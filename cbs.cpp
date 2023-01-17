@@ -1151,8 +1151,8 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
   Vector2D New;
   int new_id;
   //cout<<"new node location:";
-  std::ofstream output;
-  output.open(config.node_file, std::ios_base::app);
+  //std::ofstream output;
+  //output.open(config.node_file, std::ios_base::app);
   if (node11==node12){
     double i0(map->get_i(node21)),j0(map->get_j(node21));
     double i1(map->get_i(node22)),j1(map->get_j(node22));
@@ -1169,7 +1169,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
       if (validNewNode(P0,P1,New)){
         new_id=map->add_node(New.i,New.j, node21, node22,conflict.agent2);
         if (new_id!=-1){
-          output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
+          //output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
           deltasL.push_back(Map_delta(new_id,{node21,node22})); 
           h_values.add_node(new_id,conflict.agent2,node22);
           //cout<<" &&&:"<<new_id<<"@("<<New.i<<","<<New.j<<") a:"<<conflict.agent2;
@@ -1209,7 +1209,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
       if (validNewNode(ind2Vec(prev_node),ind2Vec(node11),New)){
         new_id=map->add_node(New.i,New.j, prev_node, node11,conflict.agent1);
         if (new_id!=-1) {
-          output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
+          //output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
           deltasR.push_back(Map_delta(new_id,{prev_node,node11})); 
           h_values.add_node(new_id,conflict.agent1,node11);
           //cout<<" &&&:"<<new_id<<"@("<<New.i<<","<<New.j<<") a:"<<conflict.agent1;
@@ -1234,7 +1234,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
       if (validNewNode(ind2Vec(node11),ind2Vec(node12),New)){
         new_id=map->add_node(New.i,New.j, node11, node12,conflict.agent1);
         if (new_id!=-1) {
-          output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
+          //output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
           deltasR.push_back(Map_delta(new_id,{node11,node12})); 
           h_values.add_node(new_id,conflict.agent1,node12);
           //cout<<" &&&:"<<new_id<<"@("<<New.i<<","<<New.j<<") a:"<<conflict.agent1;
@@ -1284,7 +1284,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
           cout<<"new id:"<<new_id<<New<<endl;
         }
         if (new_id!=-1) {
-          output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
+          //output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
           deltasL.push_back(Map_delta(new_id,{prev_node,node21})); 
           h_values.add_node(new_id,conflict.agent2,node21);
           //cout<<" &&&:"<<new_id<<"@("<<New.i<<","<<New.j<<") a:"<<conflict.agent1;
@@ -1303,14 +1303,14 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     double a0(j0-j1), b0(i1-i0), c0(i0*j1-i1*j0); //define the line
     double a1(j2-j3), b1(i3-i2), c1(i2*j3-i3*j2);
     if (b0==0 && b1==0){ //two vertical line
-      output.close();
+      //output.close();
       return;
     }
     Vector2D Q((b0*c1-b1*c0)/(a0*b1-a1*b0) , (c0*a1-c1*a0)/(a0*b1-a1*b0)); //define intersection point
     double m0(-1*a0/b0),m1(-1*a1/b1);
     double theta;
     if (abs((m0)-(m1))<config.precision){
-      output.close();
+      //output.close();
       return;
     }
 
@@ -1337,7 +1337,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     if (validNewNode(ind2Vec(node11),ind2Vec(node12),New)){
       new_id=map->add_node(New.i,New.j, node11, node12,conflict.agent1);
       if (new_id!=-1) {
-        output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
+        //output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
         deltasR.push_back(Map_delta(new_id,{node11,node12})); 
         h_values.add_node(new_id,conflict.agent1,node12);
         //cout<<new_id<<"@("<<New.i<<","<<New.j<<") a:"<<conflict.agent1;
@@ -1348,7 +1348,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     if (validNewNode(ind2Vec(node21),ind2Vec(node22),New)){
       new_id=map->add_node(New.i,New.j, node21, node22,conflict.agent2);
       if (new_id!=-1) {
-        output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
+        //output<<new_id<<" "<<New.i<<" "<<New.j<<endl;
         deltasL.push_back(Map_delta(new_id,{node21,node22})); 
         h_values.add_node(new_id,conflict.agent2,node22);
         //cout<<" &&&:"<<new_id<<"@("<<New.i<<","<<New.j<<") a:"<<conflict.agent2;
@@ -1356,7 +1356,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     }
   }
   //cout<<endl;
-  output.close();
+  //output.close();
 }
 
 Move CBS::modify_move(Move move,int new_id)

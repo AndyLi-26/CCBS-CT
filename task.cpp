@@ -1,10 +1,45 @@
 #include "task.h"
-Task::Task(int _agent_num)
+Task::Task(int _agent_num, bool _isGrid)
 {
-    agents.clear();
+  agents.clear();
 	agent_num=_agent_num;
+  isGrid=_isGrid;
 }
 
+void Task::get_task(string FileName)
+{
+  ifstream myfile(FileName);
+  int tasks;
+  if (!(myfile>>tasks))
+    FAIL("Invalid task number (expecting an int)");
+  
+  for (int i=0;i<tasks;i++)
+  {
+    Agent a;
+    if (isGrid)
+    {
+      int x1,x2,y1,y2;
+      if (!(myfile>>x1>>y1>>x2>>y2))
+        FAIL("Invalid starting and goal location (expecting 2 pairs of int, e.g.: startx starty goalx goaly)");
+      a.start_i=x1;
+      a.start_j=y1;
+      a.goal_i=x2;
+      a.goal_j=y2;
+    }
+    else{
+      int id1,id2;
+      if(!(myfile>>id1>>id2))
+        FAIL("Invalid starting and goal loaction (expecting 2 int)");
+      a.start_id=id1;
+      a.goal_id=id2;
+    }
+    a.id = int(agents.size());
+    agents.push_back(a);
+    if(int(agents.size()) == agent_num)
+      break;
+  }
+}
+/*
 void Task::get_task(string FileName, bool isGrid)
 {
 
@@ -51,6 +86,7 @@ void Task::get_task(string FileName, bool isGrid)
     exit(10);
   }
 }
+*/
 /*
 bool Task::get_task(string FileName, int k)
 {

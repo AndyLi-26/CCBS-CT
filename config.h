@@ -24,8 +24,8 @@ public:
     double  timelimit;
 	int 	agent_num;
 	//double 	resolution;
-	string output;
-	string node_file;
+	string F_result;
+	string F_debug;
 };
 
-#endif // CONFIG_H
+#endif // CONFIG_Houtput

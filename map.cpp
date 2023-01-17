@@ -67,8 +67,7 @@ void Map::get_map(string FileName)
     get_roadmap(FileName);
   }
   else{
-    cerr<<"File name has unrecognisable extension, please ensure the file end with .grid for grid or .graph for graph(roadmap)"<<endl;
-    exit(10);
+    FAIL("File name has unrecognisable extension, please ensure the file end with .grid for grid or .graph for graph(roadmap)");
   }
 }
 
@@ -283,8 +282,57 @@ bool Map::get_grid(string FileName)
     return true;
 }
 */
+
 void Map::get_roadmap(string FileName)
 {
+  ifstream myfile(FileName);
+  int n_num;
+  if(!(myfile>>n_num))
+    FAIL("Invalid node number, expecting an int");
+
+  double x,y;
+  for (int i=0;i<n_num;++i)
+  {
+    if (!(myfile>>x>>y))
+      FAIL("Invalid coord, expecting 2 floats");
+    gNode node(x,y);
+    node.agent.insert(-1);
+    nodes.push_back(node);
+    ori_node_ind ind(std::make_pair(x,y));
+    ori_node_table[ind]=nodes.size()-1;
+  }
+  nodes_num=n_num;
+  init_node_num=n_num;
+
+  int edges,id1,id2;
+  if(!(myfile>>edges))
+    FAIL("Invalid edge number, expecting an int");
+  for (int i=0;i<edges;i++)
+  {
+    if (!(myfile>>id1>>id2))
+      FAIL("Invalid edge, expecting 2 ints");
+
+    nodes[id1].neighbors.push_back(id2);
+  }
+  for(gNode cur:nodes)
+  {
+    Node node;
+    std::vector<Node> neighbors;
+    neighbors.clear();
+    for(unsigned int i = 0; i < cur.neighbors.size(); i++)
+    {
+      node.i = nodes[cur.neighbors[i]].i;
+      node.j = nodes[cur.neighbors[i]].j;
+      node.id = cur.neighbors[i];
+      neighbors.push_back(node);
+    }
+    valid_moves.push_back(neighbors);
+  }
+  size = int(nodes.size());
+}
+/*
+   void Map::get_roadmap(string FileName)
+   {
   string line;
   ifstream myfile(FileName.c_str());
   if (myfile.is_open())
@@ -345,7 +393,7 @@ void Map::get_roadmap(string FileName)
     exit(10);
   }
 }
-
+*/
 /*
 bool Map::get_roadmap(string FileName)
 {

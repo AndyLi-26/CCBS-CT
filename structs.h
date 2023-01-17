@@ -43,8 +43,8 @@ struct Config
   int  timelimit;
   int 	agent_num;
   //double 	resolution;
-  string output;
-  string node_file;
+  string F_debug_info;
+  string F_result;
 };
 
 struct Node

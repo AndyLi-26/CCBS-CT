@@ -1,5 +1,6 @@
 #include "config.h"
 using namespace  tinyxml2;
+/*
 Config::Config()
 {
     connectdness = CN_CONNECTEDNESS;
@@ -298,3 +299,4 @@ void Config::getConfig(const char *fileName)
 	*/
     return;
 }
+*/
