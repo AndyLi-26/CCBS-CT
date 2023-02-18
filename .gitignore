@@ -1,1 +1,4 @@
 ./debug/*
+./debug
+./visulizer/*.mp4
+debug/

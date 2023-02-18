@@ -287,14 +287,16 @@ void Map::get_roadmap(string FileName)
 {
   ifstream myfile(FileName);
   int n_num;
-  if(!(myfile>>n_num))
+  if(!(myfile>>n_num)){
     FAIL("Invalid node number, expecting an int");
+  }
 
   double x,y;
   for (int i=0;i<n_num;++i)
   {
-    if (!(myfile>>x>>y))
+    if (!(myfile>>x>>y)){
       FAIL("Invalid coord, expecting 2 floats");
+    }
     gNode node(x,y);
     node.agent.insert(-1);
     nodes.push_back(node);
@@ -305,13 +307,14 @@ void Map::get_roadmap(string FileName)
   init_node_num=n_num;
 
   int edges,id1,id2;
-  if(!(myfile>>edges))
+  if(!(myfile>>edges)){
     FAIL("Invalid edge number, expecting an int");
-  for (int i=0;i<edges;i++)
+  }
+    for (int i=0;i<edges;i++)
   {
-    if (!(myfile>>id1>>id2))
+    if (!(myfile>>id1>>id2)){
       FAIL("Invalid edge, expecting 2 ints");
-
+    }
     nodes[id1].neighbors.push_back(id2);
   }
   for(gNode cur:nodes)
@@ -330,151 +333,191 @@ void Map::get_roadmap(string FileName)
   }
   size = int(nodes.size());
 }
+
+void Map::pre_process()
+{
+  auto dist=[](Vector2D A, Vector2D B) -> double {return sqrt((A-B)*(A-B));};
+  for (int i=0; i<size;++i){
+    cout<<"i:"<<i<<" moves: "<<valid_moves[i].size()<<endl;
+    boost::unordered_map<int,double> min_clearV;
+    min_clearV.clear();
+      for (Node enter:valid_moves[i]){
+
+    cout<<"enter:"<<enter.id;
+        double min_t(-1);
+        for (Node exit:valid_moves[i]){
+    cout<<"exit:"<<exit.id;
+          if (enter.id==exit.id) continue;
+          //calc theta
+          Vector2D A(get_coord(i)),B(get_coord(enter.id)),C(get_coord(exit.id));
+          double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
+          double cos_theta((b*b+c*c-a*a)/(2*b*c));
+          cout<<"cos_theta:"<<cos_theta;
+          if (cos_theta==1){ //zero
+            min_t=0;
+            break;
+          }
+          if (cos_theta==-1) continue;//inf large
+          //find min_t
+          double temp(-(8*agent_size*agent_size)/(1-cos_theta));
+          double t=(sqrt(-4*temp))/2;
+          cout<<"t: "<<t<<endl;
+          if (min_t==-1 || t<min_t){
+            min_t=t;
+          }
+        }
+        min_clearV[enter.id]=min_t;
+      }
+    min_clear_time.push_back(min_clearV);
+  }
+  cout<<endl<<"min clear time: "<<min_clear_time[1][2]<<endl;
+ }
+
 /*
    void Map::get_roadmap(string FileName)
    {
-  string line;
-  ifstream myfile(FileName.c_str());
-  if (myfile.is_open())
-  {
-    getline (myfile,line);
-    int nodes = atoi ( (line).c_str() );
-    for(int i=0;i<nodes;++i)
-    {
-      getline (myfile,line);
-      char_separator<char> sep(",");
-      tokenizer< char_separator<char> > tok(line, sep);
-      tokenizer< char_separator<char> >::iterator beg=tok.begin();
-      double x = stod ( (*beg).c_str() ); // read x
-      beg++;
-      double y = stod ( (*beg).c_str() ); // read y
-      gNode node(x,y);
-      node.agent.insert(-1);
-      nodes.push_back(node);
-      ori_node_ind ind(std::make_pair(x,y));
-      ori_node_table[ind]=nodes.size()-1;
-    }
-    nodes_num=nodes;
-    init_node_num=nodes;
-    
-    getline(myfile,line);
-    int edges = atoi ((*line).c_str());
-    for (int i=0;i<edges;i++)
-    {
-      getline (myfile,line);
-      char_separator<char> sep(",");
-      tokenizer< char_separator<char> > tok(line, sep);
-      tokenizer< char_separator<char> >::iterator beg=tok.begin();
-      int id1 = atoi ( (*beg).c_str() ); // read id1
-      beg++;
-      int id2 = atoi ( (*beg).c_str() ); // read id2
-      nodes[id1].neighbors.push_back(id2);
-    }
-    
-    for(gNode cur:nodes)
-    {
-        Node node;
-        std::vector<Node> neighbors;
-        neighbors.clear();
-        for(unsigned int i = 0; i < cur.neighbors.size(); i++)
-        {
-            node.i = nodes[cur.neighbors[i]].i;
-            node.j = nodes[cur.neighbors[i]].j;
-            node.id = cur.neighbors[i];
-            neighbors.push_back(node);
-        }
-        valid_moves.push_back(neighbors);
-    }
-    size = int(nodes.size());
-  }
-  else
-  {
-    cerr<<"map file:("<<FileName <<") not found"<<endl;
-    exit(10);
-  }
-}
-*/
-/*
-bool Map::get_roadmap(string FileName)
-{
-    tinyxml2::XMLDocument doc;
-    if (doc.LoadFile(FileName) != tinyxml2::XMLError::XML_SUCCESS)
-    {
-        std::cout << "Error opening XML file!" << std::endl;
-        return false;
-    }
-    tinyxml2::XMLElement *root = 0, *element = 0, *data;
-    std::string value;
-    std::stringstream stream;
-    root = doc.FirstChildElement("graphml")->FirstChildElement("graph");
-    for(element = root->FirstChildElement("node"); element; element = element->NextSiblingElement("node"))
-    {
-        data = element->FirstChildElement();
+   string line;
+   ifstream myfile(FileName.c_str());
+   if (myfile.is_open())
+   {
+   getline (myfile,line);
+   int nodes = atoi ( (line).c_str() );
+   for(int i=0;i<nodes;++i)
+   {
+   getline (myfile,line);
+   char_separator<char> sep(",");
+   tokenizer< char_separator<char> > tok(line, sep);
+   tokenizer< char_separator<char> >::iterator beg=tok.begin();
+   double x = stod ( (*beg).c_str() ); // read x
+   beg++;
+   double y = stod ( (*beg).c_str() ); // read y
+   gNode node(x,y);
+   node.agent.insert(-1);
+   nodes.push_back(node);
+   ori_node_ind ind(std::make_pair(x,y));
+   ori_node_table[ind]=nodes.size()-1;
+   }
+   nodes_num=nodes;
+   init_node_num=nodes;
 
-        stream.str("");
-        stream.clear();
-        stream << data->GetText();
-        stream >> value;
-        auto it = value.find_first_of(",");
-        stream.str("");
-        stream.clear();
-        stream << value.substr(0, it);
-        double i;
-        stream >> i;
-		i=fit2grid(i);
-        stream.str("");
-        stream.clear();
-        value.erase(0, ++it);
-        stream << value;
-        double j;
-        stream >> j;
-		j=fit2grid(j);
-        gNode node(i,j);
-		node.agent.insert(-1);
-        nodes.push_back(node);
-		//nodes_table.insert(n);
-		ori_node_ind ind(std::make_pair(i,j));
-		ori_node_table[ind]=nodes.size()-1;
-    }
-	//prt_nodes();
-	nodes_num=nodes.size();
-	init_node_num=nodes_num;
-	
-    for(element = root->FirstChildElement("edge"); element; element = element->NextSiblingElement("edge"))
-    {
-        std::string source = std::string(element->Attribute("source"));
-        std::string target = std::string(element->Attribute("target"));
-        source.erase(source.begin(),++source.begin());
-        target.erase(target.begin(),++target.begin());
-        int id1, id2;
-        stream.str("");
-        stream.clear();
-        stream << source;
-        stream >> id1;
-        stream.str("");
-        stream.clear();
-        stream << target;
-        stream >> id2;
-        nodes[id1].neighbors.push_back(id2);
-    }
-    for(gNode cur:nodes)
-    {
-        Node node;
-        std::vector<Node> neighbors;
-        neighbors.clear();
-        for(unsigned int i = 0; i < cur.neighbors.size(); i++)
-        {
-            node.i = nodes[cur.neighbors[i]].i;
-            node.j = nodes[cur.neighbors[i]].j;
-            node.id = cur.neighbors[i];
-            neighbors.push_back(node);
-        }
-        valid_moves.push_back(neighbors);
-    }
-    size = int(nodes.size());
-    return true;
+   getline(myfile,line);
+   int edges = atoi ((*line).c_str());
+   for (int i=0;i<edges;i++)
+   {
+   getline (myfile,line);
+   char_separator<char> sep(",");
+   tokenizer< char_separator<char> > tok(line, sep);
+   tokenizer< char_separator<char> >::iterator beg=tok.begin();
+   int id1 = atoi ( (*beg).c_str() ); // read id1
+   beg++;
+   int id2 = atoi ( (*beg).c_str() ); // read id2
+   nodes[id1].neighbors.push_back(id2);
+   }
+
+   for(gNode cur:nodes)
+   {
+   Node node;
+   std::vector<Node> neighbors;
+   neighbors.clear();
+   for(unsigned int i = 0; i < cur.neighbors.size(); i++)
+   {
+   node.i = nodes[cur.neighbors[i]].i;
+   node.j = nodes[cur.neighbors[i]].j;
+   node.id = cur.neighbors[i];
+   neighbors.push_back(node);
+   }
+   valid_moves.push_back(neighbors);
+   }
+   size = int(nodes.size());
+   }
+   else
+   {
+   cerr<<"map file:("<<FileName <<") not found"<<endl;
+   exit(10);
+   }
+   }
+   */
+/*
+   bool Map::get_roadmap(string FileName)
+   {
+   tinyxml2::XMLDocument doc;
+   if (doc.LoadFile(FileName) != tinyxml2::XMLError::XML_SUCCESS)
+   {
+   std::cout << "Error opening XML file!" << std::endl;
+   return false;
+   }
+   tinyxml2::XMLElement *root = 0, *element = 0, *data;
+   std::string value;
+   std::stringstream stream;
+   root = doc.FirstChildElement("graphml")->FirstChildElement("graph");
+   for(element = root->FirstChildElement("node"); element; element = element->NextSiblingElement("node"))
+   {
+   data = element->FirstChildElement();
+
+   stream.str("");
+   stream.clear();
+   stream << data->GetText();
+   stream >> value;
+   auto it = value.find_first_of(",");
+   stream.str("");
+   stream.clear();
+   stream << value.substr(0, it);
+   double i;
+   stream >> i;
+   i=fit2grid(i);
+   stream.str("");
+   stream.clear();
+   value.erase(0, ++it);
+   stream << value;
+   double j;
+   stream >> j;
+   j=fit2grid(j);
+   gNode node(i,j);
+   node.agent.insert(-1);
+   nodes.push_back(node);
+//nodes_table.insert(n);
+ori_node_ind ind(std::make_pair(i,j));
+ori_node_table[ind]=nodes.size()-1;
 }
-*/
+//prt_nodes();
+nodes_num=nodes.size();
+init_node_num=nodes_num;
+
+for(element = root->FirstChildElement("edge"); element; element = element->NextSiblingElement("edge"))
+{
+std::string source = std::string(element->Attribute("source"));
+std::string target = std::string(element->Attribute("target"));
+source.erase(source.begin(),++source.begin());
+target.erase(target.begin(),++target.begin());
+int id1, id2;
+stream.str("");
+stream.clear();
+stream << source;
+stream >> id1;
+stream.str("");
+stream.clear();
+stream << target;
+stream >> id2;
+nodes[id1].neighbors.push_back(id2);
+}
+for(gNode cur:nodes)
+{
+Node node;
+std::vector<Node> neighbors;
+neighbors.clear();
+for(unsigned int i = 0; i < cur.neighbors.size(); i++)
+{
+node.i = nodes[cur.neighbors[i]].i;
+node.j = nodes[cur.neighbors[i]].j;
+node.id = cur.neighbors[i];
+neighbors.push_back(node);
+}
+valid_moves.push_back(neighbors);
+}
+size = int(nodes.size());
+return true;
+}
+  */
 int Map::add_node(double i, double j, int node1, int node2,int agent)
 {
   //std::cout<<"new agent:"<<agent<<std::endl;
@@ -497,33 +540,33 @@ int Map::add_node(double i, double j, int node1, int node2,int agent)
       return -1;
     /*if (nodes[node_id].agent.find(-1)!=nodes[node_id].agent.end() || nodes[node_id].agent.find(agent)!=nodes[node_id].agent.end())*/
     if (nodes[node_id].agent.find(agent)!=nodes[node_id].agent.end())  
-    return -1;
+      return -1;
     else{
       nodes[node_id].agent.insert(agent);
       /*
-      bool n1=false,n2=false;
-      for (Node n:valid_moves[node_id]){
-        if(n1 && n2) break;
-        if (n.id==node1) n1=true;
-        if (n.id==node2) n2=true;
-      }
-      if (!n1){
-        Node valid1;
-        valid1.i = nodes[node1].i;
-        valid1.j = nodes[node1].j;
-        valid1.id = node1;
-        valid1.agent.insert(-1);
-        valid_moves[node_id].push_back(valid1);
-      }
-      if (!n2){
-        Node valid2;
-        valid2.i = nodes[node2].i;
-        valid2.j = nodes[node2].j;
-        valid2.id = node2;
-        valid2.agent.insert(-1);
-        valid_moves[node_id].push_back(valid2);
-      }
-      */
+         bool n1=false,n2=false;
+         for (Node n:valid_moves[node_id]){
+         if(n1 && n2) break;
+         if (n.id==node1) n1=true;
+         if (n.id==node2) n2=true;
+         }
+         if (!n1){
+         Node valid1;
+         valid1.i = nodes[node1].i;
+         valid1.j = nodes[node1].j;
+         valid1.id = node1;
+         valid1.agent.insert(-1);
+         valid_moves[node_id].push_back(valid1);
+         }
+         if (!n2){
+         Node valid2;
+         valid2.i = nodes[node2].i;
+         valid2.j = nodes[node2].j;
+         valid2.id = node2;
+         valid2.agent.insert(-1);
+         valid_moves[node_id].push_back(valid2);
+         }
+         */
     }
   }
   else{
@@ -578,44 +621,44 @@ int Map::add_node(double i, double j, int node1, int node2,int agent)
      }
      }
 
-	
-	for (int n=0;n<valid_moves[node2].size();++n){
-		if (valid_moves[node2][n].id==node1){
-			valid_moves[node2].erase(valid_moves[node2].begin()+n);
-			break;
-		}
-	}
-	*/
-	//valid_moves[node1].push_back(node);
-	//valid_moves[node2].push_back(node);
 
-	
-	return node_id;
+     for (int n=0;n<valid_moves[node2].size();++n){
+     if (valid_moves[node2][n].id==node1){
+     valid_moves[node2].erase(valid_moves[node2].begin()+n);
+     break;
+     }
+     }
+     */
+  //valid_moves[node1].push_back(node);
+  //valid_moves[node2].push_back(node);
+
+
+  return node_id;
 }
 
 void Map::print_map()
 {
-    std::cout<<height<<"x"<<width<<std::endl;
-    for(int i = 0; i < height; i++)
-    {
-        std::cout<<"<row>";
-        for(int j = 0; j < width; j++)
-            std::cout<<grid[i][j]<<" ";
-        std::cout<<"</row>"<<std::endl;
-    }
+  std::cout<<height<<"x"<<width<<std::endl;
+  for(int i = 0; i < height; i++)
+  {
+    std::cout<<"<row>";
+    for(int j = 0; j < width; j++)
+      std::cout<<grid[i][j]<<" ";
+    std::cout<<"</row>"<<std::endl;
+  }
 }
 
 void Map::printPPM()
 {
-    std::cout<<"P3\n"<<width<<" "<<height<<"\n255\n";
-    for(int i = 0; i < height; i++)
-        for(int j = 0; j < width; j++)
-        {
-            if(grid[i][j]==1)
-                std::cout<<"0 0 0\n";
-            else
-                std::cout<<"255 255 255\n";
-        }
+  std::cout<<"P3\n"<<width<<" "<<height<<"\n255\n";
+  for(int i = 0; i < height; i++)
+    for(int j = 0; j < width; j++)
+    {
+      if(grid[i][j]==1)
+        std::cout<<"0 0 0\n";
+      else
+        std::cout<<"255 255 255\n";
+    }
 }
 
 bool Map::cell_is_obstacle(int i, int j) const

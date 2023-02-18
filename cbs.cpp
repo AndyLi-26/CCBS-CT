@@ -182,7 +182,7 @@ Constraint CBS::get_wait_constraint(int agent, Move move1, Move move2)
       interval.second = move2.t1 + ha + size;
     }
   }
-  return Constraint(agent, interval.first-CN_PRECISION, interval.second+CN_PRECISION, move1.id1, -1,move1.id2); // exit index -1 means wait
+  return Constraint(agent, interval.first-config.precision, interval.second+config.precision, move1.id1, -1,move1.id2); // exit index -1 means wait
 }
 
 double CBS::get_hl_heuristic(const std::list<Conflict> &conflicts)
@@ -243,7 +243,17 @@ Constraint CBS::get_constraint(int agent, Move move1, Move move2)
            B(map->get_i(move2.id1), map->get_j(move2.id1)), B2(map->get_i(move2.id2), map->get_j(move2.id2));
   if(move2.t2 == CN_INFINITY){
     int exit_index=id2ind(move1.id1, move1.id2,agent);
-    return Constraint(agent, move1.t1-CN_PRECISION, CN_INFINITY, move1.id1, exit_index, move1.id2);
+    return Constraint(agent, move1.t1-config.precision, CN_INFINITY, move1.id1, exit_index, move1.id2);
+  }
+  double startT,endT;
+  if (config.cons_reason){
+  if (move1.id2==move2.id2){
+    Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
+    double dist=sqrt((A-B)*(A-B));
+    double min_clear=map->min_clear_time[move1.id2][move1.id1];
+    endT=move2.t2-(dist-min_clear)+config.precision;
+    startT=move1.t1;
+  }
   }
   double delta = move2.t2 - move1.t1;
   while(delta > config.precision/2.0)
@@ -271,8 +281,17 @@ Constraint CBS::get_constraint(int agent, Move move1, Move move2)
     move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
     move1.t2 = move1.t1 + endTimeA - startTimeA;
   }
+  //consider min_clear time for node conflict
   int exit_index=id2ind(move1.id1, move1.id2,agent);
-  return Constraint(agent, startTimeA-CN_PRECISION, move1.t1+CN_PRECISION, move1.id1, exit_index, move1.id2);
+  if (config.cons_reason){
+    if (move1.t1+config.precision>endT)
+      return Constraint(agent, startTimeA-config.precision, move1.t1+config.precision, move1.id1, exit_index, move1.id2);
+    else
+      return Constraint(agent, startT, endT,move1.id1, exit_index, move1.id2);
+  }
+  else{
+    return Constraint(agent, startTimeA-config.precision, move1.t1+config.precision, move1.id1, exit_index, move1.id2);
+  }
 }
 
 int CBS::id2ind(int v1, int v2,int agent)
@@ -372,8 +391,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     auto semicard_conflicts = node.semicard_conflicts;
     if(conflicts.empty() && semicard_conflicts.empty() && cardinal_conflicts.empty())
     {
-      if (debug>0){
         printBT_aux();
+      if (debug>0){
         string file="CT_tree.dot";
         saveCT(file,&node,task.get_agents_size());
         prt_paths(paths);
@@ -562,10 +581,10 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       cout<<"new_path:";
       prt_path(pathB);
       cout<<endl<<flush;
-      assert(!BREAK); 
     //assert(false);
     }
 
+    assert(!BREAK); 
     if (config.use_edge_split){
       gen_original_map(&node);
       if (debug>1){
@@ -752,8 +771,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     if(time_spent.count() > config.timelimit )
     {
       solution.found = false;
-      if (debug>0){
         printBT_aux();
+      if (debug>0){
         map.prt_validmoves();
       }
       break;
@@ -1181,7 +1200,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     std::vector<Node> succ=map->get_valid_moves(node11,conflict.agent1);
     int prev_node;
     for (sNode n: paths[conflict.agent1].nodes){
-      if (n.g>=conflict.move1.t1-config.precision)
+      if (n.g>=conflict.move1.t1+config.precision)
         break;
       prev_node=n.id;
     }
@@ -1243,9 +1262,10 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     }
 
     //take care waiting node
+    //prt_path(paths[conflict.agent1]);
     int prev_node;
     for (sNode n: paths[conflict.agent1].nodes){
-      if (n.g>=conflict.move1.t1-config.precision)
+      if (n.g>=conflict.move1.t1+config.precision)
         break;
       prev_node=n.id;
     }

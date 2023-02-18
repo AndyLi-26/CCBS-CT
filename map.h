@@ -42,6 +42,7 @@ public:
     Map(double size, int k){ agent_size = size; connectedness = k; }
 	Map(Map *m);
     ~Map(){}
+    std::vector<boost::unordered_map<int,double>> min_clear_time; //[main node][enter node]
     int  get_size() const { return size; }
 	int get_new_node_num() const {return size-init_node_num;}
     void get_map(string FileName);
@@ -63,6 +64,7 @@ public:
 	void prt_validmoves() const;
 	void alter(Map_deltas map_delta);
 	void alter_back(Map_deltas map_delta);
+  void pre_process();
 	bool equal(Map *m);
 };
 

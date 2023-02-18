@@ -158,6 +158,12 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
     }
     while(curNode.parent != nullptr);
   path.nodes.insert(path.nodes.begin(), curNode);
+
+  //store sipp path
+  path.SIPP_nodes.clear();
+  for (Node n:path.nodes)
+    path.SIPP_nodes.push_back(n);
+
   for(unsigned int i = 0; i < path.nodes.size(); i++)
   {
     unsigned int j = i + 1;

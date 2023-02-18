@@ -36,6 +36,7 @@ struct Config
   bool    use_cardinal;
   bool    use_disjoint_splitting;
   bool    use_edge_split;
+  bool    cons_reason;
   int     hlh_type;
   int     connectdness;
   int     debug=0;
@@ -119,6 +120,7 @@ struct Position
 struct Path
 {
     std::vector<Node> nodes;
+    std::vector<Node> SIPP_nodes;
     double cost;
     int agentID;
     int expanded;
@@ -141,6 +143,7 @@ struct sNode
 struct sPath
 {
     std::vector<sNode> nodes;
+    std::vector<Node> SIPP_nodes;
     double cost;
     int agentID;
     int expanded;
@@ -152,8 +155,10 @@ struct sPath
         agentID = path.agentID;
         expanded = path.expanded;
         nodes.clear();
-        for(auto n:path.nodes)
+        for(auto n:path.nodes){
             nodes.push_back(sNode(n));
+            SIPP_nodes.push_back(n);
+        }
         return *this;
     }
 	friend std::ostream& operator << (std::ostream& os, const sPath p){
@@ -266,38 +271,39 @@ typedef std::list<Map_delta> Map_deltas;
 struct CBS_Node
 {
   std::vector<sPath> paths;
-    CBS_Node* parent;
-    Constraint constraint;
-    Constraint positive_constraint;
-    int id;
-    std::string id_str;
-    double cost;
-    double h;
-    unsigned int conflicts_num;
-    unsigned int total_cons;
-    unsigned int low_level_expanded;
-	Map_deltas deltas;
-	Conflict cur_conflict;
-    std::list<Conflict> conflicts;
-    std::list<Conflict> semicard_conflicts;
-    std::list<Conflict> cardinal_conflicts;
-    CBS_Node(std::vector<sPath> _paths = {}, CBS_Node* _parent = nullptr, Constraint _constraint = Constraint(),Map_deltas _deltas={}, double _cost = 0, int _conflicts_num = 0, int total_cons_ = 0)
-        :paths(_paths), parent(_parent), constraint(_constraint), deltas(_deltas), cost(_cost), conflicts_num(_conflicts_num), total_cons(total_cons_)
+  std::vector<Path> SIPP_Paths;
+  CBS_Node* parent;
+  Constraint constraint;
+  Constraint positive_constraint;
+  int id;
+  std::string id_str;
+  double cost;
+  double h;
+  unsigned int conflicts_num;
+  unsigned int total_cons;
+  unsigned int low_level_expanded;
+  Map_deltas deltas;
+  Conflict cur_conflict;
+  std::list<Conflict> conflicts;
+  std::list<Conflict> semicard_conflicts;
+  std::list<Conflict> cardinal_conflicts;
+  CBS_Node(std::vector<sPath> _paths = {}, CBS_Node* _parent = nullptr, Constraint _constraint = Constraint(),Map_deltas _deltas={}, double _cost = 0, int _conflicts_num = 0, int total_cons_ = 0)
+    :paths(_paths), parent(_parent), constraint(_constraint), deltas(_deltas), cost(_cost), conflicts_num(_conflicts_num), total_cons(total_cons_)
     {
-        low_level_expanded = 0;
-        h = 0;
-        conflicts.clear();
-        semicard_conflicts.clear();
-        cardinal_conflicts.clear();
+      low_level_expanded = 0;
+      h = 0;
+      conflicts.clear();
+      semicard_conflicts.clear();
+      cardinal_conflicts.clear();
     }
-    ~CBS_Node()
-    {
-        parent = nullptr;
-        paths.clear();
-        conflicts.clear();
-        semicard_conflicts.clear();
-        cardinal_conflicts.clear();
-    }
+  ~CBS_Node()
+  {
+    parent = nullptr;
+    paths.clear();
+    conflicts.clear();
+    semicard_conflicts.clear();
+    cardinal_conflicts.clear();
+  }
 
 };
 
@@ -309,62 +315,62 @@ struct CBS_Node_aux
   int id,id_parent,id_left=-1,id_right=-1;
   int cost;
 
-	Conflict cur_conflict;
+  Conflict cur_conflict;
   Constraint constraint;
-  
+
   CBS_Node_aux(CBS_Node node):id(node.id),id_parent(node.parent != nullptr? node.parent->id : -1), cost(node.cost),cur_conflict(node.cur_conflict), constraint(node.constraint),id_left(-1),id_right(-1),path(node.paths[0]) {};
 
 };
 
 struct Open_Elem
 {
-    CBS_Node* tree_pointer;
-    int id;
-    double cost;
-    unsigned int cons_num;
-    unsigned int conflicts_num;
+  CBS_Node* tree_pointer;
+  int id;
+  double cost;
+  unsigned int cons_num;
+  unsigned int conflicts_num;
 
-    Open_Elem(CBS_Node* _tree_pointer = nullptr, int _id = -1, double _cost = -1, unsigned int _cons_num = 0, unsigned int _conflicts_num = 0)
-        : tree_pointer(_tree_pointer), id(_id), cost(_cost), cons_num(_cons_num), conflicts_num(_conflicts_num) {}
-    ~Open_Elem()
-    {
-        tree_pointer = nullptr;
-    }
+  Open_Elem(CBS_Node* _tree_pointer = nullptr, int _id = -1, double _cost = -1, unsigned int _cons_num = 0, unsigned int _conflicts_num = 0)
+    : tree_pointer(_tree_pointer), id(_id), cost(_cost), cons_num(_cons_num), conflicts_num(_conflicts_num) {}
+  ~Open_Elem()
+  {
+    tree_pointer = nullptr;
+  }
 };
 
 struct cost{};
 struct id{};
 
 typedef multi_index_container<
-        Open_Elem,
-        indexed_by<
-                    //ordered_non_unique<tag<cost>, BOOST_MULTI_INDEX_MEMBER(Open_Elem, double, cost)>,
-                    ordered_non_unique<composite_key<Open_Elem, BOOST_MULTI_INDEX_MEMBER(Open_Elem, double, cost), BOOST_MULTI_INDEX_MEMBER(Open_Elem, unsigned int, conflicts_num), BOOST_MULTI_INDEX_MEMBER(Open_Elem, unsigned int, cons_num)>,
-                    composite_key_compare<std::less<double>, std::less<int>, std::greater<int>>>,
-                    hashed_unique<tag<id>, BOOST_MULTI_INDEX_MEMBER(Open_Elem, int, id)>
-        >
-> CT_container;
+Open_Elem,
+  indexed_by<
+  //ordered_non_unique<tag<cost>, BOOST_MULTI_INDEX_MEMBER(Open_Elem, double, cost)>,
+  ordered_non_unique<composite_key<Open_Elem, BOOST_MULTI_INDEX_MEMBER(Open_Elem, double, cost), BOOST_MULTI_INDEX_MEMBER(Open_Elem, unsigned int, conflicts_num), BOOST_MULTI_INDEX_MEMBER(Open_Elem, unsigned int, cons_num)>,
+  composite_key_compare<std::less<double>, std::less<int>, std::greater<int>>>,
+  hashed_unique<tag<id>, BOOST_MULTI_INDEX_MEMBER(Open_Elem, int, id)>
+  >
+  > CT_container;
 
-struct Focal_Elem
+  struct Focal_Elem
 {
-    int id;
-    unsigned int conflicts_num;
-    unsigned int constraints;
-    double cost;
-    Focal_Elem(int id_=-1, unsigned int conflicts_num_ = 0, unsigned int constraints_ = 0, double cost_ = 0):id(id_), conflicts_num(conflicts_num_), constraints(constraints_), cost(cost_){}
-    bool operator <(const Focal_Elem& other) const
-    {
-        if(this->conflicts_num < other.conflicts_num)
-            return true;
-        else if(this->conflicts_num > other.conflicts_num)
-            return false;
-        else if(this->constraints > other.constraints)
-            return true;
-        else if(this->constraints < other.constraints)
-            return false;
-        else if(this->cost < other.cost)
-            return true;
-        else
+  int id;
+  unsigned int conflicts_num;
+  unsigned int constraints;
+  double cost;
+  Focal_Elem(int id_=-1, unsigned int conflicts_num_ = 0, unsigned int constraints_ = 0, double cost_ = 0):id(id_), conflicts_num(conflicts_num_), constraints(constraints_), cost(cost_){}
+  bool operator <(const Focal_Elem& other) const
+  {
+    if(this->conflicts_num < other.conflicts_num)
+      return true;
+    else if(this->conflicts_num > other.conflicts_num)
+      return false;
+    else if(this->constraints > other.constraints)
+      return true;
+    else if(this->constraints < other.constraints)
+      return false;
+    else if(this->cost < other.cost)
+      return true;
+    else
             return false;
     }
 };

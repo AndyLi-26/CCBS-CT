@@ -13,12 +13,12 @@ mapSize=[min(nodes,[],'all'),max(nodes,[],'all')];range=mapSize(2)-mapSize(1);
 mapSize=[mapSize(1)-0.01*range,mapSize(2)+0.01*range];
 mapSize=[0,100];
 edges=readmatrix('edges.csv');
-summary=readmatrix('summary.txt');%run-time, SoC, makespan
+%summary=readmatrix('summary.txt');%run-time, SoC, makespan
 
 figure('Renderer', 'painters', 'Position', [10 10 900 900]);
 hold on; grid on; xlim(mapSize);ylim(mapSize);
 %xlim([65,165]);ylim([80,180]);
-xlabel(sprintf("run-time=%f,    SoC=%f,    makespan=%f",summary));
+%xlabel(sprintf("run-time=%f,    SoC=%f,    makespan=%f",summary));
 plot(nodes(:,1),nodes(:,2),'ro',LineWidth=3)
 for i=1:length(nodes)
     i

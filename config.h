@@ -17,6 +17,7 @@ public:
     bool    use_cardinal;
     bool    use_disjoint_splitting;
     bool    use_edge_split;
+    bool    cons_reasoning;
     int     hlh_type;
     int     connectdness;
     int     debug=0;

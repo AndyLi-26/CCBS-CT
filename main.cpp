@@ -30,7 +30,8 @@ int main(int argc, const char *argv[])
       ("timelimit",po::value<int>()->default_value(30))
       ("Cardinal","use cardinal for choose conflict")
       ("Disjoint_splitting,DS","use Disjoint_splitting")
-      ("Edge_split,ES","use edge split");
+      ("cons_reason","use minimum clearance time reasoning")
+      ("Edge_split","use edge split");
       
     po::variables_map temp;
     po::store(po::parse_command_line(argc,argv,desc),temp);
@@ -42,8 +43,9 @@ int main(int argc, const char *argv[])
     Map map = Map(config.agent_size,  config.connectdness);
     map.get_map(fmap);
     cout<<"read map success"<<endl;
+    map.pre_process();
     
-    config.agent_num=vm["agent_number"].as<int>();
+    config.agent_num=vm["agent_num"].as<int>();
     string ftask=vm["tasks"].as<string>();
     Task task(config.agent_num,fmap[fmap.size()-1]=='d');
     task.get_task(ftask);
@@ -51,8 +53,7 @@ int main(int argc, const char *argv[])
       task.make_ij(map);
     else
       task.make_ids(map.get_width());
-    std::cout<<"read task "<<endl;
-    
+    cout<<"read task success"<<endl;
     config.F_debug_info=vm["debug_info"].as<string>();
     config.F_result=vm["result_file"].as<string>();
     config.hlh_type=vm["HI_h"].as<int>();
@@ -64,12 +65,12 @@ int main(int argc, const char *argv[])
     bool card=vm.count("Cardinal");
     bool DS=vm.count("Disjoint_splitting");
     bool ES=vm.count("Edge_split");
+    bool CR=vm.count("cons_reason");
     config.use_cardinal=card;
     config.use_disjoint_splitting=DS;
     config.use_edge_split=ES;
+    config.cons_reason=CR;
     
-    cout<<"finishing reading PO"<<endl<<flush;
-
     cout<<"agents_num="<<task.get_agent_num()<<endl;
     task.prt_agents();
     CBS cbs;
