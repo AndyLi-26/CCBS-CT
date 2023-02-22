@@ -10,12 +10,13 @@ class logger
 {
   private:
     Config config;
-
+    Solution solution;
   public:
-    logger(Config cfg) :config(cfg) {};
-    void write_to_log_summary(const Solution &solution);
-    void write_to_log_path(const Solution &solution, const Map &map);
+    logger(Config cfg, Solution sol) :config(cfg),solution(sol) {};
+    void write_to_log_summary();
+    void write_to_log_path(const Map &map);
     void write_nodes(const Map &map);
+    void write_exp_result(int task_ind);
 };
 
 #endif // LOGGER_H

@@ -31,12 +31,15 @@ private:
     void add_collision_interval(int id, std::pair<double, double> interval);
     void add_move_constraint(Move move);
     std::vector<Node> get_endpoints(int node_id, double node_i, double node_j, double t1, double t2);
-    double check_endpoint(Node start, Node goal);
-	void prt_constraint(Constraint c);
-	void prt_constraints(std::list<Constraint> constraints);
-  void prt_cons();
-  void prt_intervals();
-	
+    double check_endpoint(Node start, Node goal,int exit_id);
+    void prt_constraint(Constraint c);
+    void prt_constraints(std::list<Constraint> constraints);
+    void prt_cons();
+    void prt_intervals();
+    void prt_path(Path P);
+    void prt_paths(std::vector<Path> paths);
+    void prt_nodes(std::vector<Node> starts);
+
     std::unordered_map<int, Node> close;
     std::list<Node> open;
     std::unordered_map<int, std::pair<double, bool>> visited;

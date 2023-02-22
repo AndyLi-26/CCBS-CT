@@ -338,21 +338,17 @@ void Map::pre_process()
 {
   auto dist=[](Vector2D A, Vector2D B) -> double {return sqrt((A-B)*(A-B));};
   for (int i=0; i<size;++i){
-    cout<<"i:"<<i<<" moves: "<<valid_moves[i].size()<<endl;
     boost::unordered_map<int,double> min_clearV;
     min_clearV.clear();
       for (Node enter:valid_moves[i]){
 
-    cout<<"enter:"<<enter.id;
         double min_t(-1);
         for (Node exit:valid_moves[i]){
-    cout<<"exit:"<<exit.id;
           if (enter.id==exit.id) continue;
           //calc theta
           Vector2D A(get_coord(i)),B(get_coord(enter.id)),C(get_coord(exit.id));
           double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
           double cos_theta((b*b+c*c-a*a)/(2*b*c));
-          cout<<"cos_theta:"<<cos_theta;
           if (cos_theta==1){ //zero
             min_t=0;
             break;
@@ -361,7 +357,6 @@ void Map::pre_process()
           //find min_t
           double temp(-(8*agent_size*agent_size)/(1-cos_theta));
           double t=(sqrt(-4*temp))/2;
-          cout<<"t: "<<t<<endl;
           if (min_t==-1 || t<min_t){
             min_t=t;
           }
@@ -370,7 +365,6 @@ void Map::pre_process()
       }
     min_clear_time.push_back(min_clearV);
   }
-  cout<<endl<<"min clear time: "<<min_clear_time[1][2]<<endl;
  }
 
 /*

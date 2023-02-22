@@ -1,9 +1,9 @@
 #include "logger.h"
-void logger::write_to_log_summary(const Solution &solution)
+void logger::write_to_log_summary()
 {
-  ofstream fw(config.F_result, std::ios::out | std::ios::app);
+  ofstream fw(config.F_solution, std::ios::out | std::ios::app);
   if (!fw.is_open()){
-    FAIL("did not open result file properly");
+    FAIL("did not open solution file properly");
   }
   fw<<solution.time.count()<<","
     <<solution.flowtime<<","
@@ -13,9 +13,9 @@ void logger::write_to_log_summary(const Solution &solution)
   fw.close();
 }
 
-void logger::write_to_log_path(const Solution &solution, const Map &map)
+void logger::write_to_log_path(const Map &map)
 {
-  ofstream fw(config.F_result, std::ios::out);
+  ofstream fw(config.F_solution, std::ios::out);
   if (!fw.is_open()){
     FAIL("did not open result file properly");
   }
@@ -37,7 +37,31 @@ void logger::write_to_log_path(const Solution &solution, const Map &map)
   }
   fw.close();
 }
+void logger::write_exp_result(int task_ind)
+{
+  ofstream fw(config.F_exp, std::ios::out | std::ios::app);
+  if (!fw.is_open()){
+    FAIL("did not open result file properly");
+  }
+  int ES=config.use_edge_split ? 1:0;
+  int CR=config.cons_reason ? 1:0;
+  int DS=config.use_disjoint_splitting? 1:0;
+  int f=solution.found? 1:0;
+  fw<<config.agent_num<<","
+    <<config.agent_size<<","
+    <<task_ind<<","
+    <<DS<<","
+    <<ES<<","
+    <<CR<<","
+    <<solution.time.count()<<","
+    <<f<<","
+    <<solution.init_cost<<","
+    <<solution.flowtime<<","
+    <<solution.makespan<<","
+    <<solution.new_node<<","
+    <<endl;
 
+}
 void logger::write_nodes(const Map &map)
 {
 

@@ -19,7 +19,8 @@ int main(int argc, const char *argv[])
       ("map,m", po::value<std::string>()->required(), "input file for map")
       ("tasks,t", po::value<std::string>()->required(), "input file for all the tasks")
       ("debug_info",po::value<std::string>()->default_value(""),"output file for debug info, such as new node, path etc")
-      ("result_file,o",po::value<std::string>()->default_value(""),"result data file")
+      ("solution_file",po::value<std::string>()->default_value(""),"solution file")
+      ("result_file,o",po::value<std::string>()->default_value(""),"result file")
       ("HI_h,h",po::value<int>()->default_value(0),"HI level heutistic, 0: none, 1:simplex model, 2: count" )
       ("focal_weigth",po::value<float>()->default_value(1.0),"focal weright")
       ("precision",po::value<float>()->default_value(0.00001),"the precision used in math calculation and number comparison")
@@ -29,9 +30,10 @@ int main(int argc, const char *argv[])
       ("agent_num",po::value<int>()->required(),"number of agent")
       ("timelimit",po::value<int>()->default_value(30))
       ("Cardinal","use cardinal for choose conflict")
-      ("Disjoint_splitting,DS","use Disjoint_splitting")
+      ("DS","use Disjoint_splitting")
       ("cons_reason","use minimum clearance time reasoning")
-      ("Edge_split","use edge split");
+      ("ES","use edge split")
+      ("extra_info",po::value<int>()->default_value(-1),"task index");
       
     po::variables_map temp;
     po::store(po::parse_command_line(argc,argv,desc),temp);
@@ -55,7 +57,8 @@ int main(int argc, const char *argv[])
       task.make_ids(map.get_width());
     cout<<"read task success"<<endl;
     config.F_debug_info=vm["debug_info"].as<string>();
-    config.F_result=vm["result_file"].as<string>();
+    config.F_solution=vm["solution_file"].as<string>();
+    config.F_exp=vm["result_file"].as<string>();
     config.hlh_type=vm["HI_h"].as<int>();
     config.focal_weight=vm["focal_weigth"].as<float>();
     config.precision=vm["precision"].as<float>();
@@ -63,8 +66,8 @@ int main(int argc, const char *argv[])
     config.debug = vm["debug"].as<int>();
 
     bool card=vm.count("Cardinal");
-    bool DS=vm.count("Disjoint_splitting");
-    bool ES=vm.count("Edge_split");
+    bool DS=vm.count("DS");
+    bool ES=vm.count("ES");
     bool CR=vm.count("cons_reason");
     config.use_cardinal=card;
     config.use_disjoint_splitting=DS;
@@ -75,17 +78,24 @@ int main(int argc, const char *argv[])
     task.prt_agents();
     CBS cbs;
     Solution solution = cbs.find_solution(map, task, config);
-    logger log(config);
+    logger log(config,solution);
     auto found = solution.found?"true":"false";
     auto Use_edge = config.use_edge_split?"true":"false";
+    auto Cons_reason =config.cons_reason?"true":"false";
+    int task_ind=vm["extra_info"].as<int>();
 
     std::cout<< "Soulution found: " << found <<"\nUse Edge Splitting: "<< Use_edge <<
+      "\nconstraint reasoning: "<<Cons_reason<<
       "\nRuntime: "<<solution.time.count() << "\nMakespan: " << solution.makespan << "\nFlowtime: " << solution.flowtime<< "\nInitial Cost: "<<solution.init_cost<< "\nCollision Checking Time: " << solution.check_time
       << "\nHL expanded: " << solution.high_level_expanded << "\nLL searches: " << solution.low_level_expansions << "\nLL expanded(avg): " << solution.low_level_expanded << std::endl;
     std::cout<<"agent_size: "<<config.agent_size<<std::endl;
     std::cout<<"introduce new node: "<<map.get_new_node_num()<<std::endl;
-    log.write_to_log_summary(solution);
-    log.write_to_log_path(solution, map);
+    if (config.F_solution!="")
+    {
+      log.write_to_log_summary();
+      log.write_to_log_path(map);
+    }
+    log.write_exp_result(task_ind);
   }
   else
   {

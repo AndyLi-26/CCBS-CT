@@ -26,7 +26,8 @@ public:
     bool check_conflict(Move move1, Move move2);
     double get_hl_heuristic(const std::list<Conflict> &conflicts);
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
-    Constraint get_constraint(int agent, Move move1, Move move2);
+typedef std::pair<Constraint,bool> con_return;
+    con_return get_constraint(int agent, Move move1, Move move2);
     Constraint get_wait_constraint(int agent, Move move1, Move move2);
     void find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::vector<sPath> &paths, const sPath &path,
                             const std::list<Conflict> &conflicts, const std::list<Conflict> &semicard_conflicts, const std::list<Conflict> &cardinal_conflicts,
@@ -39,6 +40,7 @@ public:
 	//typedef std::pair<Map_delta,Map_delta> Map_delta_pair;
   typedef std::pair<Vector2D,Vector2D> node_pair;
   typedef std::pair<int,int> edge;
+  
   //std::pair<Vector2D,double> findAngle(edge e1, edge e2);
 	void split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &deltasR, Map_deltas &deltasL);
   //node_pair newNodeMoving(Conflict conflict);

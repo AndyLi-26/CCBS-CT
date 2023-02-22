@@ -45,7 +45,8 @@ struct Config
   int 	agent_num;
   //double 	resolution;
   string F_debug_info;
-  string F_result;
+  string F_solution;
+  string F_exp;
 };
 
 struct Node
@@ -199,7 +200,7 @@ struct Constraint
     }
     bool operator ==(const Constraint& other) const
     {
-        return agent==other.agent && id1==other.id1 && id2==other.id2 && abs(t1-other.t1)<=CN_PRECISION && abs(t2-other.t2)<=CN_PRECISION;
+        return agent==other.agent && id1==other.id1 && id2==other.id2 && abs(t1-other.t1)<=CN_PRECISION && abs(t2-other.t2)<=CN_PRECISION && positive==other.positive;
     }
 };
 
@@ -498,11 +499,12 @@ struct Solution
     double low_level_expanded;
     int cardinal_solved;
     int semicardinal_solved;
+    int new_node;
     std::chrono::duration<double> time;
     std::chrono::duration<double> init_time;
     std::vector<sPath> paths;
     Solution(double _flowtime = -1, double _makespan = -1, std::vector<sPath> _paths = {})
-        : flowtime(_flowtime), makespan(_makespan), paths(_paths) { init_cost = -1; constraints_num = 0; low_level_expanded = 0; low_level_expansions = 0; cardinal_solved = 0; semicardinal_solved = 0; max_constraints = 0;}
+        : flowtime(_flowtime), makespan(_makespan), paths(_paths) { init_cost = -1; constraints_num = 0; low_level_expanded = 0; low_level_expansions = 0; cardinal_solved = 0; semicardinal_solved = 0; max_constraints = 0; new_node=-1;}
     ~Solution() { paths.clear(); found = false;}
 };
 
