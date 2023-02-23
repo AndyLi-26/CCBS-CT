@@ -269,7 +269,7 @@ void SIPP::make_constraints(std::list<Constraint> &cons,const Map &map)
       bool inserted = false;
       //auto temp=map.get_valid_moves(con.id1,agent.id);
       //int id2=temp[con.id2].id;
-      cout<<con.t1<<"~"<<con.t2<<","<<con.id1<<"->"<<con.id2<<endl;
+      //cout<<con.t1<<"~"<<con.t2<<","<<con.id1<<"->"<<con.id2<<endl;
       for(unsigned int i = 0; i < landmarks.size(); i++)
         if(landmarks[i].t1 > con.t1)
         {
@@ -401,17 +401,17 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
 
 double SIPP::check_endpoint(Node start, Node goal, int exit_id)
 {
-  cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
+  //cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
   double cost = sqrt(pow(start.i - goal.i, 2) + pow(start.j - goal.j, 2));
   if(start.g + cost < goal.interval.first)
     start.g = goal.interval.first - cost;
-  cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
+  //cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
   if(constraints.count({start.id, exit_id}) != 0)
   {
     auto it = constraints.find({start.id,exit_id});
     for(unsigned int i = 0; i < it->second.size(); i++)
     {
-      cout<<"cons:"<<it->second[i].t1<<"~"<<it->second[i].t2<<endl;
+      //cout<<"cons:"<<it->second[i].t1<<"~"<<it->second[i].t2<<endl;
       if(start.g + CN_EPSILON > it->second[i].t1 && start.g < it->second[i].t2)
         start.g = it->second[i].t2;
     }
@@ -463,11 +463,11 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
       }
       if(goals.empty())
         return Path();
-      cout<<"starts before plan"<<endl;
-      prt_nodes(starts);
+      //cout<<"starts before plan"<<endl;
+      //prt_nodes(starts);
       parts = find_partial_path(starts, goals, map, h_values, goals.back().interval.second);
-      cout<<"parts"<<endl;
-      prt_paths(parts);
+      //cout<<"parts"<<endl;
+      //prt_paths(parts);
       expanded += int(close.size());
       new_results.clear();
       if(i == 0)
@@ -489,8 +489,8 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
           }
         }
       results = new_results;
-      cout<<"results:"<<endl;
-      prt_paths(results);
+      //cout<<"results:"<<endl;
+      //prt_paths(results);
       if(results.empty())
         return Path();
       if(i < landmarks.size())
@@ -504,8 +504,8 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         double offset = sqrt(pow(map.get_i(landmarks[i].id1) - map.get_i(id2), 2) + pow(map.get_j(landmarks[i].id1) - map.get_j(id2), 2));
         goals = get_endpoints(id2, map.get_i(id2), map.get_j(id2), landmarks[i].t1 + offset, landmarks[i].t2 + offset);
 
-      cout<<"starts:"<<endl;
-        prt_nodes(starts);
+      //cout<<"starts:"<<endl;
+        //prt_nodes(starts);
         if(goals.empty())
           return Path();
         new_results.clear();

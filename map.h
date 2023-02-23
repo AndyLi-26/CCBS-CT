@@ -45,6 +45,7 @@ public:
     std::vector<boost::unordered_map<int,double>> min_clear_time; //[main node][enter node]
     int  get_size() const { return size; }
 	int get_new_node_num() const {return size-init_node_num;}
+  int get_init_node_num() const {return init_node_num;}
     void get_map(string FileName);
     bool is_roadmap() const {return map_is_roadmap;}
     bool cell_is_obstacle(int i, int j) const;

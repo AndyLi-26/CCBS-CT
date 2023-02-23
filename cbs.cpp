@@ -247,16 +247,22 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2)
     int exit_index=id2ind(move1.id1, move1.id2,agent);
     return make_pair(Constraint(agent, move1.t1-config.precision, CN_INFINITY, move1.id1, exit_index, move1.id2),false);
   }
+
+  cout<<"start CR"<<endl<<flush;
   double startT,endT;
   if (config.cons_reason){
-  if (move1.id2==move2.id2){
-    Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
-    double dist=sqrt((A-B)*(A-B));
-    double min_clear=map->min_clear_time[move1.id2][move1.id1];
-    endT=move2.t2-(dist-min_clear)+config.precision;
-    startT=move1.t1;
+    if (move2.id2<map->get_init_node_num() && move1.id2==move2.id2){
+      Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
+      double dist=sqrt((A-B)*(A-B));
+      cout<<"3.4333333"<<endl;
+      cout<<"("<<move1.id2<<", "<<move1.id1<<")"<<endl<<flush;
+      double min_clear=map->min_clear_time[move1.id2][move1.id1];
+      cout<<"asdasd sa"<<endl<<flush;
+      endT=move2.t2-(dist-min_clear)+config.precision;
+      startT=move1.t1;
+    }
   }
-  }
+  cout<<"end CR"<<endl<<flush;
   double delta = move2.t2 - move1.t1;
   while(delta > config.precision/2.0)
   {
@@ -374,7 +380,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     //cout<<node.id<<endl;
     auto paths = get_paths(&node, task.get_agents_size());
     if (debug>0){
-    cout<<"###   "<<node.id<<"   #####################################"<<endl;
+      cout<<"###   "<<node.id<<"   #####################################"<<endl;
       cout<<"before conflict"<<endl;
       prt_paths(paths);
     }
@@ -517,7 +523,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     Constraint constraintB;
     pair<Constraint,bool> consBoolPairB;
     if (debug>0){
-     prt_constraints(constraintsB);
+      prt_constraints(constraintsB);
       cout<<"+"<<endl;
     }
     if (config.use_edge_split && !deltasL.empty() && conflict.move2.id1!=conflict.move2.id2){
@@ -568,7 +574,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       cout<<flush;
     }
     sPath pathB;
-    
+
     if (config.use_edge_split && !deltasL.empty()){
       map.alter(deltasL);
       if (debug>1){
@@ -589,7 +595,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       cout<<"new_path:";
       prt_path(pathB);
       cout<<endl<<flush;
-    //assert(false);
+      //assert(false);
     }
 
     assert(!BREAK); 
@@ -607,7 +613,6 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
 
     CBS_Node right({pathA}, parent, constraintA,deltasR, node.cost + pathA.cost - get_cost(node, conflict.agent1), 0, node.total_cons + 1);
     CBS_Node left ({pathB}, parent, constraintB,deltasL, node.cost + pathB.cost - get_cost(node, conflict.agent2), 0, node.total_cons + 1);
-
     Constraint positive;
     bool inserted = false;
     bool left_ok = true, right_ok = true;
@@ -746,7 +751,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       {
         left.h = get_hl_heuristic(left.cardinal_conflicts);
         left.cost += left.h;
-      tree.add_node(left);
+        tree.add_node(left);
         /*
            if (node.cost+node.h-0.1>left.cost+config.precision){
            cout<<endl<<endl<<endl;
@@ -870,20 +875,26 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
   }
   for(auto c: new_conflicts)
   {
+    prt_conflict(c);
+    cout<<flush;
     std::list<Constraint> constraintsA, constraintsB;
     if(path.agentID == c.agent1)
     {
       constraintsA = get_constraints(&node, c.agent1);
+      cout<<"1"<<endl<<flush;
       con_return temp=get_constraint(c.agent1, c.move1, c.move2);
+      cout<<"2"<<endl<<flush;
       constraintsA.push_back(temp.first);
       //cout<<"temp new cons 1";
       //prt_constraint(get_constraint(c.agent1, c.move1, c.move2));
+      cout<<"planA1"<<endl<<flush;
       auto new_pathA = planner.find_path(task.get_agent(c.agent1), map, constraintsA, h_values);
       constraintsB = get_constraints(&node, c.agent2);
       temp=get_constraint(c.agent2, c.move2, c.move1);
       constraintsB.push_back(temp.first);
       //cout<<"temp new cons 2";
       //prt_constraint(get_constraint(c.agent2, c.move2, c.move1));
+      cout<<"planB1"<<endl<<flush;
       auto new_pathB = planner.find_path(task.get_agent(c.agent2), map, constraintsB, h_values);
       double old_cost = get_cost(node, c.agent2);
       //c.path1 = new_pathA;
@@ -918,20 +929,25 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
     else
     {
       constraintsA = get_constraints(&node, c.agent2);
+      cout<<"3"<<endl<<flush;
       con_return temp=get_constraint(c.agent2, c.move2, c.move1);
+      cout<<"3.5"<<endl<<flush;
       constraintsA.push_back(temp.first);
+      cout<<"4"<<endl<<flush;
       //cout<<"temp new cons 3: ";
       //prt_constraint(get_constraint(c.agent2, c.move2, c.move1));
       //cout<<"from move";
       //prt_move(c.move2);
       //prt_move(c.move1);
       //if (c.move2.id1==c.move2.id2 && c.move.id1==2)
+      cout<<"planA2"<<endl<<flush;
       auto new_pathA = planner.find_path(task.get_agent(c.agent2), map, constraintsA, h_values);
       constraintsB = get_constraints(&node, c.agent1);
       temp=get_constraint(c.agent1, c.move1, c.move2);
       constraintsB.push_back(temp.first);
       //cout<<"temp new cons 4";
       //prt_constraint(get_constraint(c.agent1, c.move1, c.move2));
+      cout<<"planB2"<<endl<<flush;
       auto new_pathB = planner.find_path(task.get_agent(c.agent1), map, constraintsB, h_values);
       double old_cost = get_cost(node, c.agent1);
       //c.path1 = new_pathB;
@@ -1103,71 +1119,71 @@ bool CBS::validNewNode(Vector2D node1,Vector2D node2,Vector2D New)
   return true;
 }
 /*
-CBS::node_pair CBS::newNodeMoving(Conflict conflict)
-{
-  int node11=conflict.move1.id1;
-  int node12=conflict.move1.id2;
-  int node21=conflict.move2.id1;
-  int node22=conflict.move2.id2;
-  double i0(map->get_i(node11)),j0(map->get_j(node11));
-  double i1(map->get_i(node12)),j1(map->get_j(node12));
-  double i2(map->get_i(node21)),j2(map->get_j(node21));
-  double i3(map->get_i(node22)),j3(map->get_j(node22));
-  double r(config.agent_size);
+   CBS::node_pair CBS::newNodeMoving(Conflict conflict)
+   {
+   int node11=conflict.move1.id1;
+   int node12=conflict.move1.id2;
+   int node21=conflict.move2.id1;
+   int node22=conflict.move2.id2;
+   double i0(map->get_i(node11)),j0(map->get_j(node11));
+   double i1(map->get_i(node12)),j1(map->get_j(node12));
+   double i2(map->get_i(node21)),j2(map->get_j(node21));
+   double i3(map->get_i(node22)),j3(map->get_j(node22));
+   double r(config.agent_size);
 
-  std::pair<Vector2D, double> retval=findAngle(make_pair(node11,node12),make_pair(node21,node22));
-  Vector2D Q(retval.first);
-  double theta(retval.second);
+   std::pair<Vector2D, double> retval=findAngle(make_pair(node11,node12),make_pair(node21,node22));
+   Vector2D Q(retval.first);
+   double theta(retval.second);
 
-  Vector2D P0(i0,j0),P1(i1,j1),P2(i2,j2),P3(i3,j3);
-  Vector2D temp(P1-P0);
-  Vector2D V0(temp/sqrt(temp*temp)); //define unit dir vec
-  temp= P3-P2;
-  Vector2D V1(temp/sqrt(temp*temp));
-  double d(2.1*r/sin(theta)+config.precision);//define waiting point
-  Vector2D new_node1(Q-V0*d);
-  Vector2D new_node2(Q-V1*d);
-  return make_pair(new_node1,new_node2);
-}
+   Vector2D P0(i0,j0),P1(i1,j1),P2(i2,j2),P3(i3,j3);
+   Vector2D temp(P1-P0);
+   Vector2D V0(temp/sqrt(temp*temp)); //define unit dir vec
+   temp= P3-P2;
+   Vector2D V1(temp/sqrt(temp*temp));
+   double d(2.1*r/sin(theta)+config.precision);//define waiting point
+   Vector2D new_node1(Q-V0*d);
+   Vector2D new_node2(Q-V1*d);
+   return make_pair(new_node1,new_node2);
+   }
 
-std::pair<Vector2D,double> CBS::findAngle(edge e1, edge e2)
-{
-  int node11=e1.first;
-  int node12=e1.second;
-  int node21=e2.first;
-  int node22=e2.second;
-  double i0(map->get_i(node11)),j0(map->get_j(node11));
-  double i1(map->get_i(node12)),j1(map->get_j(node12));
-  double i2(map->get_i(node21)),j2(map->get_j(node21));
-  double i3(map->get_i(node22)),j3(map->get_j(node22));
+   std::pair<Vector2D,double> CBS::findAngle(edge e1, edge e2)
+   {
+   int node11=e1.first;
+   int node12=e1.second;
+   int node21=e2.first;
+   int node22=e2.second;
+   double i0(map->get_i(node11)),j0(map->get_j(node11));
+   double i1(map->get_i(node12)),j1(map->get_j(node12));
+   double i2(map->get_i(node21)),j2(map->get_j(node21));
+   double i3(map->get_i(node22)),j3(map->get_j(node22));
 
-  double a0(j0-j1), b0(i1-i0), c0(i0*j1-i1*j0); //define the line
-  double a1(j2-j3), b1(i3-i2), c1(i2*j3-i3*j2);
-  if (b0==0 && b1==0){ //two vertical line
-    output.close();
-    return;
-  }
-  Vector2D Q((b0*c1-b1*c0)/(a0*b1-a1*b0) , (c0*a1-c1*a0)/(a0*b1-a1*b0)); //define intersection point
-  double m0(-1*a0/b0),m1(-1*a1/b1);
-  double theta;
-  if (abs((m0)-(m1))<config.precision){
-    output.close();
-    return;
-  }
+   double a0(j0-j1), b0(i1-i0), c0(i0*j1-i1*j0); //define the line
+   double a1(j2-j3), b1(i3-i2), c1(i2*j3-i3*j2);
+   if (b0==0 && b1==0){ //two vertical line
+   output.close();
+   return;
+   }
+   Vector2D Q((b0*c1-b1*c0)/(a0*b1-a1*b0) , (c0*a1-c1*a0)/(a0*b1-a1*b0)); //define intersection point
+   double m0(-1*a0/b0),m1(-1*a1/b1);
+   double theta;
+   if (abs((m0)-(m1))<config.precision){
+   output.close();
+   return;
+   }
 
-  if (b0==0){
-    theta=M_PI/2-atan(abs(m1));
-  }
-  else if (b1==0){
-    theta=M_PI/2-atan(abs(m0));
-  }
-  else{
-    theta=atan(abs((m1-m0)/(1+m0*m1)));
-  }
+   if (b0==0){
+   theta=M_PI/2-atan(abs(m1));
+   }
+   else if (b1==0){
+   theta=M_PI/2-atan(abs(m0));
+   }
+   else{
+   theta=atan(abs((m1-m0)/(1+m0*m1)));
+   }
 
-  return make_pair(Q,theta);
-}
-*/
+   return make_pair(Q,theta);
+   }
+   */
 void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &deltasR, Map_deltas &deltasL)
 {
   int node11=conflict.move1.id1;
@@ -1196,7 +1212,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     double t=(-B-sqrt(B*B-4*A*C))/(2*A);
     if (t>-config.precision){
       Vector2D new_node(i0+v.i*t,j0+v.j*t);
-        New=Vector2D(map->fit2grid(new_node.i),map->fit2grid(new_node.j)); 
+      New=Vector2D(map->fit2grid(new_node.i),map->fit2grid(new_node.j)); 
       if (validNewNode(P0,P1,New)){
         new_id=map->add_node(New.i,New.j, node21, node22,conflict.agent2);
         if (new_id!=-1){
@@ -1236,7 +1252,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
         d.set(v*2.1*r/cos(theta)+config.precision);
       }
       Vector2D new_node(P2-d);
-        New=Vector2D(map->fit2grid(new_node.i),map->fit2grid(new_node.j));
+      New=Vector2D(map->fit2grid(new_node.i),map->fit2grid(new_node.j));
       if (validNewNode(ind2Vec(prev_node),ind2Vec(node11),New)){
         new_id=map->add_node(New.i,New.j, prev_node, node11,conflict.agent1);
         if (new_id!=-1) {
@@ -1335,7 +1351,7 @@ void CBS::split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &de
     double a0(j0-j1), b0(i1-i0), c0(i0*j1-i1*j0); //define the line
     double a1(j2-j3), b1(i3-i2), c1(i2*j3-i3*j2);
     if (b0==0 && b1==0){ //two vertical line
-      //output.close();
+                         //output.close();
       return;
     }
     Vector2D Q((b0*c1-b1*c0)/(a0*b1-a1*b0) , (c0*a1-c1*a0)/(a0*b1-a1*b0)); //define intersection point

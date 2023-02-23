@@ -365,7 +365,14 @@ void Map::pre_process()
       }
     min_clear_time.push_back(min_clearV);
   }
- }
+  boost::unordered::unordered_map<int,double>::iterator it;
+  for (int i=0;i<min_clear_time.size();++i)
+  {
+    cout<<i<<": "<<endl;
+    for (it=min_clear_time[i].begin();it!=min_clear_time[i].end();++it)
+        std::cout << it->first <<", " << it->second << std::endl;
+  }
+}
 
 /*
    void Map::get_roadmap(string FileName)
