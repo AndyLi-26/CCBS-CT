@@ -12,7 +12,7 @@ for m=1:3
                 temp=temp(temp(:,6)==cr,:);
                 temp=temp(temp(:,2)==4.5,:);
                 succ=zeros(1,21);
-                for a=5:25
+                for a=[5,10,15,25]
                     aaa=temp(temp(:,1)==a,:);
                     if (size(aaa,1)==0)
                         succ(a-4)=0;

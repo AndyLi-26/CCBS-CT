@@ -336,6 +336,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
     std::list<Node> succs;
     succs.clear();
     find_successors(curNode, map, succs, h_values, Node(goals[0].id, 0, 0, goals[0].i, goals[0].j));
+    cout<<"gets here"<<endl<<flush;
     std::list<Node>::iterator it = succs.begin();
     while(it != succs.end())
     {
@@ -463,11 +464,15 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
       }
       if(goals.empty())
         return Path();
-      //cout<<"starts before plan"<<endl;
-      //prt_nodes(starts);
+      if (config.debug>1){
+        cout<<"starts before plan"<<endl;
+        prt_nodes(starts);
+      }
       parts = find_partial_path(starts, goals, map, h_values, goals.back().interval.second);
-      //cout<<"parts"<<endl;
-      //prt_paths(parts);
+      if (config.debug>1){
+        cout<<"parts"<<endl;
+        prt_paths(parts);
+      }
       expanded += int(close.size());
       new_results.clear();
       if(i == 0)
@@ -489,8 +494,11 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
           }
         }
       results = new_results;
-      //cout<<"results:"<<endl;
-      //prt_paths(results);
+      
+      if (config.debug>1){
+        cout<<"results:"<<endl;
+        prt_paths(results);
+      }
       if(results.empty())
         return Path();
       if(i < landmarks.size())
@@ -504,8 +512,10 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         double offset = sqrt(pow(map.get_i(landmarks[i].id1) - map.get_i(id2), 2) + pow(map.get_j(landmarks[i].id1) - map.get_j(id2), 2));
         goals = get_endpoints(id2, map.get_i(id2), map.get_j(id2), landmarks[i].t1 + offset, landmarks[i].t2 + offset);
 
-      //cout<<"starts:"<<endl;
-        //prt_nodes(starts);
+        if (config.debug>1){
+          cout<<"starts:"<<endl;
+          prt_nodes(starts);
+        }
         if(goals.empty())
           return Path();
         new_results.clear();
@@ -568,14 +578,6 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
   result.agentID = agent.id;
   result.expanded = expanded;
   //Path p=result;
-  /*if (p.agentID==5){
-    std::cout<<"solution:"<<std::endl;
-    std::cout<<p.agentID<<":";
-    for (sNode n:p.nodes){
-    std::cout<<"("<<n.id<<","<<n.g<<")->";
-    }
-    std::cout<<std::endl;
-    }*/
   return result;
 }
 

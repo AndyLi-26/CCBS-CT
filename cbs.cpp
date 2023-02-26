@@ -248,6 +248,9 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2)
     return make_pair(Constraint(agent, move1.t1-config.precision, CN_INFINITY, move1.id1, exit_index, move1.id2),false);
   }
 
+  cout<<"agent:"<<agent<<endl;
+  cout<<"("<<move1.id1<<"-> "<<move1.id2<<")"<<endl<<flush;
+  cout<<"("<<move2.id1<<"-> "<<move2.id2<<")"<<endl<<flush;
   cout<<"start CR"<<endl<<flush;
   double startT,endT;
   if (config.cons_reason){
@@ -255,8 +258,12 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2)
       Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
       double dist=sqrt((A-B)*(A-B));
       cout<<"3.4333333"<<endl;
-      cout<<"("<<move1.id2<<", "<<move1.id1<<")"<<endl<<flush;
-      double min_clear=map->min_clear_time[move1.id2][move1.id1];
+      cout<<map->get_init_node_num()<<endl<<flush;
+      int enter_index=id2ind(move1.id2, move1.id1,agent);
+      
+      cout<<enter_index<<endl<<flush;
+      assert(enter_index!=-2);
+      double min_clear=map->min_clear_time.at(move1.id2).at(enter_index);
       cout<<"asdasd sa"<<endl<<flush;
       endT=move2.t2-(dist-min_clear)+config.precision;
       startT=move1.t1;
@@ -290,7 +297,10 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2)
     move1.t2 = move1.t1 + endTimeA - startTimeA;
   }
   //consider min_clear time for node conflict
+  cout<<"before call id2ind"<<endl<<flush;
+  map->prt_validmoves();
   int exit_index=id2ind(move1.id1, move1.id2,agent);
+  cout<<"after call id2ind"<<endl<<flush;
   if (config.cons_reason){
     if (move1.t1+config.precision>endT)
       return make_pair(Constraint(agent, startTimeA-config.precision, move1.t1+config.precision, move1.id1, exit_index, move1.id2),false);
@@ -306,11 +316,15 @@ int CBS::id2ind(int v1, int v2,int agent)
 {
   std::vector<Node> temp_moves=map->get_valid_moves(v1,agent);
   for (int i=0;i<temp_moves.size();++i){
+    cout<<temp_moves[i].id<<" ";
     if (temp_moves[i].id==v2)
       return i;
   }
   //cout<<"trying get from: "<<v1<<"->"<<v2<<"for a:"<<agent<<endl;
   //map->prt_validmoves();
+  cout<<endl<<flush;
+  printBT_aux();
+  assert(false);
   return -2;
 }
 
@@ -442,23 +456,31 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     Constraint constraintA;
     pair<Constraint,bool> consBoolPairA;
     if (debug>0)
-    {prt_constraints(constraintsA);
+    {
+      prt_constraints(constraintsA);
       cout<<"+"<<endl;
     }
     if (config.use_edge_split)
       gen_new_map(&node);
 
-    if (config.use_edge_split && !deltasR.empty() && conflict.move1.id1!=conflict.move1.id2){
-      if (debug>1){
+    if (config.use_edge_split && !deltasR.empty() && conflict.move1.id1!=conflict.move1.id2)
+    {
+      if (debug>1)
+      {
         cout<<"move1: ";
         prt_move(conflict.move1);
       }
       Move temp_move=modify_move(conflict.move1,(deltasR.begin())->add_node);
-      if (debug>1){
+      if (debug>1)
+      {
         cout<<"new_m: ";
         prt_move(temp_move);
       }
+      map.prt_validmoves();
+      map.alter(deltasR);
+      map.prt_validmoves();
       consBoolPairA = get_constraint(conflict.agent1, temp_move, conflict.move2);
+      map.alter_back(deltasR);
       constraintA=consBoolPairA.first;  
       if (debug>0)
       {
@@ -468,7 +490,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       assert(std::find(constraintsA.begin(),constraintsA.end(),constraintA)==constraintsA.end());
       constraintsA.push_back(constraintA);
     }
-    else{
+    else
+    {
       consBoolPairA=get_constraint(conflict.agent1, conflict.move1, conflict.move2);
       constraintA = consBoolPairA.first; 
       if (debug>0)
@@ -516,7 +539,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     }
     low_level_searches++;
     low_level_expanded += pathA.expanded;
-    //----------------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if (debug>0)
       cout<<"-----------------------------------------"<<endl;
     std::list<Constraint> constraintsB = get_constraints(&node, conflict.agent2);
@@ -536,7 +559,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         cout<<"new_m: ";
         prt_move(temp_move);
       }
+      map.prt_validmoves();
+      map.alter(deltasL);
+      map.prt_validmoves();
       consBoolPairB= get_constraint(conflict.agent2, temp_move, conflict.move1);
+      map.alter_back(deltasL);
       constraintB= consBoolPairB.first;
       if (debug>0)
       {
@@ -705,11 +732,16 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     if(right_ok && pathA.cost > 0 && validate_constraints(constraintsA, pathA.agentID))
     {
       time_now = std::chrono::high_resolution_clock::now();
-
+      cout<<"this should be orginal"<<endl<<flush;
+      map.prt_validmoves();
       if (config.use_edge_split)
         gen_new_map(&right);
+      cout<<"new right"<<endl<<flush;
+      map.prt_validmoves();
+
       //cout<<"modA"<<endl;
       //map.prt_validmoves();
+      cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<endl<<flush;
       find_new_conflicts(map, task, right, paths, pathA, conflicts, semicard_conflicts, cardinal_conflicts, low_level_searches, low_level_expanded);
       if (config.use_edge_split)
         gen_original_map(&right);
@@ -740,6 +772,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         gen_new_map(&left);
       //cout<<"modB"<<endl;
       //map.prt_validmoves();
+      cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"<<endl<<flush;
       find_new_conflicts(map, task, left, paths, pathB, conflicts, semicard_conflicts, cardinal_conflicts, low_level_searches, low_level_expanded);
       if (config.use_edge_split)
         gen_original_map(&left);
@@ -850,6 +883,8 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
 {
   auto oldpath = paths[path.agentID];
   paths[path.agentID] = path;
+  prt_path(path);
+  cout<<"-------------------"<<path.agentID<<endl;
   //cout<<"checking conf###############"<<endl;
   auto new_conflicts = get_all_conflicts(paths, path.agentID);
   paths[path.agentID] = oldpath;
@@ -930,6 +965,8 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
     {
       constraintsA = get_constraints(&node, c.agent2);
       cout<<"3"<<endl<<flush;
+      map.prt_validmoves();
+      prt_path(paths[c.agent2]);
       con_return temp=get_constraint(c.agent2, c.move2, c.move1);
       cout<<"3.5"<<endl<<flush;
       constraintsA.push_back(temp.first);
@@ -949,6 +986,7 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
       //prt_constraint(get_constraint(c.agent1, c.move1, c.move2));
       cout<<"planB2"<<endl<<flush;
       auto new_pathB = planner.find_path(task.get_agent(c.agent1), map, constraintsB, h_values);
+      cout<<"finish B2"<<endl<<flush;
       double old_cost = get_cost(node, c.agent1);
       //c.path1 = new_pathB;
       //c.path2 = new_pathA;
@@ -1429,7 +1467,7 @@ void CBS::prt_move(Move m)
 
 void CBS::prt_constraint(Constraint c)
 {
-  cout<<"Constraint "<< (c.positive ? "positive":"negative")<<" a:"<<c.agent<<" from:"<<c.id1<<"to:"<<c.to_id<<"[t:"<<c.t1<<"~"<<c.t2<<"]"<<endl;
+  cout<<"Constraint "<< (c.positive ? "positive":"negative")<<" a:"<<c.agent<<" from:"<<c.id1<<"to:"<<c.id2<<"("<<c.to_id<<") [t:"<<c.t1<<"~"<<c.t2<<"]"<<endl;
 }
 
 void CBS::prt_constraints(std::list<Constraint> constraints)
@@ -1549,6 +1587,8 @@ void CBS::gen_new_map(CBS_Node *node)
   }
   CBS_Node tempNode;
   while (!infos.empty()){
+    for (auto md:infos.top().deltas)
+      cout<<"("<<md.del_edge.first<<") -- ("<<md.add_node<<") -- ("<<md.del_edge.second<<")"<<endl;
     map->alter(infos.top().deltas);
     infos.pop();
   }

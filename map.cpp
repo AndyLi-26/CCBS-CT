@@ -1,6 +1,6 @@
 #include "map.h"
-Map::Map(Map *m)
-{
+Map::Map(Map *m) 
+{ 
 	grid=m->grid;
 	nodes=m->nodes;
 	height=m->height;
@@ -340,13 +340,13 @@ void Map::pre_process()
   for (int i=0; i<size;++i){
     boost::unordered_map<int,double> min_clearV;
     min_clearV.clear();
-      for (Node enter:valid_moves[i]){
+      for (int j=0;j<valid_moves[i].size();++j){
 
         double min_t(-1);
         for (Node exit:valid_moves[i]){
-          if (enter.id==exit.id) continue;
+          if (valid_moves[i][j].id==exit.id) continue;
           //calc theta
-          Vector2D A(get_coord(i)),B(get_coord(enter.id)),C(get_coord(exit.id));
+          Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
           double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
           double cos_theta((b*b+c*c-a*a)/(2*b*c));
           if (cos_theta==1){ //zero
@@ -361,7 +361,7 @@ void Map::pre_process()
             min_t=t;
           }
         }
-        min_clearV[enter.id]=min_t;
+        min_clearV[j]=min_t;
       }
     min_clear_time.push_back(min_clearV);
   }
@@ -669,19 +669,19 @@ bool Map::cell_is_obstacle(int i, int j) const
 
 std::vector<Node> Map::get_valid_moves(int id,int agent) const
 {
-    std::vector<Node> retval=valid_moves[id];
+  std::vector<Node> retval=valid_moves.at(id);
 	if (agent==-1)
 		return retval;
 	
 	for (int i=0;i<retval.size();++i){
-		if (retval[i].agent.find(-1)==retval[i].agent.end() && retval[i].agent.find(agent)==retval[i].agent.end()){
+		if (retval.at(i).agent.find(-1)==retval.at(i).agent.end() && retval.at(i).agent.find(agent)==retval.at(i).agent.end()){
 		//if (retval[i].agent!=-1 && retval[i].agent!=agent)
 			/*if (valid_moves[retval[i].id].size()!=2){
 				std::cout<<"id: "<<id<<", agent: "<<agent<<", i:"<<i<<std::endl;
 				prt_validmoves();
 				assert(false);
 			}*/
-			if (valid_moves[retval[i].id][0].id==id)
+			if (valid_moves.at(retval[i].id)[0].id==id)
 				retval[i]=valid_moves[retval[i].id][1];
 			else
 				retval[i]=valid_moves[retval[i].id][0];
