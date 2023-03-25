@@ -23,7 +23,8 @@ int main(int argc, const char *argv[])
       ("result_file,o",po::value<std::string>()->default_value(""),"result file")
       ("HI_h,h",po::value<int>()->default_value(0),"HI level heutistic, 0: none, 1:simplex model, 2: count" )
       ("focal_weigth",po::value<float>()->default_value(1.0),"focal weright")
-      ("precision",po::value<float>()->default_value(0.00001),"the precision used in math calculation and number comparison")
+      //("precision",po::value<float>()->default_value(0.00001),"the precision used in math calculation and number comparison")
+      //("resolution",po::value<float>()->default_value(0.01),"the resolution of the nodes on the edge")
       ("debug",po::value<int>()->default_value(0),"debug information")
       ("connectdness",po::value<int>()->default_value(2))
       ("agent_size,a",po::value<float>()->default_value(4.5))
@@ -61,7 +62,12 @@ int main(int argc, const char *argv[])
     config.F_exp=vm["result_file"].as<string>();
     config.hlh_type=vm["HI_h"].as<int>();
     config.focal_weight=vm["focal_weigth"].as<float>();
-    config.precision=vm["precision"].as<float>();
+    //precision=vm["precision"].as<float>();
+    //resolution=vm["resolution"].as<float>();
+    cout<<"agent_size"<<config.agent_size<<endl<<flush;
+    cout<<"precision "<<CN_PRECISION<<"resolution "<<CN_RESOLUTION<<endl<<flush;
+
+
     config.timelimit=vm["timelimit"].as<int>();
     config.debug = vm["debug"].as<int>();
 

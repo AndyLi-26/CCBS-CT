@@ -53,8 +53,8 @@ end
 for i=1:agents
     plot(nodes(tasks(i,2)+1,1),nodes(tasks(i,2)+1,2),'o',MarkerEdgeColor=colors(i,:),MarkerSize=60,LineWidth=8);
 end
-f = getframe(gcf);
-writeVideo(obj,f);
+%f = getframe(gcf);
+%writeVideo(obj,f);
 
 %gen animation
 paths=cell(1,agents);

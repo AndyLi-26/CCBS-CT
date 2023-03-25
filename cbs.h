@@ -14,7 +14,7 @@
 
 class CBS
 {
-public:
+  public:
     CBS() {}
     Solution find_solution(Map &map, const Task &task, const Config &cfg);
     bool init_root(Map &map, const Task &task);
@@ -26,50 +26,54 @@ public:
     bool check_conflict(Move move1, Move move2);
     double get_hl_heuristic(const std::list<Conflict> &conflicts);
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
-typedef std::pair<Constraint,bool> con_return;
-    con_return get_constraint(int agent, Move move1, Move move2);
-    Constraint get_wait_constraint(int agent, Move move1, Move move2);
+    typedef std::pair<std::list<Constraint>,bool> con_return;
+    con_return get_constraint(int agent, Move move1, Move move2, CBS_Node *node);
+    CBS::con_return get_wait_constraint(int agent, Move move1, Move move2);
     void find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::vector<sPath> &paths, const sPath &path,
-                            const std::list<Conflict> &conflicts, const std::list<Conflict> &semicard_conflicts, const std::list<Conflict> &cardinal_conflicts,
-                            int &low_level_searches, int &low_level_expanded);
+        const std::list<Conflict> &conflicts, const std::list<Conflict> &semicard_conflicts, const std::list<Conflict> &cardinal_conflicts,
+        int &low_level_searches, int &low_level_expanded);
     double get_cost(CBS_Node node, int agent_id);
     std::vector<sPath> get_paths(CBS_Node *node, unsigned int agents_size);
     Conflict get_conflict(std::list<Conflict> &conflicts);
-	Move modify_move(Move move,int new_id);
-	bool validNewNode(Vector2D X1,Vector2D X2,Vector2D New);
-	//typedef std::pair<Map_delta,Map_delta> Map_delta_pair;
-  typedef std::pair<Vector2D,Vector2D> node_pair;
-  typedef std::pair<int,int> edge;
-  
-  //std::pair<Vector2D,double> findAngle(edge e1, edge e2);
-	void split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &deltasR, Map_deltas &deltasL);
-  //node_pair newNodeMoving(Conflict conflict);
-	Constraint get_split_constraint(int agent, Move move1, Move move2);
-	void gen_new_map(CBS_Node *node);
-	void gen_original_map(CBS_Node *node);
-	int id2ind(int v1, int v2, int agent);
-	void prt_move(Move m1);
-	void prt_constraint(Constraint c);
-	void prt_constraints(std::list<Constraint> constraints);
-	void prt_conflict(Conflict conflict);
-	void prt_conflicts(list<Conflict> conflicts);
-	void prt_path(sPath p);
-	void prt_paths(std::vector<sPath> paths);
-	void prt_map_deltas(Map_deltas R,Map_deltas L);
-	void saveCT(const string &fileName,CBS_Node *goal_node,unsigned int agent_num);
-  void printBT_aux();
-  void printBT(const string& prefix, const int node_id, bool isLeft);
-	Vector2D ind2Vec(int nodeId);
+    Move find_sub_conflict(Move m1,Move m2,CBS_Node *node);
+    Move split_conf_move(Move m1,Move m2, CBS_Node *node);
+    Conflict modify_conflict(Conflict conflict,CBS_Node *node);
+    Move modify_move(Move move,int new_id);
+    bool validNewNode(Vector2D X1,Vector2D X2,Vector2D New);
+    //typedef std::pair<Map_delta,Map_delta> Map_delta_pair;
+    typedef std::pair<Vector2D,Vector2D> node_pair;
+    typedef std::pair<int,int> edge;
+
+    //std::pair<Vector2D,double> findAngle(edge e1, edge e2);
+    void split_edge(Conflict conflict, std::vector<sPath> paths, Map_deltas &deltasR, Map_deltas &deltasL);
+    //node_pair newNodeMoving(Conflict conflict);
+    Constraint get_split_constraint(int agent, Move move1, Move move2);
+    void gen_new_map(CBS_Node *node);
+    void gen_original_map(CBS_Node *node);
+    int id2ind(int v1, int v2, int agent);
+    void prt_move(Move m1);
+    void prt_constraint(Constraint c);
+    void prt_constraints(std::list<Constraint> constraints);
+    void prt_conflict(Conflict conflict);
+    void prt_conflicts(list<Conflict> conflicts);
+    void prt_path(sPath p);
+    void prt_paths(std::vector<sPath> paths);
+    void prt_map_deltas(Map_deltas R,Map_deltas L);
+    void prt_map_deltas_aux(Map_deltas md);
+    void saveCT(const string &fileName,CBS_Node *goal_node,unsigned int agent_num);
+    void printBT_aux();
+    void printBT(const string& prefix, const int node_id, bool isLeft);
+    Vector2D ind2Vec(int nodeId);
     CBS_Tree tree;
     SIPP planner;
     Solution solution;
     Heuristic h_values;
     Config config;
     Map* map;
-	Map* original;
+    Map* original;
     typedef boost::unordered_map<int,CBS_Node_aux*> tree_aux;
     tree_aux tree_info;
-    
+
 };
 
 #endif // CBS_H

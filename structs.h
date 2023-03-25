@@ -17,7 +17,6 @@
 using boost::multi_index_container;
 using namespace boost::multi_index;
 using namespace std;
-
 struct Agent
 {
     double start_i, start_j, goal_i, goal_j;
@@ -31,7 +30,8 @@ struct Agent
 struct Config
 {
   Config() {};
-  double  precision;
+  //double  CN_PRECISION;
+  //double resolution;
   double  focal_weight;
   bool    use_cardinal;
   bool    use_disjoint_splitting;
@@ -53,13 +53,13 @@ struct Node
 {
     int     id;
     double  f, g, i, j;
-	std::set<int> agent;  //visible to some agent, -1 is everyone
+	  //int agent;  //visible to some agent, -1 is everyone
 	//std::vector<int> negtive_list;
     Node*   parent;
     std::pair<double, double> interval;
     int interval_id;
     Node(int _id = -1, double _f = -1, double _g = -1, double _i = -1, double _j = -1, Node* _parent = nullptr, double begin = -1, double end = -1)
-        :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)) {interval_id = 0;agent.insert(-1);}
+        :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)) {interval_id = 0;}
     bool operator <(const Node& other) const //required for heuristic calculation
     {
         return this->g < other.g;
@@ -93,7 +93,7 @@ struct gNode
 {
     double i;
     double j;
-	std::set<int> agent; //visible to some agent, -1 is everyone
+	  //int agent; //visible to some agent, -1 is everyone
     std::vector<int> neighbors;
     gNode(double i_ = -1, double j_ = -1):i(i_), j(j_){}
 	
@@ -200,7 +200,7 @@ struct Constraint
     }
     bool operator ==(const Constraint& other) const
     {
-        return agent==other.agent && id1==other.id1 && id2==other.id2 && abs(t1-other.t1)<=CN_PRECISION && abs(t2-other.t2)<=CN_PRECISION && positive==other.positive;
+        return agent==other.agent && id1==other.id1 && id2==other.id2 && abs(t1-other.t1)<=0.000001 && abs(t2-other.t2)<=0.000001 && positive==other.positive;
     }
 };
 
@@ -215,6 +215,14 @@ struct Move
     Move(const Constraint& con) : t1(con.t1), t2(con.t2), id1(con.id1), id2(con.id2) {}
     Move(Node a, Node b) : t1(a.g), t2(b.g), id1(a.id), id2(b.id) {}
     Move(sNode a, sNode b): t1(a.g), t2(b.g), id1(a.id), id2(b.id) {}
+    Move operator = (const Move m)
+    {
+      t1=m.t1;
+      t2=m.t2;
+      id1=m.id1;
+      id2=m.id2;
+      return *this;
+    }
     bool operator <(const Move& other) const
     {
         if     (id1 < other.id1) return true;
@@ -274,7 +282,7 @@ struct CBS_Node
   std::vector<sPath> paths;
   std::vector<Path> SIPP_Paths;
   CBS_Node* parent;
-  Constraint constraint;
+  std::list<Constraint> constraint;
   Constraint positive_constraint;
   int id;
   std::string id_str;
@@ -288,7 +296,7 @@ struct CBS_Node
   std::list<Conflict> conflicts;
   std::list<Conflict> semicard_conflicts;
   std::list<Conflict> cardinal_conflicts;
-  CBS_Node(std::vector<sPath> _paths = {}, CBS_Node* _parent = nullptr, Constraint _constraint = Constraint(),Map_deltas _deltas={}, double _cost = 0, int _conflicts_num = 0, int total_cons_ = 0)
+  CBS_Node(std::vector<sPath> _paths = {}, CBS_Node* _parent = nullptr, std::list<Constraint> _constraint = {},Map_deltas _deltas={}, double _cost = 0, int _conflicts_num = 0, int total_cons_ = 0)
     :paths(_paths), parent(_parent), constraint(_constraint), deltas(_deltas), cost(_cost), conflicts_num(_conflicts_num), total_cons(total_cons_)
     {
       low_level_expanded = 0;
@@ -317,7 +325,7 @@ struct CBS_Node_aux
   int cost;
 
   Conflict cur_conflict;
-  Constraint constraint;
+  std::list<Constraint> constraint;
 
   CBS_Node_aux(CBS_Node node):id(node.id),id_parent(node.parent != nullptr? node.parent->id : -1), cost(node.cost),cur_conflict(node.cur_conflict), constraint(node.constraint),id_left(-1),id_right(-1),path(node.paths[0]) {};
 
@@ -447,7 +455,7 @@ public:
             focal.get<0>().erase(focal.get<0>().begin());
             auto pointer = min->tree_pointer;
             container.get<1>().erase(min);
-            if(container.get<0>().begin()->cost > cost + CN_EPSILON)
+            if(container.get<0>().begin()->cost > cost + CN_PRECISION)
                 update_focal(cost);
             return pointer;
         }
@@ -462,7 +470,7 @@ public:
     void update_focal(double cost)
     {
         auto it0 = container.get<0>().begin();
-        auto it1 = container.get<0>().upper_bound(cost*focal_weight + CN_EPSILON);
+        auto it1 = container.get<0>().upper_bound(cost*focal_weight + CN_PRECISION);
         for(auto it = it0; it != it1; it++)
             focal.insert(Focal_Elem(it->id, it->conflicts_num, it->cons_num, it->cost));
     }

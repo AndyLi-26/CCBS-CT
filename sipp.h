@@ -4,6 +4,7 @@
 #include "map.h"
 //#include "config.h"
 #include "heuristic.h"
+#include "const.h"
 #include <unordered_map>
 #include <map>
 #include <set>
