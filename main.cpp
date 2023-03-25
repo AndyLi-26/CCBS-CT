@@ -32,8 +32,9 @@ int main(int argc, const char *argv[])
       ("timelimit",po::value<int>()->default_value(30))
       ("Cardinal","use cardinal for choose conflict")
       ("DS","use Disjoint_splitting")
-      ("cons_reason","use minimum clearance time reasoning")
+      ("CR","use minimum clearance time reasoning")
       ("ES","use edge split")
+      ("TR","use target reasoning")
       ("extra_info",po::value<int>()->default_value(-1),"task index");
       
     po::variables_map temp;
@@ -75,6 +76,7 @@ int main(int argc, const char *argv[])
     bool DS=vm.count("DS");
     bool ES=vm.count("ES");
     bool CR=vm.count("cons_reason");
+    bool TR=vm.count("TR");
     config.use_cardinal=card;
     config.use_disjoint_splitting=DS;
     config.use_edge_split=ES;

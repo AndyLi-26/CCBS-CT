@@ -36,6 +36,7 @@ struct Config
   bool    use_cardinal;
   bool    use_disjoint_splitting;
   bool    use_edge_split;
+  bool    TR;//target reasoning sym breaking
   bool    cons_reason;
   int     hlh_type;
   int     connectdness;

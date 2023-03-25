@@ -58,6 +58,7 @@ void logger::write_exp_result(int task_ind)
     <<solution.init_cost<<","
     <<solution.flowtime<<","
     <<solution.makespan<<","
+    <<solution.high_level_expanded<<","
     <<solution.new_node<<","
     <<endl;
 
