@@ -43,14 +43,14 @@ int main(int argc, const char *argv[])
 
     config.agent_size = vm["agent_size"].as<float>();
     config.connectdness = vm["connectdness"].as<int>();
-    string fmap=vm["map"].as<string>();
+    const string& fmap=vm["map"].as<string>();
     Map map = Map(config.agent_size,  config.connectdness);
     map.get_map(fmap);
     cout<<"read map success"<<endl;
     map.pre_process();
     
     config.agent_num=vm["agent_num"].as<int>();
-    string ftask=vm["tasks"].as<string>();
+    const string& ftask=vm["tasks"].as<string>();
     Task task(config.agent_num,fmap[fmap.size()-1]=='d');
     task.get_task(ftask);
     if(map.is_roadmap())
@@ -75,7 +75,7 @@ int main(int argc, const char *argv[])
     bool card=vm.count("Cardinal");
     bool DS=vm.count("DS");
     bool ES=vm.count("ES");
-    bool CR=vm.count("cons_reason");
+    bool CR=vm.count("CR");
     bool TR=vm.count("TR");
     config.use_cardinal=card;
     config.use_disjoint_splitting=DS;

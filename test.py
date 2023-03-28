@@ -10,7 +10,7 @@ try:
     print("removed successfully")
 except OSError as e:
     print("{e}")
-for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
+for m in [1,2,"3a","3b","4a","4b",5,7,8,9,10,12]:
 #for m in [2]:
     for ES in [False]:#,True]:
         for cr in [False,True]:
@@ -18,7 +18,6 @@ for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
                 cmd=[exe,"-m",map_address.format(m),
                      "-t",task_address.format(m),
                     "--HI_h","0","precision","0.00001",
-                     "--debug","0",
                      "-o", output_address,
                      "-a",str(4.5),
                      "--agent_num",str(10),

@@ -381,6 +381,7 @@ void Map::pre_process()
     min_clear_time.push_back(min_clearV);
   }
   //boost::unordered::unordered_map<int,double>::iterator it;
+  /*
   for (int i=0;i<min_clear_time.size();++i)
   {
     cout<<i<<": "<<endl;
@@ -390,6 +391,7 @@ void Map::pre_process()
       cout<<j<<", ";
     cout<<endl;
   }
+  */
 }
 
 /*
