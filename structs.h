@@ -201,7 +201,7 @@ struct Constraint
     }
     bool operator ==(const Constraint& other) const
     {
-        return agent==other.agent && id1==other.id1 && id2==other.id2 && abs(t1-other.t1)<=0.000001 && abs(t2-other.t2)<=0.000001 && positive==other.positive;
+        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2 && abs(t1-other.t1)<=CN_PRECISION && abs(t2-other.t2)<=CN_PRECISION && positive==other.positive;
     }
 };
 

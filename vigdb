@@ -1,0 +1,30 @@
+#!/opt/homebrew/bin/python3
+import sys
+import os
+import json
+
+def main(argv):
+    cwd = os.getcwd()
+    args = ", ".join(["\"%s\"" % i for i in argv[1:]])
+    conf = """{
+  "configurations": {
+    "Launch": {
+      "adapter": "vscode-cpptools",
+      "configuration": {
+        "request": "launch",
+        "program": "%s",
+        "args": [%s],
+        "cwd": "%s",
+        "externalConsole": false,
+        "MIMode": "lldb"
+      }
+    }
+  }
+}
+    """ % (argv[0], args, cwd)
+    fpath = "%s/.vimspector.json" % cwd
+    with open(fpath, "w") as f:
+        f.write(conf)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

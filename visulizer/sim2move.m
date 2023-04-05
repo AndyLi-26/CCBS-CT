@@ -1,10 +1,10 @@
 clc;clear all; close all;
 global resolution
-pos11=[96.9881,165.795];
-pos12=[153.478, 157.941];
-pos21=[94,175.1];
-pos22=[100.3,173.3];
-t1=99.9188;t2=99.9307;
+pos11=[172.517,133.363];
+pos12=[165.245,178.969];
+pos21=[165.245,178.969];
+pos22=[165.245,178.969];
+%t1=99.9188;t2=99.9307;
 agent_size=4.5;
 resolution =0.01;
 
@@ -14,23 +14,25 @@ resolution =0.01;
 %minx=min([pos11(1),pos12(1),pos21(1),pos22(1)]);
 %miny=min([pos11(2),pos12(2),pos21(2),pos22(2)]);
 figure();
-xlim([85,120]);
-ylim([145,180]);
+xlim([140,200]);
+ylim([125,185]);
 %xlim([minx-0.5*temprang,minx+rang]);ylim([miny-0.5*temprang,miny+rang]);
 
-base=min(t1,t2);
-t1=t1-base;t2=t2-base;
+%base=min(t1,t2);
+%t1=t1-base;t2=t2-base;
 d1=norm(pos11-pos12);d2=norm(pos21-pos22);
-info1=[0,0,0,0,t1+d1;pos11,pos11,t1;
-    pos11,pos12,d1];
-
-info2=[0,0,0,0,t2+d2;pos21,pos21,t2;
-    pos21,pos22,d2];
+%info1=[0,0,0,0,t1+d1;pos11,pos11,t1;
+%    pos11,pos12,d1];
+info1=[0,0,0,0,d1;pos11,pos12,d1];
+%info2=[0,0,0,0,t2+d2;pos21,pos21,t2;
+%    pos21,pos22,d2];
 M1=genPathMatrix(info1);
-M2=genPathMatrix(info2);
+%M2=genPathMatrix(info2);
 colors=[1,0,0;0,0,1];
 plots =plot([],[]);agentNum =plot([],[]);
-for t=1:max(t1+d1,t2+d2)/resolution
+circle(pos21(1),pos21(2),agent_size,colors(2,:));
+text(pos21(1),pos21(2),"1",'Color',[1,1,1]-colors(2,:),'FontSize',22,'FontWeight','bold');
+for t=1:(1+d1)/resolution
     title(sprintf("t=%.1f",t*resolution))
     delete(plots);delete(agentNum);
     plots=[];agentNum=[];
@@ -48,21 +50,22 @@ for t=1:max(t1+d1,t2+d2)/resolution
     end
 
 
-    p=M2;
-    t;
-    if size(p,1)>t
-        p2=[p(t,1),p(t,2)];
-        plots=[plots;circle(p(t,1),p(t,2),agent_size,colors(2,:))];
-        agentNum=[agentNum,text(p(t,1),p(t,2),"1",'Color',[1,1,1]-colors(2,:),'FontSize',22,'FontWeight','bold')];
-    else
-        p2=[p(end,1),p(end,2)];
-        plots=[plots;circle(p(end,1),p(end,2),agent_size,colors(2,:))];
-        agentNum=[agentNum,text(p(end,1),p(end,2),"1",'Color',[1,1,1]-colors(2,:),'FontSize',22,'FontWeight','bold')];
-    end
+%     p=M2;
+%     t;
+%     if size(p,1)>t
+%         p2=[p(t,1),p(t,2)];
+%         plots=[plots;circle(p(t,1),p(t,2),agent_size,colors(2,:))];
+%         agentNum=[agentNum,text(p(t,1),p(t,2),"1",'Color',[1,1,1]-colors(2,:),'FontSize',22,'FontWeight','bold')];
+%     else
+%         p2=[p(end,1),p(end,2)];
+%         plots=[plots;circle(p(end,1),p(end,2),agent_size,colors(2,:))];
+%         agentNum=[agentNum,text(p(end,1),p(end,2),"1",'Color',[1,1,1]-colors(2,:),'FontSize',22,'FontWeight','bold')];
+%     end
     
-    title(sprintf("t=%.1f,dis=%.3f",t*resolution,norm(p1-p2)-2*agent_size))
+%    title(sprintf("t=%.1f,dis=%.3f",t*resolution,norm(p1-p2)-2*agent_size))
+    p2=pos21;
     if (norm(p1-p2)-2*agent_size)<0
-        t*resolution+base
+        t*resolution
     end
     drawnow;
     grid off;

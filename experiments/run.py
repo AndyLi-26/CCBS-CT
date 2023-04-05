@@ -11,7 +11,7 @@ for a_size in [4.5]:#[0.5,1.5,2.5,3.5,4.5]:
             for cr in [False,True]:
                 for ds in [False,True]:
                     for a in range(5,6):#(5,26):
-                        for i in [19]:#range(1,26):
+                        for i in range(1,26):
                             cmd=[exe,"-m",map_address.format(m),
                                  "-t",task_address.format(m,i),
                                 "--HI_h","0","precision","0.00001",

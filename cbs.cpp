@@ -5,8 +5,10 @@ bool CBS::init_root(Map &map, const Task &task)
   CBS_Node root;
   tree.set_focal_weight(config.focal_weight);
   sPath path;
+  cout<<"size: "<<task.get_agents_size()<<endl<<flush;
   for(int i = 0; i < int(task.get_agents_size()); i++)
   {
+    cout<<"i:"<<i<<endl<<flush;
     Agent agent = task.get_agent(i);
     path = planner.find_path(agent, map, {}, h_values);
     if(path.cost < 0)
@@ -20,8 +22,9 @@ bool CBS::init_root(Map &map, const Task &task)
   root.id_str = "1";
   auto conflicts = get_all_conflicts(root.paths, -1);
   root.conflicts_num = conflicts.size();
-  //cout<<"init_path"<<endl;
-  //prt_paths(root.paths);
+  cout<<"init_path"<<endl;
+  prt_paths(root.paths);
+  
   for(auto conflict: conflicts)
     if(!config.use_cardinal)
       root.conflicts.push_back(conflict);
@@ -73,6 +76,7 @@ bool CBS::check_conflict(Move move1, Move move2)
   double r(2*config.agent_size);
   Vector2D w(B - A);
   double c(w*w - r*r);
+  cout<<"c: "<<c<<endl;
   if(c < 0)
     return true;
 
@@ -80,10 +84,13 @@ bool CBS::check_conflict(Move move1, Move move2)
   double a(v*v);
   double b(w*v);
   double dscr(b*b - a*c);
-  if(dscr - CN_PRECISION < 0)
+  cout<<"dscr: "<<dscr<<endl;
+  if(dscr - CN_EPSILON < 0)
     return false;
   double ctime = (b - sqrt(dscr))/a;
-  if(ctime > -100* CN_PRECISION  && ctime < std::min(endTimeB,endTimeA) - startTimeA + 100* CN_PRECISION )
+  cout<<"ctime: "<<ctime<<endl;
+  cout<<"std::min(endTimeB,endTimeA) - startTimeA: "<<(std::min(endTimeB,endTimeA) - startTimeA)<<endl;
+  if(ctime >  CN_EPSILON  && ctime < std::min(endTimeB,endTimeA) - startTimeA +  CN_EPSILON )
     return true;
   return false;
 }
@@ -136,56 +143,96 @@ return Constraint(agent, interval.first, interval.second, move1.id1, -1,move1.id
 //original version
 CBS::con_return CBS::get_wait_constraint(int agent, Move move1, Move move2)
 {
+  prt_move(move1);
+  prt_move(move2);
+  cout<<"collising: "<< check_conflict(move1,move2);
   double radius = 2*config.agent_size;
-  double i0(map->get_i(move2.id1)), j0(map->get_j(move2.id1)), i1(map->get_i(move2.id2)), j1(map->get_j(move2.id2)), i2(map->get_i(move1.id1)), j2(map->get_j(move1.id1));
-  std::pair<double,double> interval;
-  Point point(i2,j2), p0(i0,j0), p1(i1,j1);
-  int cls = point.classify(p0, p1);
-  double dist = fabs((i0 - i1)*j2 + (j1 - j0)*i2 + (j0*i1 - i0*j1))/sqrt(pow(i0 - i1, 2) + pow(j0 - j1, 2));
-  double da = (i0 - i2)*(i0 - i2) + (j0 - j2)*(j0 - j2);
-  double db = (i1 - i2)*(i1 - i2) + (j1 - j2)*(j1 - j2);
-  double ha = sqrt(da - dist*dist);
-  double size = sqrt(radius*radius - dist*dist);
-  if(cls == 3)
-  {
-    interval.first = move2.t1;
-    interval.second = move2.t1 + (sqrt(radius*radius - dist*dist) - ha);
-  }
-  else if(cls == 4)
-  {
-    interval.first = move2.t2 - sqrt(radius*radius - dist*dist) + sqrt(db - dist*dist);
-    interval.second = move2.t2;
-  }
-  else if(da < radius*radius)
-  {
-    if(db < radius*radius)
-    {
-      interval.first = move2.t1;
-      interval.second = move2.t2;
-    }
-    else
-    {
-      double hb = sqrt(db - dist*dist);
-      interval.first = move2.t1;
-      interval.second = move2.t2 - hb + size;
-    }
-  }
-  else
-  {
-    if(db < radius*radius)
-    {
-      interval.first = move2.t1 + ha - size;
-      interval.second = move2.t2;
-    }
-    else
-    {
-      interval.first = move2.t1 + ha - size;
-      interval.second = move2.t1 + ha + size;
-    }
-  }
-
   list<Constraint> constraint(0);
-  Constraint waitCon(agent, interval.first-CN_PRECISION, interval.second+CN_PRECISION, move1.id1, -1,move1.id2);
+  Constraint waitCon;
+  std::pair<double,double> interval;
+  if (move1.id1==move2.id2)
+  {
+    interval.second=move2.t2;
+    if (move2.t2-radius-CN_EPSILON>0)
+      interval.first=move2.t2-radius;
+    else
+      interval.first=CN_PRECISION;
+    assert(interval.first<interval.second+CN_PRECISION);
+
+    waitCon=Constraint(agent,interval.first-CN_PRECISION,interval.second+CN_PRECISION,move1.id1,-1,move1.id2);
+  }
+  else if ((move1.t2-move1.t1-CN_PRECISION)<radius)
+  {
+    interval.first=move1.t1;
+    interval.second=move1.t2;
+    /*
+    if (move1.t1-radius-CN_PRECISION>0)
+      interval.first=move1.t1-radius;
+    else
+      interval.first=CN_PRECISION;
+    */
+    waitCon=Constraint(agent,interval.first-CN_PRECISION,interval.second+CN_PRECISION,move1.id1,-1,move1.id2);
+  }
+  else{
+    double i0(map->get_i(move2.id1)), j0(map->get_j(move2.id1)), i1(map->get_i(move2.id2)), j1(map->get_j(move2.id2)), i2(map->get_i(move1.id1)), j2(map->get_j(move1.id1));
+    Point point(i2,j2), p0(i0,j0), p1(i1,j1);
+    int cls = point.classify(p0, p1);
+    cout<<"cls "<<cls<<endl;
+    double dist = fabs((i0 - i1)*j2 + (j1 - j0)*i2 + (j0*i1 - i0*j1))/sqrt(pow(i0 - i1, 2) + pow(j0 - j1, 2));
+    cout<<"dist: "<<dist<<endl;
+    double da = (i0 - i2)*(i0 - i2) + (j0 - j2)*(j0 - j2);
+    double db = (i1 - i2)*(i1 - i2) + (j1 - j2)*(j1 - j2);
+    double ha = sqrt(da - dist*dist);
+    cout<<"da: "<<da<<" db:"<<db<<" ha:"<<ha<<endl;
+    double size = sqrt(radius*radius - dist*dist);
+    cout<<"size: "<<size<<endl;
+    cout<<"rad*rad: "<< (radius*radius) <<endl;
+    if(cls == 3)
+    {
+      cout<<"3"<<endl;
+      interval.first = move2.t1;
+      interval.second = move2.t1 + (sqrt(radius*radius - dist*dist) - ha);
+    }
+    else if(cls == 4)
+    {
+      cout<<"4"<<endl;
+      interval.first = move2.t2 - sqrt(radius*radius - dist*dist) + sqrt(db - dist*dist);
+      interval.second = move2.t2;
+    }
+    else if(da < radius*radius)
+    {
+      if(db < radius*radius)
+      {
+      cout<<"5a"<<endl;
+        interval.first = move2.t1;
+        interval.second = move2.t2;
+      }
+      else
+      {
+      cout<<"5b"<<endl;
+        double hb = sqrt(db - dist*dist);
+        interval.first = move2.t1;
+        interval.second = move2.t2 - hb + size;
+      }
+    }
+    else
+    {
+      if(db < radius*radius)
+      {
+      cout<<"6a"<<endl;
+        interval.first = move2.t1 + ha - size;
+        interval.second = move2.t2;
+      }
+      else
+      {
+      cout<<"6b"<<endl;
+        interval.first = move2.t1 + ha - size;
+        interval.second = move2.t1 + ha + size;
+      }
+    }
+
+    waitCon=Constraint(agent, interval.first-CN_PRECISION, interval.second+CN_PRECISION, move1.id1, -1,move1.id2);
+  }
   constraint.push_back(waitCon);
   if (config.cons_reason)
   {
@@ -194,7 +241,7 @@ CBS::con_return CBS::get_wait_constraint(int agent, Move move1, Move move2)
       vector<Node> nodes=map->get_valid_moves(move1.id1);
       for (Node n :nodes){
         Vector2D toNode(map->get_coord(move1.id1)),fromNode(map->get_coord(n.id));
-          Vector2D temp(toNode-fromNode);
+        Vector2D temp(toNode-fromNode);
         double dis=sqrt(temp*temp);
         int enter_index=id2ind(move1.id1,n.id,agent);
         assert(enter_index!=-2);
@@ -299,9 +346,9 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2, CBS_Node 
       if (min_clear>0)
       {
         if (dist>min_clear)
-          endT=move2.t2-(dist-min_clear)+CN_PRECISION;
+          endT=move2.t2-(dist-min_clear);
         else
-          endT=move2.t2+min_clear+(min_clear-dist)+CN_PRECISION;
+          endT=move2.t2+min_clear+(min_clear-dist);
         startT=move1.t1;
       }
     }
@@ -356,7 +403,7 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2, CBS_Node 
     else
     {
       list<Constraint> c(0);
-      Constraint cons(agent, startT, endT,move1.id1, exit_index, move1.id2);
+      Constraint cons(agent, startT-CN_PRECISION, endT+CN_PRECISION,move1.id1, exit_index, move1.id2);
       c.push_back(cons);
       return make_pair(c,true);
     }
@@ -573,7 +620,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
 
     auto paths = get_paths(&node, task.get_agents_size());
     if (debug>0){
-      cout<<"###   "<<node.id<<"   #####################################"<<endl;
+      cout<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
       cout<<"before conflict"<<endl;
       prt_paths(paths);
     }
@@ -709,9 +756,10 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       }
     }
     else{
+      cout<<"start planning"<<endl;
       pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values);
     }
-    if (debug>1){
+    if (debug>0){
       cout<<"new_path:";
       prt_path(pathA);
       cout<<endl;
