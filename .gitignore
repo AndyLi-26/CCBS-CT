@@ -2,3 +2,6 @@
 ./debug
 ./visulizer/*.mp4
 debug/
+release/
+./release/*
+./release
