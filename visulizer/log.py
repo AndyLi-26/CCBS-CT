@@ -26,8 +26,19 @@ def parserP(i,info):
     #with open("paths/{}.csv".format(i),'w'):
     
 if __name__=="__main__":
-    with open(sys.argv[1],'r') as f:
-        s=f.read().strip()
+    with open("paths.txt") as f:
+        paths=[]
+        path=[]
+        for l in f:
+            info=list(map(float,l.strip().split(",")))
+            if len(info)==2:
+                paths.append(path)
+
+
+
+
+
+
     s=remove_rubbish(s)
     all=list(map(lambda x:x.strip(),s.split("<log>")))
     #tasks

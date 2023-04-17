@@ -30,7 +30,7 @@ struct Agent
 struct Config
 {
   Config() {};
-  //double  CN_PRECISION;
+  //double  CN_EPSILON;
   //double resolution;
   double  focal_weight;
   bool    use_cardinal;
@@ -72,8 +72,8 @@ struct Node
 
 			return (s1 == s2) || (s1 && s2 &&
 				s1->id == s2->id) || (s1 && s2 &&
-				abs(s1->i - s2->i)<CN_PRECISION && 
-				abs(s1->j - s2->j)<CN_PRECISION);
+				abs(s1->i - s2->i)<CN_EPSILON && 
+				abs(s1->j - s2->j)<CN_EPSILON);
 		}
 	};
 
@@ -201,7 +201,7 @@ struct Constraint
     }
     bool operator ==(const Constraint& other) const
     {
-        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2 && abs(t1-other.t1)<=CN_PRECISION && abs(t2-other.t2)<=CN_PRECISION && positive==other.positive;
+        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2 && abs(t1-other.t1)<=CN_EPSILON && abs(t2-other.t2)<=CN_EPSILON && positive==other.positive;
     }
 };
 
@@ -456,7 +456,7 @@ public:
             focal.get<0>().erase(focal.get<0>().begin());
             auto pointer = min->tree_pointer;
             container.get<1>().erase(min);
-            if(container.get<0>().begin()->cost > cost + CN_PRECISION)
+            if(container.get<0>().begin()->cost > cost + CN_EPSILON)
                 update_focal(cost);
             return pointer;
         }
@@ -471,7 +471,7 @@ public:
     void update_focal(double cost)
     {
         auto it0 = container.get<0>().begin();
-        auto it1 = container.get<0>().upper_bound(cost*focal_weight + CN_PRECISION);
+        auto it1 = container.get<0>().upper_bound(cost*focal_weight + CN_EPSILON);
         for(auto it = it0; it != it1; it++)
             focal.insert(Focal_Elem(it->id, it->conflicts_num, it->cons_num, it->cost));
     }
@@ -532,6 +532,10 @@ class Vector2D {
     inline double operator *(const Vector2D &vec){ return i*vec.i + j*vec.j; }
     inline void operator +=(const Vector2D &vec) { i += vec.i; j += vec.j; }
     inline void operator -=(const Vector2D &vec) { i -= vec.i; j -= vec.j; }
+    bool operator == (const Vector2D v) const
+    {
+      return abs(v.i-i)<=CN_EPSILON && abs(v.j-j)<=CN_EPSILON;
+    }
     friend std::ostream& operator << (std::ostream& os, const Vector2D v){
       os<<"("<<v.i<<","<<v.j<<")";
       return os;
@@ -545,28 +549,28 @@ public:
 
     Point(double _i = 0.0, double _j = 0.0):i (_i), j (_j){}
     Point operator-(Point &p){return Point(i - p.i, j - p.j);}
-    int operator== (Point &p){return (i == p.i) && (j == p.j);}
+    int operator== (Point &p){return (abs(i -p.i)<=CN_EPSILON) && (abs(j - p.j)<=CN_EPSILON);}
     int classify(Point &pO, Point &p1)
     {
-        Point p2 = *this;
-		if (pO == p2)
-            return 5;//ORIGIN;
-        if (p1 == p2)
-            return 6;//DESTINATION;
-		
-        Point a = p1 - pO;
-        Point b = p2 - pO;
-        double sa = a.i * b.j - b.i * a.j;
-        if (sa > 0.0)
-            return 1;//LEFT;
-        if (sa < 0.0)
-            return 2;//RIGHT;
-        if ((a.i * b.i < 0.0) || (a.j * b.j < 0.0))
-            return 3;//BEHIND;
-        if ((a.i*a.i + a.j*a.j) < (b.i*b.i + b.j*b.j))
-            return 4;//BEYOND;
+      Point p2 = *this;
+      if (pO == p2)
+        return 5;//ORIGIN;
+      if (p1 == p2)
+        return 6;//DESTINATION;
 
-        return 7;//BETWEEN;
+      Point a = p1 - pO;
+      Point b = p2 - pO;
+      double sa = a.i * b.j - b.i * a.j;
+      if (sa > CN_EPSILON)
+        return 1;//LEFT;
+      if (sa < -CN_EPSILON)
+        return 2;//RIGHT;
+      if ((a.i * b.i < -CN_EPSILON) || (a.j * b.j < -CN_EPSILON))
+        return 3;//BEHIND;
+      if ((a.i*a.i + a.j*a.j) < (b.i*b.i + b.j*b.j) + CN_EPSILON)
+        return 4;//BEYOND;
+
+      return 7;//BETWEEN;
     }
 };
 

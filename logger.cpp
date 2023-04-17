@@ -43,9 +43,9 @@ void logger::write_exp_result(int task_ind)
   if (!fw.is_open()){
     FAIL("did not open result file properly");
   }
-  int ES=config.use_edge_split ? 1:0;
-  int CR=config.cons_reason ? 1:0;
-  int DS=config.use_disjoint_splitting? 1:0;
+  string ES=config.use_edge_split ? "ES":"0";
+  string CR=config.cons_reason ? "CR":"0";
+  string DS=config.use_disjoint_splitting? "DS":"0";
   int f=solution.found? 1:0;
   fw<<config.agent_num<<","
     <<config.agent_size<<","

@@ -21,6 +21,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
   std::vector<Node> valid_moves = map.get_valid_moves(curNode.id);
   if (config.debug>1)
   {
+    cout<<endl;
     std::cout<<"expanding: "<<curNode.id<<" g:"<<curNode.g<<"interval:("<<curNode.interval.first<<", "<<curNode.interval.second<<") "<<std::endl;
     for (Node n:valid_moves){
       std::cout<<"->("<<n.id<<","<<dist(curNode,n)<<")";
@@ -65,6 +66,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
     //int to_index=map.valid_moves
     auto cons_it = constraints.find({curNode.id,i});
     int id(0);			
+    //cout<<"checking "<<curNode.id<<"~"<<i<<endl;
     for(auto interval: intervals)
     {
 
@@ -74,20 +76,26 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
       if(it != visited.end())
         if(it->second.second)
           continue;
-      if(interval.second - CN_PRECISION< newNode.g+CN_PRECISION)
+      if(interval.second < newNode.g - CN_EPSILON) // < 
         continue;
-      if(interval.first+CN_PRECISION > newNode.g-CN_PRECISION)
+      if(interval.first> newNode.g + CN_EPSILON) // > 
         newNode.g = interval.first;
       if(cons_it != constraints.end())
         for(unsigned int i = 0; i < cons_it->second.size(); i++)
-          if(newNode.g - cost + CN_PRECISION > cons_it->second[i].t1-CN_PRECISION && newNode.g - cost-CN_PRECISION < cons_it->second[i].t2 +CN_PRECISION)
+        {
+          //cout<<"g: "<<newNode.g<<" cost: "<<cost<<endl;
+          //cout<<"g-cost: "<<newNode.g-cost<<" cons_it->second[i].t1: "<<cons_it->second[i].t1<<" cons_it->second[i].t2: "<<cons_it->second[i].t2<<endl;
+          //cout<<": ="<<(newNode.g - cost + CN_EPSILON > cons_it->second[i].t1)<<" & "<<(newNode.g - cost < cons_it->second[i].t2 + CN_EPSILON)<<endl;
+          if(newNode.g - cost + CN_EPSILON > cons_it->second[i].t1 && newNode.g - cost < cons_it->second[i].t2 + CN_EPSILON) // >= && < 
             newNode.g = cons_it->second[i].t2 + cost;
-      newNode.interval = interval;
-      if(newNode.g - cost+ CN_PRECISION> curNode.interval.second - CN_PRECISION|| newNode.g+CN_PRECISION> newNode.interval.second -CN_PRECISION)
+          //cout<<"new g: "<<newNode.g<<endl;
+        }
+        newNode.interval = interval;
+      if(newNode.g - cost > curNode.interval.second -CN_EPSILON || newNode.g > newNode.interval.second -CN_EPSILON) // >= || >=
         continue;
       if(it != visited.end())
       {
-        if(it->second.first - CN_PRECISION < newNode.g+CN_PRECISION)
+        if(it->second.first - CN_EPSILON < newNode.g) // <=
           continue;
         else
           it->second.first = newNode.g;
@@ -124,19 +132,19 @@ Node SIPP::find_min()
 
 void SIPP::add_open(Node newNode)
 {
-  if (open.empty() || open.back().f - CN_PRECISION < newNode.f)
+  if (open.empty() || open.back().f - CN_EPSILON < newNode.f)
   {
     open.push_back(newNode);
     return;
   }
   for(auto iter = open.begin(); iter != open.end(); ++iter)
   {
-    if(iter->f > newNode.f + CN_PRECISION) // if newNode.f has lower f-value
+    if(iter->f > newNode.f + CN_EPSILON) // if newNode.f has lower f-value  >  
     {
       open.insert(iter, newNode);
       return;
     }
-    else if(fabs(iter->f - newNode.f) < CN_PRECISION && newNode.g + CN_PRECISION > iter->g) // if f-values are equal, compare g-values
+    else if(fabs(iter->f - newNode.f) < CN_EPSILON && newNode.g + CN_EPSILON > iter->g) // if f-values are equal, compare g-values  == && >=
     {
       open.insert(iter, newNode);
       return;
@@ -168,7 +176,7 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
     unsigned int j = i + 1;
     if(j == path.nodes.size())
       break;
-    if(fabs(path.nodes[j].g - path.nodes[i].g - dist(path.nodes[j], path.nodes[i])) > 2*CN_PRECISION)
+    if(fabs(path.nodes[j].g - path.nodes[i].g - dist(path.nodes[j], path.nodes[i])) > CN_EPSILON) //==
     {
       //cout<<path.nodes[i].id<<"->"<<path.nodes[j].id<<" : "<<path.nodes[i].g<<"~"<<path.nodes[j].g<<" dis:"<<dist(path.nodes[j], path.nodes[i])<<endl<<flush;
       Node add = path.nodes[i];
@@ -210,12 +218,12 @@ void SIPP::add_collision_interval(int id, std::pair<double, double> interval)
   }
   for(unsigned int i = 0; i + 1 < collision_intervals[id].size(); i++)
   {
-    if (collision_intervals[id][i].second+CN_PRECISION > collision_intervals[id][i+1].second)
+    if (collision_intervals[id][i].second+CN_EPSILON > collision_intervals[id][i+1].second) // >=
     {
       collision_intervals[id].erase(collision_intervals[id].begin() + i + 1);
       i--;
     }
-    else if(collision_intervals[id][i].second + CN_PRECISION > collision_intervals[id][i+1].first)
+    else if(collision_intervals[id][i].second + CN_EPSILON > collision_intervals[id][i+1].first)  //>=
     {
       collision_intervals[id][i].second = collision_intervals[id][i+1].second;
       collision_intervals[id].erase(collision_intervals[id].begin() + i + 1);
@@ -237,19 +245,19 @@ void SIPP::add_move_constraint(Move move)
     {
       if(inserted)
         break;
-      if(m_cons[i].t1+CN_PRECISION > move.t1)
+      if(m_cons[i].t1 > move.t1+CN_EPSILON)  //>
       {
-        if(m_cons[i].t1-CN_PRECISION  < move.t2 + CN_PRECISION)
+        if(m_cons[i].t1  < move.t2 + CN_EPSILON)  //<=
         {
           m_cons[i].t1 = move.t1;
-          if(move.t2 + CN_PRECISION > m_cons[i].t2 -CN_PRECISION)
+          if(move.t2 + CN_EPSILON > m_cons[i].t2) // >=
             m_cons[i].t2 = move.t2;
           inserted = true;
           if(i != 0)
-            if(m_cons[i-1].t2 + CN_PRECISION > move.t1-CN_PRECISION && m_cons[i-1].t2 -CN_PRECISION< move.t2 + CN_PRECISION)
+            if(m_cons[i-1].t2 + CN_EPSILON > move.t1 && m_cons[i-1].t2 < move.t2 + CN_EPSILON) //>= && <=
             {
               m_cons[i-1].t2 = move.t2;
-              if(m_cons[i-1].t2 +CN_PRECISION > m_cons[i].t1-CN_PRECISION && m_cons[i-1].t2-CN_PRECISION < m_cons[i].t2 + CN_PRECISION)
+              if(m_cons[i-1].t2 +CN_EPSILON > m_cons[i].t1 && m_cons[i-1].t2 < m_cons[i].t2 + CN_EPSILON) //>= && <=
               {
                 m_cons[i-1].t2 = m_cons[i].t2;
                 m_cons.erase(m_cons.begin() + i);
@@ -260,7 +268,7 @@ void SIPP::add_move_constraint(Move move)
         else
         {
           if(i != 0)
-            if(m_cons[i-1].t2 + CN_PRECISION > move.t1 -CN_PRECISION && m_cons[i-1].t2 -CN_PRECISION < move.t2 + CN_PRECISION)
+            if(m_cons[i-1].t2 + CN_EPSILON > move.t1 && m_cons[i-1].t2 < move.t2 + CN_EPSILON) //>= && <=
             {
               m_cons[i-1].t2 = move.t2;
               inserted = true;
@@ -271,7 +279,7 @@ void SIPP::add_move_constraint(Move move)
         }
       }
     }
-    if(m_cons.back().t2 +CN_PRECISION > move.t1 -CN_PRECISION && m_cons.back().t2 - CN_PRECISION < move.t2 + CN_PRECISION)
+    if(m_cons.back().t2 +CN_EPSILON > move.t1 && m_cons.back().t2  < move.t2 + CN_EPSILON)  //>= && <=
       m_cons.back().t2 = move.t2;
     else if(!inserted)
       m_cons.push_back(move);
@@ -297,7 +305,7 @@ void SIPP::make_constraints(std::list<Constraint> &cons,const Map &map)
       //int id2=temp[con.id2].id;
       //cout<<con.t1<<"~"<<con.t2<<","<<con.id1<<"->"<<con.id2<<endl;
       for(unsigned int i = 0; i < landmarks.size(); i++)
-        if(landmarks[i].t1 > con.t1)
+        if(landmarks[i].t1 > con.t1 + CN_EPSILON)  // >
         {
           landmarks.insert(landmarks.begin() + i, Move(con.t1, con.t2, con.id1, con.id2));
           inserted = true;
@@ -345,7 +353,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
     {
       for(unsigned int i = 0; i < goals.size(); i++)
       {
-        if(curNode.g - CN_PRECISION < goals[i].interval.second && goals[i].interval.first - CN_PRECISION < curNode.interval.second)
+        if(curNode.g + CN_EPSILON < goals[i].interval.second && goals[i].interval.first - CN_EPSILON < curNode.interval.second) //< && <=
         {
           paths[i].nodes = reconstruct_path(curNode);
           if(paths[i].nodes.back().g < goals[i].interval.first)
@@ -367,7 +375,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
     std::list<Node>::iterator it = succs.begin();
     while(it != succs.end())
     {
-      if(it->f > max_f)
+      if(it->f > max_f+CN_EPSILON) //>
       {
         it++;
         continue;
@@ -396,23 +404,23 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
         Node n = nodes[i];
         auto c = collision_intervals[node_id][k];
         bool changed = false;
-        if(c.first - CN_PRECISION < n.interval.first && c.second + CN_PRECISION > n.interval.second)
+        if(c.first - CN_EPSILON < n.interval.first && c.second + CN_EPSILON > n.interval.second) //<= && >=
         {
           nodes.erase(nodes.begin() + i);
           changed = true;
         }
-        else if(c.first - CN_PRECISION < n.interval.first && c.second > n.interval.first)
+        else if(c.first - CN_EPSILON < n.interval.first && c.second > n.interval.first + CN_EPSILON) //<= && >
         {
           nodes[i].interval.first = c.second;
           changed = true;
         }
-        else if(c.first - CN_PRECISION > n.interval.first && c.second + CN_PRECISION < n.interval.second)
+        else if(c.first - CN_EPSILON > n.interval.first && c.second + CN_EPSILON < n.interval.second) //> && <
         {
           nodes[i].interval.second = c.first;
           nodes.insert(nodes.begin() + i + 1, Node(node_id, 0, 0, node_i, node_j, nullptr, c.second, n.interval.second));
           changed = true;
         }
-        else if(c.first < n.interval.second && c.second + CN_PRECISION > n.interval.second)
+        else if(c.first + CN_EPSILON < n.interval.second && c.second + CN_EPSILON > n.interval.second) //< && >=
         {
           nodes[i].interval.second = c.first;
           changed = true;
@@ -430,29 +438,36 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
 
 double SIPP::check_endpoint(Node start, Node goal, int exit_id)
 {
-  cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
+  if(config.debug>1)
+    cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
   double cost = sqrt(pow(start.i - goal.i, 2) + pow(start.j - goal.j, 2));
-  if(start.g + cost < goal.interval.first+CN_PRECISION)
+  if(start.g + cost < goal.interval.first + CN_EPSILON) //<=
     start.g = goal.interval.first - cost;
+  if(config.debug>1)
   cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
   
   if(constraints.count({start.id, exit_id}) != 0)
   {
-    cout<<"in here"<<endl;
     auto it = constraints.find({start.id,exit_id});
     for(unsigned int i = 0; i < it->second.size(); i++)
     {
-      cout<<"start g:"<<start.g<<" it->second[i].t1:"<<it->second[i].t1<<" it->second[i].t2:"<<it->second[i].t2<<endl;
-      cout<<": ="<<(start.g + CN_PRECISION > it->second[i].t1) <<" and "<< (start.g -CN_PRECISION < it->second[i].t2) <<endl;
-      if(start.g + CN_PRECISION > it->second[i].t1 -CN_PRECISION && start.g -CN_PRECISION < it->second[i].t2)
+      if(config.debug>1)
+      {
+        cout<<"start g:"<<start.g<<" it->second[i].t1:"<<it->second[i].t1<<" it->second[i].t2:"<<it->second[i].t2<<endl;
+        cout<<": ="<<(start.g +CN_EPSILON > it->second[i].t1) <<" and "<< (start.g < it->second[i].t2) <<endl;
+      }
+      if(start.g + CN_EPSILON > it->second[i].t1  && start.g + CN_EPSILON < it->second[i].t2) //>= && <
       {
         start.g = it->second[i].t2;
-        cout<<"changed g:"<<endl;
-        cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
+        if(config.debug>1)
+        {
+          cout<<"changed g:"<<endl;
+          cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
+        }
       }
     }
   }
-  if(start.g > start.interval.second -CN_PRECISION || start.g + cost > goal.interval.second-CN_PRECISION)
+  if(start.g > start.interval.second - CN_EPSILON  || start.g + cost > goal.interval.second - CN_EPSILON) // >= && >=
     return CN_INFINITY;
   else
     return start.g + cost;
@@ -522,14 +537,14 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         {
           if(parts[k].nodes.empty())
             continue;
-          if(fabs(parts[k].nodes[0].interval.first - results[j].nodes.back().interval.first) < CN_PRECISION && fabs(parts[k].nodes[0].interval.second - results[j].nodes.back().interval.second) < CN_PRECISION)
+          if(fabs(parts[k].nodes[0].interval.first - results[j].nodes.back().interval.first) < CN_EPSILON && fabs(parts[k].nodes[0].interval.second - results[j].nodes.back().interval.second) < CN_EPSILON)
           {
             new_results.push_back(results[j]);
             new_results.back() = add_part(new_results.back(), parts[k]);
           }
         }
       results = new_results;
-      
+
       if (config.debug>1){
         cout<<"results:"<<endl;
         prt_paths(results);
@@ -541,9 +556,9 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         starts.clear();
         for(auto p:results)
           starts.push_back(p.nodes.back());
-        
-      auto temp=map.get_valid_moves(landmarks[i].id1);
-      int id2=temp[landmarks[i].id2].id;
+
+        auto temp=map.get_valid_moves(landmarks[i].id1);
+        int id2=temp[landmarks[i].id2].id;
         double offset = sqrt(pow(map.get_i(landmarks[i].id1) - map.get_i(id2), 2) + pow(map.get_j(landmarks[i].id1) - map.get_j(id2), 2));
         goals = get_endpoints(id2, map.get_i(id2), map.get_j(id2), landmarks[i].t1 + offset, landmarks[i].t2 + offset);
 
@@ -563,7 +578,8 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
           for(unsigned int j = 0; j < starts.size(); j++)
           {
             double g = check_endpoint(starts[j], goals[k],landmarks[i].id2);
-            cout<<"check_endpoint g:"<<g<<endl;
+            if(config.debug>1)
+              cout<<"check_endpoint g:"<<g<<endl;
             if(g < best_g)
             {
               best_start_id = j;
@@ -583,7 +599,7 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
               for(auto c:collision_intervals[goals[k].id])
               {
                 //cout<<"g:"<<goals[k].g<<" c:"<<c.first<<endl;
-                if(goals[k].g < c.first+CN_PRECISION)
+                if(goals[k].g < c.first)
                 {
                   goals[k].interval.second = c.first;
                   break;
@@ -591,17 +607,26 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
               }
             }
             new_results.push_back(results[best_start_id]);
-            cout<<"offset: "<<offset<<endl;
-            cout<<"goals[k].g: "<<goals[k].g <<" offset:"<<offset<<" new_results.back().nodes.back().g"<<new_results.back().nodes.back().g<<endl;
-            cout<<": ="<<(goals[k].g-offset)-new_results.back().nodes.back().g<<endl;
-            if(goals[k].g - starts[best_start_id].g > offset + CN_PRECISION && abs((goals[k].g-offset)-new_results.back().nodes.back().g) > 2*CN_PRECISION)
+            if(config.debug>1)
             {
-              cout<<"old path:"<<endl;
-              prt_path(new_results.back());
+              cout<<"offset: "<<offset<<endl;
+              cout<<"goals[k].g: "<<goals[k].g <<" offset:"<<offset<<" new_results.back().nodes.back().g"<<new_results.back().nodes.back().g<<endl;
+              cout<<": ="<<(goals[k].g-offset)-new_results.back().nodes.back().g<<endl;
+            }
+            if(goals[k].g - starts[best_start_id].g > offset + CN_EPSILON && abs((goals[k].g-offset)-new_results.back().nodes.back().g) > CN_EPSILON)
+            {
+              if(config.debug>1)
+              {
+                cout<<"old path:"<<endl;
+                prt_path(new_results.back());
+              }
               new_results.back().nodes.push_back(new_results.back().nodes.back());
               new_results.back().nodes.back().g = goals[k].g - offset;
-              cout<<"old path:"<<endl;
-              prt_path(new_results.back());
+              if(config.debug>1)
+              {
+                cout<<"old path:"<<endl;
+                prt_path(new_results.back());
+              }  
             }
             new_results.back().nodes.push_back(goals[k]);
           }
@@ -616,13 +641,9 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
   }
   else
   {
-    cout<<"1"<<endl;
     starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
-    cout<<"2"<<endl;
     goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
-    cout<<"3"<<endl;
     parts = find_partial_path(starts, goals, map, h_values);
-    cout<<"4"<<endl;
     expanded = int(close.size());
     if(parts[0].cost < 0)
       return Path();

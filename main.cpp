@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <boost/program_options.hpp>
 #include <fstream>
 #include "map.h"
@@ -8,6 +9,7 @@
 #include "structs.h"
 int main(int argc, const char *argv[])
 {
+  std::cout<<std::setprecision(9)<<std::fixed;
   if(argc > 2)
   {
     Config config;
