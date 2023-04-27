@@ -57,6 +57,9 @@ bool CBS::init_root(Map &map, const Task &task)
 
 bool CBS::check_conflict(Move move1, Move move2)
 {
+  double r(2*config.agent_size);
+  if (move1.t2+r<move2.t1-CN_EPSILON || move2.t2+r<move1.t1-CN_EPSILON)
+    return false;
   double startTimeA(move1.t1), endTimeA(move1.t2), startTimeB(move2.t1), endTimeB(move2.t2);
   double m1i1(map->get_i(move1.id1)), m1i2(map->get_i(move1.id2)), m1j1(map->get_j(move1.id1)), m1j2(map->get_j(move1.id2));
   double m2i1(map->get_i(move2.id1)), m2i2(map->get_i(move2.id2)), m2j1(map->get_j(move2.id1)), m2j2(map->get_j(move2.id2));
@@ -74,11 +77,13 @@ bool CBS::check_conflict(Move move1, Move move2)
     B += VB*(startTimeA - startTimeB);
     startTimeB = startTimeA;
   }
-  double r(2*config.agent_size);
   Vector2D w(B - A);
   double c(w*w - r*r);
   if (config.debug>1)
   {
+    cout<<"start time:"<<startTimeA<<" & "<<startTimeB<<endl;
+    cout<<"A: "<<A<<"  B: "<<B<<endl;
+    cout<<"w*w"<<w*w<<"  r*r"<<r*r<<endl;
     cout<<"c: "<<c<<endl;
   }
   if(c < 0)
@@ -100,7 +105,7 @@ bool CBS::check_conflict(Move move1, Move move2)
     cout<<"ctime: "<<ctime<<endl;
     cout<<"std::min(endTimeB,endTimeA) - startTimeA: "<<(std::min(endTimeB,endTimeA) - startTimeA)<<endl;
   }
-  if(ctime >  CN_EPSILON  && ctime < std::min(endTimeB,endTimeA) - startTimeA +  CN_EPSILON )
+  if(ctime >  -CN_EPSILON  && ctime < std::min(endTimeB,endTimeA) - startTimeA +  CN_EPSILON )
     return true;
   return false;
 }
@@ -1106,6 +1111,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
   solution.semicardinal_solved = semicardinal_solved;
   solution.new_node = map.get_new_node_num();
 
+  if (solution.found)
+  {
+    prt_paths(solution.paths);
+    post_check(solution.paths);
+  }
   return solution;
 }
 
@@ -1313,24 +1323,27 @@ Conflict CBS::check_paths(const sPath &pathA, const sPath &pathB)
   auto nodesB = pathB.nodes;
   while(a < nodesA.size() - 1 || b < nodesB.size() - 1)
   {
-    double dist = sqrt(pow(map->get_i(nodesA[a].id) - map->get_i(nodesB[b].id), 2) + pow(map->get_j(nodesA[a].id) - map->get_j(nodesB[b].id), 2)) - CN_EPSILON;
+    double temp=pow(map->get_i(nodesA[a].id) - map->get_i(nodesB[b].id), 2) + pow(map->get_j(nodesA[a].id) - map->get_j(nodesB[b].id), 2);
+    if (abs(temp)<CN_EPSILON) temp=0;
+    assert(temp>=0);
+    double dist = sqrt(temp); 
     if(a < nodesA.size() - 1 && b < nodesB.size() - 1) // if both agents have not reached their goals yet
     {
-      if(dist < (nodesA[a+1].g - nodesA[a].g) + (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2)
+      if(dist < (nodesA[a+1].g - nodesA[a].g) + (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2 - CN_EPSILON)
         if(check_conflict(Move(nodesA[a], nodesA[a+1]), Move(nodesB[b], nodesB[b+1]))){
           return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a], nodesA[a+1]), Move(nodesB[b], nodesB[b+1]), std::min(nodesA[a].g, nodesB[b].g));
         }
     }
     else if(a == nodesA.size() - 1) // if agent A has already reached the goal
     {
-      if(dist < (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2)
+      if(dist < (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2-CN_EPSILON)
         if(check_conflict(Move(nodesA[a].g, CN_INFINITY, nodesA[a].id, nodesA[a].id), Move(nodesB[b], nodesB[b+1]))){
           return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a].g, CN_INFINITY, nodesA[a].id, nodesA[a].id), Move(nodesB[b], nodesB[b+1]), std::min(nodesA[a].g, nodesB[b].g));
         }
     }
     else if(b == nodesB.size() - 1) // if agent B has already reached the goal
     {
-      if(dist < (nodesA[a+1].g - nodesA[a].g) + config.agent_size*2)
+      if(dist < (nodesA[a+1].g - nodesA[a].g) + config.agent_size*2 -CN_EPSILON)
         if(check_conflict(Move(nodesA[a], nodesA[a+1]), Move(nodesB[b].g, CN_INFINITY, nodesB[b].id, nodesB[b].id))){
           return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a], nodesA[a+1]), Move(nodesB[b].g, CN_INFINITY, nodesB[b].id, nodesB[b].id), std::min(nodesA[a].g, nodesB[b].g));
         }
@@ -1344,14 +1357,62 @@ Conflict CBS::check_paths(const sPath &pathA, const sPath &pathB)
       a++;
       b++;
     }
-    else if(nodesA[a+1].g < nodesB[b+1].g)
+    else if(nodesA[a+1].g < nodesB[b+1].g - CN_EPSILON)
       a++;
-    else if(nodesB[b+1].g - CN_EPSILON < nodesA[a+1].g)
+    else if(nodesB[b+1].g  < nodesA[a+1].g - CN_EPSILON)
       b++;
   }
   return Conflict();
 }
 
+Conflict CBS::check_paths_ori(const sPath &pathA, const sPath &pathB)
+{
+  unsigned int a(0), b(0);
+  auto nodesA = pathA.nodes;
+  auto nodesB = pathB.nodes;
+  while(a < nodesA.size() - 1 || b < nodesB.size() - 1)
+  {
+    double temp=pow(map->get_i(nodesA[a].id) - map->get_i(nodesB[b].id), 2) + pow(map->get_j(nodesA[a].id) - map->get_j(nodesB[b].id), 2);
+    if (abs(temp)<CN_EPSILON) temp=0;
+    assert(temp>=0);
+    double dist = sqrt(temp); 
+    if(a < nodesA.size() - 1 && b < nodesB.size() - 1) // if both agents have not reached their goals yet
+    {
+      if(dist < (nodesA[a+1].g - nodesA[a].g) + (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2 - CN_EPSILON)
+        if(check_conflict_ori(Move(nodesA[a], nodesA[a+1]), Move(nodesB[b], nodesB[b+1]))){
+          return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a], nodesA[a+1]), Move(nodesB[b], nodesB[b+1]), std::min(nodesA[a].g, nodesB[b].g));
+        }
+    }
+    else if(a == nodesA.size() - 1) // if agent A has already reached the goal
+    {
+      if(dist < (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2-CN_EPSILON)
+        if(check_conflict_ori(Move(nodesA[a].g, CN_INFINITY, nodesA[a].id, nodesA[a].id), Move(nodesB[b], nodesB[b+1]))){
+          return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a].g, CN_INFINITY, nodesA[a].id, nodesA[a].id), Move(nodesB[b], nodesB[b+1]), std::min(nodesA[a].g, nodesB[b].g));
+        }
+    }
+    else if(b == nodesB.size() - 1) // if agent B has already reached the goal
+    {
+      if(dist < (nodesA[a+1].g - nodesA[a].g) + config.agent_size*2 -CN_EPSILON)
+        if(check_conflict_ori(Move(nodesA[a], nodesA[a+1]), Move(nodesB[b].g, CN_INFINITY, nodesB[b].id, nodesB[b].id))){
+          return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a], nodesA[a+1]), Move(nodesB[b].g, CN_INFINITY, nodesB[b].id, nodesB[b].id), std::min(nodesA[a].g, nodesB[b].g));
+        }
+    }
+    if(a == nodesA.size() - 1)
+      b++;
+    else if(b == nodesB.size() - 1)
+      a++;
+    else if(fabs(nodesA[a+1].g - nodesB[b+1].g) < CN_EPSILON)
+    {
+      a++;
+      b++;
+    }
+    else if(nodesA[a+1].g < nodesB[b+1].g - CN_EPSILON)
+      a++;
+    else if(nodesB[b+1].g  < nodesA[a+1].g + CN_EPSILON)
+      b++;
+  }
+  return Conflict();
+}
 std::vector<Conflict> CBS::get_all_conflicts(const std::vector<sPath> &paths, int id)
 {
   std::vector<Conflict> conflicts;
@@ -1933,3 +1994,80 @@ void CBS::printBT_aux()
   printBT("",1,false);
 }
 
+bool CBS::check_conflict_ori(Move move1, Move move2)
+{
+    double startTimeA(move1.t1), endTimeA(move1.t2), startTimeB(move2.t1), endTimeB(move2.t2);
+    double m1i1(map->get_i(move1.id1)), m1i2(map->get_i(move1.id2)), m1j1(map->get_j(move1.id1)), m1j2(map->get_j(move1.id2));
+    double m2i1(map->get_i(move2.id1)), m2i2(map->get_i(move2.id2)), m2j1(map->get_j(move2.id1)), m2j2(map->get_j(move2.id2));
+    Vector2D A(m1i1, m1j1);
+    Vector2D B(m2i1, m2j1);
+    Vector2D VA((m1i2 - m1i1)/(move1.t2 - move1.t1), (m1j2 - m1j1)/(move1.t2 - move1.t1));
+    Vector2D VB((m2i2 - m2i1)/(move2.t2 - move2.t1), (m2j2 - m2j1)/(move2.t2 - move2.t1));
+    if(startTimeB > startTimeA)
+    {
+        A += VA*(startTimeB-startTimeA);
+        startTimeA = startTimeB;
+    }
+    else if(startTimeB < startTimeA)
+    {
+        B += VB*(startTimeA - startTimeB);
+        startTimeB = startTimeA;
+    }
+    double r(2*config.agent_size);
+    Vector2D w(B - A);
+    double c(w*w - r*r);
+    if (config.debug>1)
+    {
+      cout<<"A: "<<A<<"  B: "<<B<<endl;
+      cout<<"w*w"<<w*w<<"  r*r"<<r*r<<endl;
+      cout<<"c: "<<c<<endl;
+    }
+    if(c < 0)
+        return true;
+
+    Vector2D v(VA - VB);
+    double a(v*v);
+    double b(w*v);
+    double dscr(b*b - a*c);
+
+    if(config.debug>1)
+    {
+      cout<<"dscr: "<<dscr<<endl;
+    }
+    if(dscr - CN_EPSILON < 0)
+        return false;
+    double ctime = (b - sqrt(dscr))/a;
+    if(config.debug>1)
+    {
+      cout<<"ctime: "<<ctime<<endl;
+      cout<<"std::min(endTimeB,endTimeA) - startTimeA: "<<(std::min(endTimeB,endTimeA) - startTimeA)<<endl;
+    }
+    if(ctime > -CN_EPSILON && ctime < std::min(endTimeB,endTimeA) - startTimeA + CN_EPSILON)
+        return true;
+    return false;
+}
+
+void CBS::post_check(vector<sPath> Paths)
+{
+  for (sPath p1:Paths)
+  {
+    for (sPath p2:Paths)
+    {
+      if (p1.agentID==p2.agentID) continue;
+      
+      Conflict temp=check_paths(p1,p2);
+      if (temp.agent1>-1)
+      {
+        cout<<"new check path: "<<temp.agent1<<endl;
+
+        Conflict temp2=check_paths_ori(p1,p2);
+        cout<<"ori check path: "<<temp2.agent1<<endl;
+
+        assert(false);
+
+      }
+
+
+    }
+  }
+}

@@ -1,15 +1,16 @@
 import random
 import math
 N=30
-def getNewTasks():
-    temp=[random.sample(range(len(nodes)),k=N),random.sample(range(len(nodes)),k=N)]
+
+def getNewTasks(Pool):
+    temp=[random.sample(Pool,k=N),random.sample(Pool,k=N)]
     return [(temp[0][i],temp[1][i]) for i in range(N)]
 
 
 if __name__=="__main__":
     dist=lambda x,y:math.sqrt((x[0]-y[0])**2+(x[1]-y[1])**2)
     
-    for name in ["sparse","dense","super-dense"]:
+    for name in ["dense"]:
         with open(name+"/map.graph") as f:
             nodes=[]
             node_num=int(f.readline())
@@ -19,6 +20,8 @@ if __name__=="__main__":
             #[print(i) for i in nodes]
             #print("----------------------------------------------------")
         
+        Pool=[i for i in range(len(nodes)) if i not in [355,356,522,549,683,759,760]]
+
         for ind in range(1,26):
             taskName=name+"/"+str(ind)+"task.task"
             '''with open(taskName) as f:
@@ -29,7 +32,7 @@ if __name__=="__main__":
             '''
 
             while 1:
-                pairs=getNewTasks()
+                pairs=getNewTasks(Pool)
                 for i in range(N):
                     #print(i)
                     for j in range(N):
@@ -50,5 +53,6 @@ if __name__=="__main__":
             print(ind," pass")
             print(sorted(pairs,key=lambda x:x[0]))
             with open(taskName,'w') as f:
+                print(N,file=f)
                 [print(*i,file=f) for i in pairs]
         

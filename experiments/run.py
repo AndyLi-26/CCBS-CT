@@ -1,34 +1,43 @@
-import subprocess, os,glob, time
+import subprocess, os,glob, time,json
 processPool=[]
 exe = "../debug/CCBS"
 map_address ="../Instances/roadmaps/{}/map.graph"
 task_address="../Instances/roadmaps/{}/{}task.task"
-output_address="./{}.csv"
+output_address="{}-{}-{}-{}.csv"
+with open("./config.json","r") as f:
+    config=json.loads(f.read())
+    for k,v in config.items():
+        config[k]=v.split(" ")
+    print(config)
 
-for a_size in [0.5,1.5,2.5,3.5,4.5]:
-    for m in ["sparse","dense","super-dense"]:
-        for e_sp in [False]:#[False,True]:
-            for cr in [False,True]:
-                for ds in [False,True]:
-                    for a in range(5,11):
-                        for i in range(1,26):
+for r in config['r']:
+    for m in config['m']:
+        for es in config['es']:
+            for cr in config['cr']:
+                for ds in config['ds']:
+                    for a in config['a']:
+                        for i in config['i']:
+                            es_tag="es" if es=='1' else '0'
+                            cr_tag="cr" if cr=='1' else '0'
+                            ds_tag="ds" if ds=='1' else '0'
+
                             cmd=[exe,"-m",map_address.format(m),
                                  "-t",task_address.format(m,i),
                                 "--HI_h","0",
-                                 "-o", output_address.format(m),
-                                 "-a",str(a_size),
-                                 "--agent_num",str(a),
-                                 "--timelimit","30",
-                                 "--extra_info",str(i)
+                                 "-o", output_address.format(m,es_tag,cr_tag,ds_tag),
+                                 "-a",r,
+                                 "--agent_num",a,
+                                 "--timelimit","120",
+                                 "--extra_info",i
                             ]
-                            if e_sp:
+                            if es=='1':
                                 cmd+=["--ES"]
-                            if cr:
+                            if cr=='1':
                                 cmd+=["--CR"]
-                            if ds:
+                            if ds=='1':
                                 cmd+=["--DS"]
                             print(subprocess.list2cmdline(cmd))
-                            print(cmd)
+
                             if (len(processPool)>=9):
                                 finish = False
                                 while not finish:
@@ -53,3 +62,4 @@ for a_size in [0.5,1.5,2.5,3.5,4.5]:
                                 processPool.append(subprocess.Popen(cmd))
                             except:
                                 print(len(processPool))
+                            

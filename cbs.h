@@ -23,7 +23,9 @@ class CBS
     bool validate_constraints(std::list<Constraint> constraints, int agent);
     bool check_positive_constraints(std::list<Constraint> constraints, Constraint constraint);
     Conflict check_paths(const sPath &pathA, const sPath &pathB);
+    Conflict check_paths_ori(const sPath &pathA, const sPath &pathB);
     bool check_conflict(Move move1, Move move2);
+    bool check_conflict_ori(Move move1, Move move2);
     double get_hl_heuristic(const std::list<Conflict> &conflicts);
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
     typedef std::pair<std::list<Constraint>,bool> con_return;
@@ -63,6 +65,8 @@ class CBS
     void saveCT(const string &fileName,CBS_Node *goal_node,unsigned int agent_num);
     void printBT_aux();
     void printBT(const string& prefix, const int node_id, bool isLeft);
+
+    void post_check(vector<sPath> Paths);
     Vector2D ind2Vec(int nodeId);
     CBS_Tree tree;
     SIPP planner;
