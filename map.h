@@ -36,6 +36,7 @@ class Map
     typedef std::pair<double, double> ori_node_ind;
     typedef boost::unordered_map<new_node_ind,int> new_table;
     typedef boost::unordered_map<ori_node_ind,int> ori_table;
+    std::vector<std::vector<double>> min_clear_time; //[main node][enter node]
     new_table new_node_table;
     ori_table ori_node_table;
 
@@ -43,8 +44,8 @@ class Map
     Map(double size, int k){ agent_size = size; connectedness = k; }
     Map(Map *m);
     ~Map(){}
-    std::vector<std::vector<double>> min_clear_time; //[main node][enter node]
     double min_min_clearT(int node);
+    double get_min_clear_t(int main_n, int enter_n){ return (main_n >= init_node_num ? -1 : min_clear_time.at(main_n).at(enter_n));}
     int  get_size() const { return size; }
     int get_new_node_num() const {return size-init_node_num;}
     int get_init_node_num() const {return init_node_num;}

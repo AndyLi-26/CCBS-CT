@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <boost/program_options.hpp>
 #include <fstream>
+#include <string>
 #include "map.h"
 #include "task.h"
 #include "cbs.h"

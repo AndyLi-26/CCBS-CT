@@ -6,6 +6,7 @@
 #include "structs.h"
 #include "map.h"
 #include "task.h"
+#include "edgeSpliter.h"
 //#include "config.h"
 #include "sipp.h"
 #include "heuristic.h"

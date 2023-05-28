@@ -10,9 +10,10 @@ try:
     print("removed successfully")
 except OSError as e:
     print("{e}")
-for m in [1,2,"3a","3b","4a","4b",5,7,8,9,10,12]:
+for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
+    #for m in [7,9,10,11]:
 #for m in [2]:
-    for ES in [False]:#,True]:
+    for ES in [False,True]:
         for cr in [False,True]:
             for ds in [False,True]:
                 cmd=[exe,"-m",map_address.format(m),
@@ -22,16 +23,16 @@ for m in [1,2,"3a","3b","4a","4b",5,7,8,9,10,12]:
                      "-a",str(4.5),
                      "--agent_num",str(10),
                      "timelimit","30",
-                     "--extra_info",str(m if isinstance(m,int) else int(m[0]))]
+                     "--extra_info",str(m if isinstance(m,int) else int((m[0] + str(["a","b"].index(m[1])))))]
                 if ES:
                     cmd+=["--ES"]
                 if cr:
-                    cmd+=["CR"]
+                    cmd+=["--CR"]
                 if ds:
                     cmd+=["--DS"]
 
                 print(subprocess.list2cmdline(cmd))
-                if (len(processPool)>=8):
+                if (len(processPool)>=4):
                     finish = False
                     while not finish:
                         time.sleep(1)

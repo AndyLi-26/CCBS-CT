@@ -8,12 +8,12 @@ agent_size=4.5;
 global nodes resolution
 resolution=0.3;
 nodes=readmatrix('nodes.csv');
-new=readmatrix('temp.csv');
+new=readmatrix('newNode.csv');
 mapSize=[min(nodes,[],'all'),max(nodes,[],'all')];range=mapSize(2)-mapSize(1);
 mapSize=[mapSize(1)-0.01*range,mapSize(2)+0.01*range];
 mapSize=[0,100];
 edges=readmatrix('edges.csv');
-%summary=readmatrix('summary.txt');%run-time, SoC, makespan
+%summary=readmatrix(' summary.txt');%run-time, SoC, makespan
 
 figure('Renderer', 'painters', 'Position', [10 10 900 900]);
 hold on; grid on; xlim(mapSize);ylim(mapSize);
@@ -25,7 +25,8 @@ for i=1:length(nodes)
     text(nodes(i,1),nodes(i,2),num2str(i-1),'FontSize',20,'FontWeight','bold');
 end
 plot(new(:,2),new(:,3),'bo',LineWidth=2)
-for i=1:length(new)
+for i=1:size(new,1)
+    i
     text(new(i,2),new(i,3),num2str(new(i,1)),'FontSize',20,'FontWeight','bold','Color','blue');
 end
 dcm = datacursormode;          

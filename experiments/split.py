@@ -28,28 +28,44 @@ def convert(x):
             pass
     return x
 
-m="./batch1/sparse.csv"
 v=[]
 ds=[]
 cr=[]
 ds_cr=[]
-with open(m,'r') as f:
-    for i,l in enumerate(f):
-        l=l.strip()
-        l=l.split(",")
-        l=l[:-1]
+with open("./sparse-0-0-0.csv") as f:
+    for l in f:
+        l=l.strip().split(",")
         l=list(map(convert,l))
-        if not l[3] and not l[5]:
-            v.append(l)
-        elif l[3] and not l[5]:
-            ds.append(l)
-        elif not l[3] and l[5]:
-            cr.append(l)
-        else:
-            ds_cr.append(l)
+        v.append(l)
+with open("./sparse-0-0-ds.csv") as f:
+    for l in f:
+        l=l.strip().split(",")
+        l=list(map(convert,l))
+        ds.append(l)
+with open("./sparse-0-cr-0.csv") as f:
+    for l in f:
+        l=l.strip().split(",")
+        l=list(map(convert,l))
+        cr.append(l)
+with open("./sparse-0-cr-ds.csv") as f:
+    for l in f:
+        l=l.strip().split(",")
+        l=list(map(convert,l))
+        ds_cr.append(l)
+
 
 v,ds,cr,ds_cr=map(s_l,[v,ds,cr,ds_cr])
+with open("./sparse-0-0-0.csv","w") as f:
+    [print(*l,sep=',',file=f) for l in v]
+with open("./sparse-0-0-ds.csv","w") as f:
+    [print(*l,sep=',',file=f) for l in ds]
+with open("./sparse-0-cr-0.csv","w") as f:
+    [print(*l,sep=',',file=f) for l in cr]
+with open("./sparse-0-cr-ds.csv","w") as f:
+    [print(*l,sep=',',file=f) for l in ds_cr]
+
 All=[v,ds,cr,ds_cr]
+print(All)
 assert len(v)==len(ds)==len(cr)==len(ds_cr),"len is not the same"
 for i in range(len(v)):
     temp=[]

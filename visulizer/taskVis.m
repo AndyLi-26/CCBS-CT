@@ -8,7 +8,7 @@ agent_size=4.5;
 global nodes resolution
 resolution=0.3;
 nodes=readmatrix('nodes.csv');
-new=readmatrix('temp.csv');
+%new=readmatrix('temp.csv');
 mapSize=[min(nodes,[],'all'),max(nodes,[],'all')];range=mapSize(2)-mapSize(1);
 mapSize=[mapSize(1)-0.01*range,mapSize(2)+0.01*range];
 %mapSize=[0,100];
@@ -20,14 +20,15 @@ hold on; grid on; xlim(mapSize);ylim(mapSize);
 %xlim([65,165]);ylim([80,180]);
 %xlabel(sprintf("run-time=%f,    SoC=%f,    makespan=%f",summary));
 plot(nodes(:,1),nodes(:,2),'ro',LineWidth=3)
-for i=1:length(nodes)
-    i
-    text(nodes(i,1),nodes(i,2),num2str(i-1),'FontSize',20,'FontWeight','bold');
-end
-plot(new(:,2),new(:,3),'bo',LineWidth=2)
-for i=1:length(new)
-    text(new(i,2),new(i,3),num2str(new(i,1)),'FontSize',20,'FontWeight','bold','Color','blue');
-end
+
+%for i=1:length(nodes)
+%    text(nodes(i,1),nodes(i,2),num2str(i-1),'FontSize',20,'FontWeight','bold');
+%end
+%%plot new nodes
+%plot(new(:,2),new(:,3),'bo',LineWidth=2)
+%for i=1:length(new)
+%    text(new(i,2),new(i,3),num2str(new(i,1)),'FontSize',20,'FontWeight','bold','Color','blue');
+%end
 dcm = datacursormode;          
 dcm.Enable = 'on';
 dcm.UpdateFcn = @displayind;
@@ -39,6 +40,7 @@ end
 %h = image(xlim,ylim,I);
 %uistack(h,'bottom')
 %xlim([30,320]);ylim([30,620])
+exportgraphics(gca,'sparse.png','Resolution',300)
 %% plot tasks
 tasks=readmatrix('tasks.csv');
 %agents=size(tasks,1);

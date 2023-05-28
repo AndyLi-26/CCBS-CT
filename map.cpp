@@ -385,8 +385,8 @@ void Map::pre_process()
       }
     min_clear_time.push_back(min_clearV);
   }
-  //boost::unordered::unordered_map<int,double>::iterator it;
   /*
+  boost::unordered::unordered_map<int,double>::iterator it;
   for(int i=0;i<min_clear_time.size();i++)
   {
     cout<<i<<": "<<endl;
@@ -603,42 +603,9 @@ int Map::add_node(double i, double j, int node1, int node2)
   if (it != new_node_table.end())
   {
     return -1;
-    /*
-    node_id=it->second;
-    if (node_id== node1 || node_id==node2)
-      return -1;
-    if (nodes[node_id].agent.find(-1)!=nodes[node_id].agent.end() || nodes[node_id].agent.find(agent)!=nodes[node_id].agent.end())
-    if (nodes[node_id].agent.find(agent)!=nodes[node_id].agent.end())  
-      return -1;
-    else{
-      nodes[node_id].agent.insert(agent);
-    */
-      /*
-         bool n1=false,n2=false;
-         for (Node n:valid_moves[node_id]){
-         if(n1 && n2) break;
-         if (n.id==node1) n1=true;
-         if (n.id==node2) n2=true;
-         }
-         if (!n1){
-         Node valid1;
-         valid1.i = nodes[node1].i;
-         valid1.j = nodes[node1].j;
-         valid1.id = node1;
-         valid1.agent.insert(-1);
-         valid_moves[node_id].push_back(valid1);
-         }
-         if (!n2){
-         Node valid2;
-         valid2.i = nodes[node2].i;
-         valid2.j = nodes[node2].j;
-         valid2.id = node2;
-         valid2.agent.insert(-1);
-         valid_moves[node_id].push_back(valid2);
-         }
-         */
   }
-  else{
+  else
+  {
     node_id=nodes.size();
     gNode tempnode(i,j);
     nodes.push_back(tempnode);
@@ -666,41 +633,6 @@ int Map::add_node(double i, double j, int node1, int node2)
   nodes[node_id].neighbors.push_back(node2);
   nodes[node1].neighbors.push_back(node_id);
   nodes[node2].neighbors.push_back(node_id);
-
-  //add node to hash_table
-
-
-  //add edges
-  //Node node;
-  //node.i=i;
-  //node.j=j;
-  //node.id=nodeid;
-
-  //break up the original edge
-  /*
-     for (int n=0;n<valid_moves[node1].size();++n){
-     if (valid_moves[node1][n].id==node2){
-     valid_moves[node1][n].negtive_list.push_back(agent);
-     }
-     }
-
-     for (int n=0;n<valid_moves[node2].size();++n){
-     if (valid_moves[node2][n].id==node1){
-     valid_moves[node2][n].negtive_list.push_back(agent);
-     }
-     }
-
-
-     for (int n=0;n<valid_moves[node2].size();++n){
-     if (valid_moves[node2][n].id==node1){
-     valid_moves[node2].erase(valid_moves[node2].begin()+n);
-     break;
-     }
-     }
-     */
-  //valid_moves[node1].push_back(node);
-  //valid_moves[node2].push_back(node);
-
 
   return node_id;
 }
@@ -732,31 +664,31 @@ void Map::printPPM()
 
 bool Map::cell_is_obstacle(int i, int j) const
 {
-    return (grid[i][j] == CN_OBSTL);
+  return (grid[i][j] == CN_OBSTL);
 }
 /*
-std::vector<Node> Map::get_valid_moves(int id,int agent) const
-{
-  std::vector<Node> retval=valid_moves.at(id);
-	if (agent==-1)
-		return retval;
-	
-	for (int i=0;i<retval.size();++i){
-    if(retval.at(i).agent!=-1 && retval.at(i).agent!=agent) {
-		//if (retval.at(i).agent.find(-1)==retval.at(i).agent.end() && retval.at(i).agent.find(agent)==retval.at(i).agent.end()){
-		//if (retval[i].agent!=-1 && retval[i].agent!=agent)
-			//if (valid_moves[retval[i].id].size()!=2){
-			//	std::cout<<"id: "<<id<<", agent: "<<agent<<", i:"<<i<<std::endl;
-			//	prt_validmoves();
-			//	assert(false);
-			//}
-			if (valid_moves.at(retval[i].id)[0].id==id)
-				retval[i]=valid_moves[retval[i].id][1];
-			else
-				retval[i]=valid_moves[retval[i].id][0];
-		}
-	}
-	return retval;
+   std::vector<Node> Map::get_valid_moves(int id,int agent) const
+   {
+   std::vector<Node> retval=valid_moves.at(id);
+   if (agent==-1)
+   return retval;
+
+   for (int i=0;i<retval.size();++i){
+   if(retval.at(i).agent!=-1 && retval.at(i).agent!=agent) {
+//if (retval.at(i).agent.find(-1)==retval.at(i).agent.end() && retval.at(i).agent.find(agent)==retval.at(i).agent.end()){
+//if (retval[i].agent!=-1 && retval[i].agent!=agent)
+//if (valid_moves[retval[i].id].size()!=2){
+//	std::cout<<"id: "<<id<<", agent: "<<agent<<", i:"<<i<<std::endl;
+//	prt_validmoves();
+//	assert(false);
+//}
+if (valid_moves.at(retval[i].id)[0].id==id)
+retval[i]=valid_moves[retval[i].id][1];
+else
+retval[i]=valid_moves[retval[i].id][0];
+}
+}
+return retval;
 }
 */
 std::vector<Node> Map::get_valid_moves(int id) const
@@ -765,115 +697,115 @@ std::vector<Node> Map::get_valid_moves(int id) const
 }
 bool Map::check_line(int x1, int y1, int x2, int y2)
 {
-    int delta_x(std::abs(x1 - x2));
-    int delta_y(std::abs(y1 - y2));
-    if((delta_x > delta_y && x1 > x2) || (delta_y >= delta_x && y1 > y2))
-    {
-        std::swap(x1, x2);
-        std::swap(y1, y2);
-    }
-    int step_x(x1 < x2 ? 1 : -1);
-    int step_y(y1 < y2 ? 1 : -1);
-    int error(0), x(x1), y(y1);
-    int gap = int(agent_size*sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + double(delta_x + delta_y)/2 - CN_PRECISION);
-    int k, num;
+  int delta_x(std::abs(x1 - x2));
+  int delta_y(std::abs(y1 - y2));
+  if((delta_x > delta_y && x1 > x2) || (delta_y >= delta_x && y1 > y2))
+  {
+    std::swap(x1, x2);
+    std::swap(y1, y2);
+  }
+  int step_x(x1 < x2 ? 1 : -1);
+  int step_y(y1 < y2 ? 1 : -1);
+  int error(0), x(x1), y(y1);
+  int gap = int(agent_size*sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + double(delta_x + delta_y)/2 - CN_PRECISION);
+  int k, num;
 
-    if(delta_x > delta_y)
+  if(delta_x > delta_y)
+  {
+    int extraCheck = int(agent_size*delta_y/sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + 0.5 - CN_PRECISION);
+    for(int n = 1; n <= extraCheck; n++)
     {
-        int extraCheck = int(agent_size*delta_y/sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + 0.5 - CN_PRECISION);
-        for(int n = 1; n <= extraCheck; n++)
-        {
-            error += delta_y;
-            num = (gap - error)/delta_x;
-            for(k = 1; k <= num; k++)
-                if(cell_is_obstacle(x1 - n*step_x, y1 + k*step_y))
-                    return false;
-            for(k = 1; k <= num; k++)
-                if(cell_is_obstacle(x2 + n*step_x, y2 - k*step_y))
-                    return false;
-        }
-        error = 0;
-        for(x = x1; x != x2 + step_x; x++)
-        {
-            if(cell_is_obstacle(x, y))
-                return false;
-            if(x < x2 - extraCheck)
-            {
-                num = (gap + error)/delta_x;
-                for(k = 1; k <= num; k++)
-                    if(cell_is_obstacle(x, y + k*step_y))
-                        return false;
-            }
-            if(x > x1 + extraCheck)
-            {
-                num = (gap - error)/delta_x;
-                for(k = 1; k <= num; k++)
-                    if(cell_is_obstacle(x, y - k*step_y))
-                        return false;
-            }
-            error += delta_y;
-            if((error<<1) > delta_x)
-            {
-                y += step_y;
-                error -= delta_x;
-            }
-        }
+      error += delta_y;
+      num = (gap - error)/delta_x;
+      for(k = 1; k <= num; k++)
+        if(cell_is_obstacle(x1 - n*step_x, y1 + k*step_y))
+          return false;
+      for(k = 1; k <= num; k++)
+        if(cell_is_obstacle(x2 + n*step_x, y2 - k*step_y))
+          return false;
     }
-    else
+    error = 0;
+    for(x = x1; x != x2 + step_x; x++)
     {
-        int extraCheck = int(agent_size*delta_x/sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + 0.5 - CN_PRECISION);
-        for(int n = 1; n <= extraCheck; n++)
-        {
-            error += delta_x;
-            num = (gap - error)/delta_y;
-            for(k = 1; k <= num; k++)
-                if(cell_is_obstacle(x1 + k*step_x, y1 - n*step_y))
-                    return false;
-            for(k = 1; k <= num; k++)
-                if(cell_is_obstacle(x2 - k*step_x, y2 + n*step_y))
-                    return false;
-        }
-        error = 0;
-        for(y = y1; y != y2 + step_y; y += step_y)
-        {
-            if(cell_is_obstacle(x, y))
-                return false;
-            if(y < y2 - extraCheck)
-            {
-                num = (gap + error)/delta_y;
-                for(k = 1; k <= num; k++)
-                    if(cell_is_obstacle(x + k*step_x, y))
-                        return false;
-            }
-            if(y > y1 + extraCheck)
-            {
-                num = (gap - error)/delta_y;
-                for(k = 1; k <= num; k++)
-                    if(cell_is_obstacle(x - k*step_x, y))
-                        return false;
-            }
-            error += delta_x;
-            if((error<<1) > delta_y)
-            {
-                x += step_x;
-                error -= delta_y;
-            }
-        }
+      if(cell_is_obstacle(x, y))
+        return false;
+      if(x < x2 - extraCheck)
+      {
+        num = (gap + error)/delta_x;
+        for(k = 1; k <= num; k++)
+          if(cell_is_obstacle(x, y + k*step_y))
+            return false;
+      }
+      if(x > x1 + extraCheck)
+      {
+        num = (gap - error)/delta_x;
+        for(k = 1; k <= num; k++)
+          if(cell_is_obstacle(x, y - k*step_y))
+            return false;
+      }
+      error += delta_y;
+      if((error<<1) > delta_x)
+      {
+        y += step_y;
+        error -= delta_x;
+      }
     }
-    return true;
+  }
+  else
+  {
+    int extraCheck = int(agent_size*delta_x/sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + 0.5 - CN_PRECISION);
+    for(int n = 1; n <= extraCheck; n++)
+    {
+      error += delta_x;
+      num = (gap - error)/delta_y;
+      for(k = 1; k <= num; k++)
+        if(cell_is_obstacle(x1 + k*step_x, y1 - n*step_y))
+          return false;
+      for(k = 1; k <= num; k++)
+        if(cell_is_obstacle(x2 - k*step_x, y2 + n*step_y))
+          return false;
+    }
+    error = 0;
+    for(y = y1; y != y2 + step_y; y += step_y)
+    {
+      if(cell_is_obstacle(x, y))
+        return false;
+      if(y < y2 - extraCheck)
+      {
+        num = (gap + error)/delta_y;
+        for(k = 1; k <= num; k++)
+          if(cell_is_obstacle(x + k*step_x, y))
+            return false;
+      }
+      if(y > y1 + extraCheck)
+      {
+        num = (gap - error)/delta_y;
+        for(k = 1; k <= num; k++)
+          if(cell_is_obstacle(x - k*step_x, y))
+            return false;
+      }
+      error += delta_x;
+      if((error<<1) > delta_y)
+      {
+        x += step_x;
+        error -= delta_y;
+      }
+    }
+  }
+  return true;
 }
 /*
-void Map::prt_nodes(){
-	ori_node_table::iterator it_ori;
-	new_node_table::iterator it_new;
-	std::cout<<"ori_table"<<std::endl;
-	for(auto it_ori=ori_table.begin(); it_ori!=ori_table.end(); ++it_ori){
-		std::cout<<"id:"<<it_ori->second;
-    std::cout<<"("<<it_ori->first->first<<","<<it_ori->first->second<<")";
-		}
+   void Map::prt_nodes(){
+   ori_node_table::iterator it_ori;
+   new_node_table::iterator it_new;
+   std::cout<<"ori_table"<<std::endl;
+   for(auto it_ori=ori_table.begin(); it_ori!=ori_table.end(); ++it_ori){
+   std::cout<<"id:"<<it_ori->second;
+   std::cout<<"("<<it_ori->first->first<<","<<it_ori->first->second<<")";
+   }
 
-}
-*/
+   }
+   */
 void Map::prt_validmoves() const
 {
 	//std::cout<<"Map:"<<std::endl;

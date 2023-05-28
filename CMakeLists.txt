@@ -22,6 +22,8 @@ set( SOURCE_FILES
      sipp.cpp 
      task.cpp
      cbs.cpp 
+     handyFunc.cpp
+     edgeSpliter.cpp
 	 simplex/columnset.cpp
 	 simplex/constraint.cpp
 	 simplex/matrix.cpp
@@ -37,6 +39,8 @@ set( HEADER_FILES
      sipp.h 
      logger.h
      task.h
+     edgeSpliter.h
+     handyFunc.h
      cbs.h
 	 structs.h
 	 simplex/columnset.h

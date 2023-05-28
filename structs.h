@@ -6,6 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include "const.h"
+#include "handyFunc.h"
 #include <memory>
 #include <set>
 #include <iterator>
@@ -269,11 +270,10 @@ struct Conflict
 
 struct Map_delta{
 	int add_node;
-	//int agent; //positive agent
+	int agent=-1; //positive agent
 	std::pair<int,int> del_edge;
-	
-	Map_delta(int _add_node = -1, std::pair<int,int> _del_edge=std::make_pair(-1,-1))
-		: add_node(_add_node), del_edge(_del_edge) {}
+	Map_delta(int _add_node = -1, std::pair<int,int> _del_edge=std::make_pair(-1,-1), int a=-1)
+		: add_node(_add_node), del_edge(_del_edge), agent(a){}
 };
 typedef std::list<Map_delta> Map_deltas;
 
@@ -523,6 +523,7 @@ class Vector2D {
     double i, j;
     
     double mod(){return sqrt(i*i+j*j);}
+    double dis(Vector2D v){return sqrt(( (*this) - v)*( (*this) - v));}
     void set(const Vector2D &v) {i=v.i;j=v.j;}
     inline Vector2D operator +(const Vector2D &vec) { return Vector2D(i + vec.i, j + vec.j); }
     inline Vector2D operator -(const Vector2D &vec) { return Vector2D(i - vec.i, j - vec.j); }
@@ -573,5 +574,7 @@ public:
       return 7;//BETWEEN;
     }
 };
+
+
 
 #endif // STRUCTS_H

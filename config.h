@@ -1,6 +1,5 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#include "tinyxml2.h"
 #include "const.h"
 #include <string>
 #include <iostream>

@@ -8,9 +8,6 @@ def check_SameCost(infos):
             print("---")
             [print(i) for i in temp]
             assert False
-    
-
-
 
 def s_l(l):
     l=sorted(l,key=lambda x:x[2])
@@ -28,25 +25,13 @@ def convert(x):
             pass
     return x
 
-v=[]
 ds=[]
-cr=[]
 ds_cr=[]
-with open("./sparse-0-0-0.csv") as f:
-    for l in f:
-        l=l.strip().split(",")
-        l=list(map(convert,l))
-        v.append(l)
 with open("./sparse-0-0-ds.csv") as f:
     for l in f:
         l=l.strip().split(",")
         l=list(map(convert,l))
         ds.append(l)
-with open("./sparse-0-cr-0.csv") as f:
-    for l in f:
-        l=l.strip().split(",")
-        l=list(map(convert,l))
-        cr.append(l)
 with open("./sparse-0-cr-ds.csv") as f:
     for l in f:
         l=l.strip().split(",")
@@ -54,19 +39,17 @@ with open("./sparse-0-cr-ds.csv") as f:
         ds_cr.append(l)
 
 
-v,ds,cr,ds_cr=map(s_l,[v,ds,cr,ds_cr])
-All=[v,ds,cr,ds_cr]
-print(All)
-assert len(v)==len(ds)==len(cr)==len(ds_cr),"len is not the same"
+ds=s_l(ds)
+ds_cr=s_l(ds_cr)
+
+for i in range(len(ds)):
+    if (ds[i][4]==1 and ds_cr[i][4]==0):
+        print("\n"+str(ds[i])+"\n"+str(ds_cr[i]))
+'''
 for i in range(len(v)):
     temp=[]
     for ll in All:
         temp.append(ll[i])
     
     check_SameCost(temp)
-
-
-
-
-
-
+'''
