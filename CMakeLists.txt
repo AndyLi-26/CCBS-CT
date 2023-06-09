@@ -40,7 +40,6 @@ set( HEADER_FILES
      logger.h
      task.h
      edgeSpliter.h
-     handyFunc.h
      cbs.h
 	 structs.h
 	 simplex/columnset.h

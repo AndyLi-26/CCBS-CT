@@ -280,22 +280,21 @@ CBS::con_return CBS::get_wait_constraint(int agent, Move move1, Move move2)
         double dis=sqrt(temp*temp);
         int enter_index=id2ind(move1.id1,n.id,agent);
         assert(enter_index!=-2);
-        //double min_clear=map->min_clear_time.at(move1.id1).at(enter_index);
-        double min_clear=map->get_min_clear_t(move1.id1,enter_index);
+        double min_clear=map->get_min_clear_t_ori(move1.id1,enter_index);
+        Move tempMove(-1,-1,n.id,move1.id1);
+        double min_clear2=map->get_min_clear_t(tempMove,move2.id2);
+        cout<<"ori: "<<min_clear<<"new: "<<min_clear2<<endl;
+        assert(eq(min_clear,min_clear2));
+        //double min_clear=map->get_min_clear_t(move1,n.id);
         if (min_clear<-CN_EPSILON) //min_clear==-1
           continue;
-        //cout<<"min_clear time: "<<min_clear<<endl;
-        //cout<<"id: "<<move1.id1<<","<<move1.id2<<") ("<<move2.id1<<","<<move2.id2<<endl;
-        double startT(interval.second-dis),endT(startT+min_clear);
-        //cout<<"n.id: "<<n.id<<"  move1.id1: "<<move1.id1<<endl;
-        //cout<<"startT: "<<startT<<"  min_clear: "<< min_clear<<endl;
-        //cout<<"interval.second:"<<interval.second<<" dis:"<<dis<<"startT: "<<startT<<"min_clear: "<<min_clear<<endl;
-        if (startT>CN_EPSILON && min_clear>CN_EPSILON)
+        //double startT(interval.second-dis),endT(startT+min_clear);
+        double startT(interval.second-dis),endT(move2.t2-dis+min_clear);
+        if (gt(startT,0) && gt(min_clear,0))
         {
+          assert(gt(endT,startT));
           int exit_id=id2ind(n.id,move1.id1,agent);
           Constraint edgeCon(agent,startT,endT,n.id,exit_id,move1.id1); 
-          //cout<<"-----";
-          //prt_constraint(edgeCon);
           assert(edgeCon.t2-edgeCon.t1>CN_EPSILON);
           constraint.push_back(edgeCon);
         }
@@ -388,18 +387,15 @@ CBS::con_return CBS::get_constraint(int agent, Move move1, Move move2, CBS_Node 
       double dist=sqrt((A-B)*(A-B));
       int enter_index=id2ind(move1.id2, move1.id1,agent);
       assert(enter_index!=-2);
-      //double min_clear=map->min_clear_time.at(move1.id2).at(enter_index);
-      double min_clear=map->get_min_clear_t(move1.id2,enter_index);
+      double min_clear=map->get_min_clear_t_ori(move1.id2,enter_index);
+      double min_clear2=map->get_min_clear_t(move1,move2.id2);
+      cout<<"m1: "<<move1<<"m2: "<<move2<<endl;
+      cout<<"min_clear: "<<min_clear<<" min_clear2: "<<min_clear2<<endl;
+      assert(eq(min_clear,min_clear2));
       startT=move1.t1;
       if (min_clear>-CN_EPSILON)
       {
-        endT=move2.t2-(dist-min_clear);
-        /*
-        if (dist>min_clear)
-          endT=move2.t2-(dist-min_clear);
-        else
-          endT=move2.t2+min_clear+(min_clear-dist);
-      */
+        endT=move2.t2-dist+min_clear;
       }
       else
       {
@@ -675,7 +671,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
 
     auto paths = get_paths(&node, task.get_agents_size());
     if (debug>0){
-      cout<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
+      cout<<endl<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
       cout<<"before conflict"<<endl;
       prt_paths(paths);
     }
@@ -2022,6 +2018,7 @@ void CBS::printBT(const std::string& prefix, const int node_id, bool isLeft)
 
   for(Constraint cons:node->constraint)
     cout<<cons<<" & ";
+  cout<<(node->positive_constraint)<<" [";
   //cout<<node->constraint;
 
   prt_path(node->path);

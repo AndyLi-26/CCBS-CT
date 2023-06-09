@@ -19,9 +19,10 @@
 class Map
 {
   private:
-    std::vector<std::vector<int>> grid;
-    std::vector<gNode> nodes;
-    std::vector<std::vector<Node>> valid_moves;
+    vector<std::vector<int>> grid;
+    vector<gNode> nodes;
+    vector<bool> activated;
+    vector<std::vector<Node>> valid_moves;
     int  height, width, size;
     int  connectedness;
     double agent_size;
@@ -44,11 +45,10 @@ class Map
     Map(double size, int k){ agent_size = size; connectedness = k; }
     Map(Map *m);
     ~Map(){}
-    double min_min_clearT(int node);
-    double get_min_clear_t(int main_n, int enter_n){ return (main_n >= init_node_num ? -1 : min_clear_time.at(main_n).at(enter_n));}
     int  get_size() const { return size; }
     int get_new_node_num() const {return size-init_node_num;}
     int get_init_node_num() const {return init_node_num;}
+    bool isNewNode(int n) const {return n>=init_node_num;}
     void get_map(string FileName);
     bool is_roadmap() const {return map_is_roadmap;}
     bool cell_is_obstacle(int i, int j) const;
@@ -61,11 +61,17 @@ class Map
     double get_dist(int id1, int id2) const;
     int add_node(double i, double j, int node1, int node2);
     std::vector<Node> get_valid_moves(int id) const;
+    //cr part:
+    double min_min_clearT(int node);
+    double get_min_clear_t(Move m1, int s2);
+    double get_min_clear_t_ori(int main_n, int enter_n){ return (main_n >= init_node_num ? -1 : min_clear_time.at(main_n).at(enter_n));}
+    double get_min_clear_t_sameDestination(int main_n, int enter_n);
     double fit2grid(double val){return round(val/CN_PRECISION)*CN_PRECISION;}
     Vector2D fit2line(Vector2D precise_pos, int node1, int node2);
     void print_map();
     void printPPM();
-    //void prt_ind(node_index n);
+    double cos2min_t(double cos_theta);
+    int id2ind(int v1,int v2);
     void prt_set(std::set<int> s) const;
     void prt_validmoves() const;
     void alter(Map_deltas map_delta);

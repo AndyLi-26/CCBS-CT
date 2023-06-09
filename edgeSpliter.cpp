@@ -26,6 +26,7 @@ void edgeSpliter::find_deltas(const Conflict &conf, Map_deltas &deltasR, Map_del
   }
   else
   {
+    cout<<"in two moving"<<endl;
     moving(m1,m2,deltasR,map, h_values,a1);
     moving(m2,m1,deltasL,map, h_values,a2);
   }
@@ -68,7 +69,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
   {
     if (m2.id1==m1.id2) //other agent is waiting on the moving agent's destination
     {
-      double new_t=round_down(totalT-2*r) - CN_PRECISION;
+      double new_t=round_down(totalT-d) - CN_PRECISION;
       P_new=Vector2D(P11+v*(new_t));
     }
     else
@@ -78,6 +79,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
   }
   else
   {
+    cout<<"tring case1: "<<endl;
     //case1
     double x0(P11.i),y0(P11.j),x1(P21.i),y1(P21.j),x2(P22.i),y2(P22.j);
     double dx(x2-x1),dy(y2-y1);
@@ -87,11 +89,104 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
 
     if (abs(a)<=CN_EPSILON)
     {
-      if(P11.i<=P21.i && P11.i>=P22.i || P11.j <= P21.j && P11.j >= P22.j ||
-          P11.i<=P22.i && P11.i>=P21.i || P11.j <= P22.j && P11.j >= P21.j)
-        P_new=Vector2D(-1,-1);
+      if (eq(P21.i,P22.i))
+      {
+        if ( (le(P11.j,P21.j) && ge(P11.j,P22.j)) || (ge(P11.j,P21.j) && le(P11.j,P22.j)) || le( abs(P11.j-P21.j) ,d) || le( abs(P11.j - P22.j) ,d) )
+          P_new=Vector2D(-1,-1);
+
+        else if (gt(P21.j,P22.j))
+          if (gt(P11.j,P21.j))
+            P_new=case2(P11,v,P21);
+          else if (lt(P11.j,P22.j))
+            P_new=case2(P11,v,P22);
+          else
+            assert(false);
+
+        else if (lt(P21.j,P22.j))
+          if (lt(P11.j,P21.j))
+            P_new=case2(P11,v,P21);
+          else if (gt(P11.j,P22.j))
+            P_new=case2(P11,v,P22);
+          else
+            assert(false);
+      }
+      else if (eq(P21.j,P22.j))
+      {
+        if ( (le(P11.i,P21.i) && ge(P11.i,P22.i)) || (ge(P11.i,P21.i) && le(P11.i,P22.i)) || le( abs(P11.i-P21.i) ,d) || le( abs(P11.i - P22.i) ,d) )
+          P_new=Vector2D(-1,-1);
+
+        else if (gt(P21.i,P22.i))
+          if (gt(P11.i,P21.i))
+            P_new=case2(P11,v,P21);
+          else if (lt(P11.i,P22.i))
+            P_new=case2(P11,v,P22);
+          else
+            assert(false);
+
+        else if (lt(P21.i,P22.j))
+          if (lt(P11.i,P21.i))
+            P_new=case2(P11,v,P21);
+          else if (gt(P11.i,P22.i))
+            P_new=case2(P11,v,P22);
+          else
+            assert(false);
+      }
+      else if( (le(P11.i,P21.i) && ge(P11.i,P22.i)) || (le(P11.j, P21.j) && ge(P11.j, P22.j)) ||
+          (le(P11.i,P22.i) && ge(P11.i,P21.i)) || (le(P11.j, P22.j) && ge(P11.j, P21.j)) )
+          P_new=Vector2D(-1,-1);
+
+      else if((P22.i-P21.i)*(P22.j-P21.j)>0) // dir:/ checking if two sign are the same
+      {
+        if (gt(P21.i,P22.i))
+          if (gt(P11.i,P21.i))
+            if(le(P11.dis(P21),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P21);
+          else if(lt(P11.i,P22.i))
+            if(le(P11.dis(P22),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P22);
+            
+        if (lt(P21.i,P22.i))
+          if (lt(P11.i,P21.i))
+            if(le(P11.dis(P21),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P21);
+          else if(gt(P11.i,P22.i))
+            if(le(P11.dis(P22),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P22);
+      }
       else
-        P_new=case2(P11,v,P22);
+      {
+        if (gt(P21.i,P22.i))
+          if (gt(P11.i,P21.i))
+            if(le(P11.dis(P21),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P21);
+          else if(lt(P11.i,P22.i))
+            if(le(P11.dis(P22),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P22);
+            
+        if (lt(P21.i,P22.i))
+          if (lt(P11.i,P21.i))
+            if(le(P11.dis(P21),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P21);
+          else if(gt(P11.i,P22.i))
+            if(le(P11.dis(P22),d))
+              P_new=Vector2D(-1,-1);
+            else
+              P_new=case2(P11,v,P22);
+      }
     }
     else
     {
@@ -100,6 +195,8 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
       double c( -(C-pow((dx*y0 - dy*x0),2) + 2*dx*dx*y1*y0  + 2*dy*dy*x1*x0 - 2*dx*dy*y1*x0 - 2*dx*dy*x1*y0 ));
 
       double t2=solveQuad(a,b,c) - CN_PRECISION;
+
+      cout<<"solved t2: "<<endl;
 
       if (t2<CN_EPSILON)
         P_new=Vector2D(-1,-1);
@@ -113,17 +210,17 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
         {
           if(ge(P_new.j,P21.j) && ge(P_new.j,P22.j))
             if(gt(P21.j,P22.j))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                 P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
           else if(le(P_new.j,P21.j) && le(P_new.j,P22.j))
             if(lt(P21.j,P22.j))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                 P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
 
         }
@@ -131,107 +228,73 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
         {
           if(ge(P_new.i,P21.i) && ge(P_new.i,P22.i))
             if(gt(P21.i,P22.i))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                 P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
           else if(le(P_new.i,P21.i) && le(P_new.i,P22.i))
             if(lt(P21.j,P22.i))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                 P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
         }
         else if(v2x*v2y>0) // dir:/ checking if two sign are the same
         {
           if(ge(P_new.i,P21.i) && ge(P_new.i,P22.i) && ge(P_new.j,P21.j) && ge(P_new.j,P22.j))
             if(gt(P21.i,P22.i))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                 P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
           else if(le(P_new.i,P21.i) && le(P_new.i,P22.i) && le(P_new.j,P21.j) && le(P_new.j,P22.j))
             if(lt(P21.j,P22.i))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                  P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
         }
-        else // dir:\  
+        else // dir:left up to right down   
         {
           if(ge(P_new.i,P21.i) && ge(P_new.i,P22.i) && le(P_new.j,P21.j) && le(P_new.j,P22.j))
             if(gt(P21.i,P22.i))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                 P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
           else if(le(P_new.i,P21.i) && le(P_new.i,P22.i) && ge(P_new.j,P21.j) && ge(P_new.j,P22.j))
             if(lt(P21.j,P22.i))
-              if (gt(P21.dis(P_new),2*r))
+              if (gt(P21.dis(P_new),d))
                  P_new=case2(P11,v,P21);
             else
-              if (gt(P22.dis(P_new),2*r))
+              if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
         }
-        /*
-        if (eq(P21.i,P22.i))
-        //if (P_new.i==P21.i && P_new==P22.i)
-        {
-          cout<<"into case2a"<<endl;
-          if (gt(P21.j,P22.j))
-          {
-            if (ge(P_new.j - 2*r,P21.j))
-              P_new=case2(P11,v,P21);
-            else if(le(P_new.j + 2*r,P22.j))
-              P_new=case2(P11,v,P22);
-          }
-          else 
-          {
-            if (ge(P_new.j - 2*r,P22.j))
-              P_new=case2(P11,v,P22);
-            else if(le(P_new.j + 2*r,P21.j))
-              P_new=case2(P11,v,P21);
-          }
-
-        }
-        else if(gt(P21.i,P22.i))
-        {
-          cout<<"into case2b"<<endl;
-          cout<<"P_new:"<<P_new<<" P22"<<P22<<" P21"<<P21<<endl;
-          if (gt(P_new.i,P21.i) && gt(P21.dis(P_new),2*r))
-            P_new=case2(P11,v,P21);
-          else if (lt(P_new.i,P22.i) && gt(P22.dis(P_new),2*r))
-            P_new=case2(P11,v,P22);
-        }
-        else if(lt(P21.i,P22.i))
-        {
-          cout<<"into case2c"<<endl;
-          if (gt(P_new.i,P22.i) && gt(P22.dis(P_new),2*r))
-            P_new=case2(P11,v,P22);
-          else if (lt(P_new.i,P21.i) && gt(P21.dis(P_new),2*r))
-            P_new=case2(P11,v,P21);
-        }
       }
-      */
     }
   }
-
   //final adding
   if (P_new.i!=-1 && validNewNode(P11,P12,P_new))
   {
-    int new_id=map.add_node(P_new.i,P_new.j,node11,node12);
-    if (new_id!=-1)
+    cout<<"before fitting: "<<P_new<<endl;
+    P_new=fitPoint(P_new,node11,node12,map);
+    cout<<"after fitting: "<<P_new<<endl;
+    if (P_new.i!=-1)
     {
-      if(writeNode)
-        output <<new_id <<","<< P_new.i<<","<<P_new.j<<","<<endl;
-      Map_delta new_delta(new_id,{node11,node12});
-      deltas.push_back(new_delta);
-      h_values.add_node(new_id,a,node11);
+      int new_id=map.add_node(P_new.i,P_new.j,node11,node12);
+      if (new_id!=-1)
+      {
+        if(writeNode)
+          output <<new_id <<","<< P_new.i<<","<<P_new.j<<","<<endl;
+        Map_delta new_delta(new_id,{node11,node12});
+        deltas.push_back(new_delta);
+        h_values.add_node(new_id,a,node11);
+      }
     }
   }
 }
@@ -278,4 +341,83 @@ double edgeSpliter::solveQuad(double a, double b, double c)
   double t2( round_down( (-b-sqrtDelta)/(2*a) ));
   
   return t2;
+}
+
+Vector2D edgeSpliter::fitPoint(Vector2D P, int nFrom, int nTo, Map &map)
+{
+  int n1(nFrom), n2(nTo);
+  int prev(nTo), swap;
+  while (map.isNewNode(n1))
+  {
+    auto temp=map.get_valid_moves(n1);
+    swap=n1;
+    n1 = temp.at(0).id==prev ? temp.at(1).id : temp.at(0).id;
+    prev=swap;
+  }
+
+  prev=nFrom;
+  while (map.isNewNode(n2))
+  {
+    map.prt_validmoves();
+    auto temp=map.get_valid_moves(n2);
+    swap=n2;
+    n2 = temp.at(0).id==prev ? temp.at(1).id : temp.at(0).id;
+    prev=swap;
+  }
+
+  int dir;
+  Vector2D P1,P2;
+  if (n1<n2)
+  {
+    dir=0;
+    P1=map.get_coord(n1);
+    P2=map.get_coord(n2);
+  }
+  else
+  {
+    dir=1;
+    P1=map.get_coord(n2);
+    P2=map.get_coord(n1);
+  }
+  
+  Vector2D v=P2-P1;
+  Vector2D unitv=v/sqrt(v*v);
+  double dis=P.dis(P1);
+  int rounded_dis=(int) (dis/config.min_dis);
+  double fitted_dis=(rounded_dis + dir) * config.min_dis;
+  Vector2D newP(P1+unitv*fitted_dis);
+  assert(abs(newP.i-P.i)<config.min_dis && abs(newP.j-P.j)<config.min_dis);
+
+  Vector2D fromP(map.get_coord(nFrom)), toP(map.get_coord(nTo));
+  bool inBetweenX= (lt(newP.i,fromP.i) && gt(newP.i,toP.i)) || (gt(newP.i,fromP.i) && lt(newP.i,toP.i)) || (eq(newP.i,fromP.i) && eq(newP.i,toP.i));
+  bool inBetweenY= (lt(newP.j,fromP.j) && gt(newP.j,toP.j)) || (gt(newP.j,fromP.j) && lt(newP.j,toP.j)) || (eq(newP.j,fromP.j) && eq(newP.j,toP.j));
+  if (inBetweenX && inBetweenY)
+    return newP;
+  else
+  {
+    cout<<"fromP: "<<fromP<<" toP: "<<toP<<endl;
+    return Vector2D(-1,-1);
+  }
+
+  if (newP==P1)
+  {
+    cout<<"eq P1:"<<P1<<endl;
+    return Vector2D(-1,-1);
+  }
+  if (newP==P2)
+  {
+    cout<<"eq P2:"<<P2<<endl;
+    return Vector2D(-1,-1);
+  }
+  if (newP==map.get_coord(nFrom))
+  {
+    cout<<"eq nFrom:"<<(map.get_coord(nFrom))<<endl;
+    return Vector2D(-1,-1);
+  }
+  if (newP==map.get_coord(nTo))
+  {
+    cout<<"eq nTo:"<<(map.get_coord(nTo))<<endl;
+    return Vector2D(-1,-1);
+  }
+  return newP;
 }

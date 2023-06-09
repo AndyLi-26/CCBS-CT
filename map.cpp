@@ -95,13 +95,50 @@ double Map::get_dist(int id1, int id2) const
   return sqrt(dx+dy);
 }
 
+double Map::get_min_clear_t(Move m1, int s2)
+{
+  if (m1.id2==s2)
+    return get_min_clear_t_sameDestination(m1.id2,m1.id1);
+}
+
+double Map::get_min_clear_t_sameDestination(int main_n, int enter_n)
+{
+  if (main_n>=init_node_num) return -1;
+  cout<<"main_n: "<< main_n<<"enter_n"<< enter_n<<get_coord(enter_n)<<endl;
+  prt_validmoves();
+  double min_t(-1),t;
+  for (Node exit:valid_moves[main_n]){
+    //if (valid_moves[main_n][enter_n].id==exit.id) continue;
+    if (enter_n==exit.id) continue;
+    //calc cos theta
+    int nA(main_n),nB(enter_n),nC(exit.id);
+    Vector2D A(get_coord(nA)),B(get_coord(nB)),C(get_coord(nC));
+    double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
+    double cos_theta((b*b+c*c-a*a)/(2*b*c));
+    if (eq(cos_theta,-1)){ //zero
+      return 0;
+    }
+    t=cos2min_t(cos_theta);
+    if (min_t==-1 || t<min_t){
+      min_t=t;
+    }
+  }
+  return min_t;
+}
+
+double Map::cos2min_t(double cos_theta)
+{
+  //double temp((8*agent_size*agent_size)/(1-cos_theta));
+  //double t=(sqrt(temp));
+  return sqrt((8*agent_size*agent_size)/(1-cos_theta));
+}
 
 double Map::get_j(int id) const
 {
-    if(!map_is_roadmap)
-        return int(id%width);
-    else
-        return nodes[id].j;
+  if(!map_is_roadmap)
+    return int(id%width);
+  else
+    return nodes[id].j;
 }
 
 void Map::get_grid(string FileName)
@@ -111,184 +148,184 @@ void Map::get_grid(string FileName)
 }
 
 /*
-bool Map::get_grid(string FileName)
+   bool Map::get_grid(string FileName)
+   {
+
+   tinyxml2::XMLElement *root = nullptr, *map = nullptr, *element = nullptr, *mapnode = nullptr;
+
+   std::string value;
+   std::stringstream stream;
+   bool hasGridMem(false), hasGrid(false), hasHeight(false), hasWidth(false);
+
+   tinyxml2::XMLDocument doc;
+   if (doc.LoadFile(FileName) != tinyxml2::XMLError::XML_SUCCESS)
+   {
+   std::cout << "Error opening XML file!" << std::endl;
+   return false;
+   }
+   root = doc.FirstChildElement(CNS_TAG_ROOT);
+   if (!root)
+   {
+   std::cout << "Error! No '" << CNS_TAG_ROOT << "' tag found in XML file!" << std::endl;
+   return false;
+   }
+   map = root->FirstChildElement(CNS_TAG_MAP);
+   if (!map)
+   {
+   std::cout << "Error! No '" << CNS_TAG_MAP << "' tag found in XML file!" << std::endl;
+   return false;
+   }
+
+   for (mapnode = map->FirstChildElement(); mapnode; mapnode = mapnode->NextSiblingElement())
+   {
+   element = mapnode->ToElement();
+   value = mapnode->Value();
+   std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+
+   stream.str("");
+   stream.clear();
+   stream << element->GetText();
+
+   if (!hasGridMem && hasHeight && hasWidth)
+   {
+   grid.resize(height);
+   for (int i = 0; i < height; ++i)
+   grid[i].resize(width);
+   hasGridMem = true;
+   }
+
+   if (value == CNS_TAG_HEIGHT)
+   {
+   if (hasHeight)
+   {
+   std::cout << "Warning! Duplicate '" << CNS_TAG_HEIGHT << "' encountered." << std::endl;
+   std::cout << "Only first value of '" << CNS_TAG_HEIGHT << "' =" << height << "will be used."
+   << std::endl;
+   }
+   else
+   {
+   if (!((stream >> height) && (height > 0)))
+   {
+   std::cout << "Warning! Invalid value of '" << CNS_TAG_HEIGHT
+   << "' tag encountered (or could not convert to integer)." << std::endl;
+   std::cout << "Value of '" << CNS_TAG_HEIGHT << "' tag should be an integer >=0" << std::endl;
+   std::cout << "Continue reading XML and hope correct value of '" << CNS_TAG_HEIGHT
+   << "' tag will be encountered later..." << std::endl;
+   }
+   else
+   hasHeight = true;
+   }
+   }
+   else if (value == CNS_TAG_WIDTH)
+   {
+if (hasWidth)
 {
+  std::cout << "Warning! Duplicate '" << CNS_TAG_WIDTH << "' encountered." << std::endl;
+  std::cout << "Only first value of '" << CNS_TAG_WIDTH << "' =" << width << "will be used." << std::endl;
+}
+else
+{
+  if (!((stream >> width) && (width > 0)))
+  {
+    std::cout << "Warning! Invalid value of '" << CNS_TAG_WIDTH
+      << "' tag encountered (or could not convert to integer)." << std::endl;
+    std::cout << "Value of '" << CNS_TAG_WIDTH << "' tag should be an integer AND >0" << std::endl;
+    std::cout << "Continue reading XML and hope correct value of '" << CNS_TAG_WIDTH
+      << "' tag will be encountered later..." << std::endl;
 
-    tinyxml2::XMLElement *root = nullptr, *map = nullptr, *element = nullptr, *mapnode = nullptr;
-
-    std::string value;
-    std::stringstream stream;
-    bool hasGridMem(false), hasGrid(false), hasHeight(false), hasWidth(false);
-
-    tinyxml2::XMLDocument doc;
-    if (doc.LoadFile(FileName) != tinyxml2::XMLError::XML_SUCCESS)
+  }
+  else
+    hasWidth = true;
+}
+}
+else if (value == CNS_TAG_GRID)
+{
+  int grid_i(0), grid_j(0);
+  hasGrid = true;
+  if (!(hasHeight && hasWidth))
+  {
+    std::cout << "Error! No '" << CNS_TAG_WIDTH << "' tag or '" << CNS_TAG_HEIGHT << "' tag before '"
+      << CNS_TAG_GRID << "'tag encountered!" << std::endl;
+    return false;
+  }
+  element = mapnode->FirstChildElement();
+  while (grid_i < height)
+  {
+    if (!element)
     {
-        std::cout << "Error opening XML file!" << std::endl;
-        return false;
+      std::cout << "Error! Not enough '" << CNS_TAG_ROW << "' tags inside '" << CNS_TAG_GRID << "' tag."
+        << std::endl;
+      std::cout << "Number of '" << CNS_TAG_ROW
+        << "' tags should be equal (or greater) than the value of '" << CNS_TAG_HEIGHT
+        << "' tag which is " << height << std::endl;
+      return false;
     }
-    root = doc.FirstChildElement(CNS_TAG_ROOT);
-    if (!root)
-    {
-        std::cout << "Error! No '" << CNS_TAG_ROOT << "' tag found in XML file!" << std::endl;
-        return false;
-    }
-    map = root->FirstChildElement(CNS_TAG_MAP);
-    if (!map)
-    {
-        std::cout << "Error! No '" << CNS_TAG_MAP << "' tag found in XML file!" << std::endl;
-        return false;
-    }
-
-    for (mapnode = map->FirstChildElement(); mapnode; mapnode = mapnode->NextSiblingElement())
-    {
-        element = mapnode->ToElement();
-        value = mapnode->Value();
-        std::transform(value.begin(), value.end(), value.begin(), ::tolower);
-
+    std::string str = element->GetText();
+    std::vector<std::string> elems;
+    std::stringstream ss(str);
+    std::string item;
+    while (std::getline(ss, item, ' '))
+      elems.push_back(item);
+    grid_j = 0;
+    int val;
+    if (elems.size() > 0)
+      for (grid_j = 0; grid_j < width; ++grid_j)
+      {
+        if (grid_j == int(elems.size()))
+          break;
         stream.str("");
         stream.clear();
-        stream << element->GetText();
+        stream << elems[grid_j];
+        stream >> val;
+        grid[grid_i][grid_j] = val;
+      }
 
-        if (!hasGridMem && hasHeight && hasWidth)
-        {
-            grid.resize(height);
-            for (int i = 0; i < height; ++i)
-                grid[i].resize(width);
-            hasGridMem = true;
-        }
-
-        if (value == CNS_TAG_HEIGHT)
-        {
-            if (hasHeight)
-            {
-                std::cout << "Warning! Duplicate '" << CNS_TAG_HEIGHT << "' encountered." << std::endl;
-                std::cout << "Only first value of '" << CNS_TAG_HEIGHT << "' =" << height << "will be used."
-                          << std::endl;
-            }
-            else
-            {
-                if (!((stream >> height) && (height > 0)))
-                {
-                    std::cout << "Warning! Invalid value of '" << CNS_TAG_HEIGHT
-                              << "' tag encountered (or could not convert to integer)." << std::endl;
-                    std::cout << "Value of '" << CNS_TAG_HEIGHT << "' tag should be an integer >=0" << std::endl;
-                    std::cout << "Continue reading XML and hope correct value of '" << CNS_TAG_HEIGHT
-                              << "' tag will be encountered later..." << std::endl;
-                }
-                else
-                    hasHeight = true;
-            }
-        }
-        else if (value == CNS_TAG_WIDTH)
-        {
-            if (hasWidth)
-            {
-                std::cout << "Warning! Duplicate '" << CNS_TAG_WIDTH << "' encountered." << std::endl;
-                std::cout << "Only first value of '" << CNS_TAG_WIDTH << "' =" << width << "will be used." << std::endl;
-            }
-            else
-            {
-                if (!((stream >> width) && (width > 0)))
-                {
-                    std::cout << "Warning! Invalid value of '" << CNS_TAG_WIDTH
-                              << "' tag encountered (or could not convert to integer)." << std::endl;
-                    std::cout << "Value of '" << CNS_TAG_WIDTH << "' tag should be an integer AND >0" << std::endl;
-                    std::cout << "Continue reading XML and hope correct value of '" << CNS_TAG_WIDTH
-                              << "' tag will be encountered later..." << std::endl;
-
-                }
-                else
-                    hasWidth = true;
-            }
-        }
-        else if (value == CNS_TAG_GRID)
-        {
-            int grid_i(0), grid_j(0);
-            hasGrid = true;
-            if (!(hasHeight && hasWidth))
-            {
-                std::cout << "Error! No '" << CNS_TAG_WIDTH << "' tag or '" << CNS_TAG_HEIGHT << "' tag before '"
-                          << CNS_TAG_GRID << "'tag encountered!" << std::endl;
-                return false;
-            }
-            element = mapnode->FirstChildElement();
-            while (grid_i < height)
-            {
-                if (!element)
-                {
-                    std::cout << "Error! Not enough '" << CNS_TAG_ROW << "' tags inside '" << CNS_TAG_GRID << "' tag."
-                              << std::endl;
-                    std::cout << "Number of '" << CNS_TAG_ROW
-                              << "' tags should be equal (or greater) than the value of '" << CNS_TAG_HEIGHT
-                              << "' tag which is " << height << std::endl;
-                    return false;
-                }
-                std::string str = element->GetText();
-                std::vector<std::string> elems;
-                std::stringstream ss(str);
-                std::string item;
-                while (std::getline(ss, item, ' '))
-                    elems.push_back(item);
-                grid_j = 0;
-                int val;
-                if (elems.size() > 0)
-                    for (grid_j = 0; grid_j < width; ++grid_j)
-                    {
-                        if (grid_j == int(elems.size()))
-                            break;
-                        stream.str("");
-                        stream.clear();
-                        stream << elems[grid_j];
-                        stream >> val;
-                        grid[grid_i][grid_j] = val;
-                    }
-
-                if (grid_j != width)
-                {
-                    std::cout << "Invalid value on " << CNS_TAG_GRID << " in the " << grid_i + 1 << " " << CNS_TAG_ROW
-                              << std::endl;
-                    return false;
-                }
-                ++grid_i;
-                element = element->NextSiblingElement();
-            }
-        }
+    if (grid_j != width)
+    {
+      std::cout << "Invalid value on " << CNS_TAG_GRID << " in the " << grid_i + 1 << " " << CNS_TAG_ROW
+        << std::endl;
+      return false;
     }
-    if (!hasGrid) {
-        std::cout << "Error! There is no tag 'grid' in xml-file!\n";
-        return false;
-    }
-    size = width*height;
-    std::vector<Step> moves;
-    valid_moves.resize(height*width);
-    if(connectedness == 2)
-        moves = {{0,1}, {1,0}, {-1,0},  {0,-1}};
-    else if(connectedness == 3)
-        moves = {{0,1}, {1,1}, {1,0},  {1,-1},  {0,-1},  {-1,-1}, {-1,0}, {-1,1}};
-    else if(connectedness == 4)
-        moves = {{0,1}, {1,1}, {1,0},  {1,-1},  {0,-1},  {-1,-1}, {-1,0}, {-1,1},
-                 {1,2}, {2,1}, {2,-1}, {1,-2}, {-1,-2}, {-2,-1}, {-2,1},  {-1,2}};
-    else
-        moves = {{0,1},   {1,1},   {1,0},   {1,-1},  {0,-1},  {-1,-1}, {-1,0}, {-1,1},
-                 {1,2},   {2,1},   {2,-1},  {1,-2},  {-1,-2}, {-2,-1}, {-2,1}, {-1,2},
-                 {1,3},   {2,3},   {3,2},   {3,1},   {3,-1},  {3,-2},  {2,-3}, {1,-3},
-                 {-1,-3}, {-2,-3}, {-3,-2}, {-3,-1}, {-3,1},  {-3,2},  {-2,3}, {-1,3}};
-    for(int i = 0; i < height; i++)
-        for(int j = 0; j < width; j++)
-        {
-            std::vector<bool> valid(moves.size(), true);
-            for(unsigned int k = 0; k < moves.size(); k++)
-                if((i + moves[k].i) < 0 || (i + moves[k].i) >= height || (j + moves[k].j) < 0 || (j + moves[k].j) >= width
-                        || cell_is_obstacle(i + moves[k].i, j + moves[k].j)
-                        || !check_line(i, j, i + moves[k].i, j + moves[k].j))
-                    valid[k] = false;
-            std::vector<Node> v_moves = {};
-            for(unsigned int k = 0; k < valid.size(); k++)
-                if(valid[k])
-                    v_moves.push_back(Node((i + moves[k].i)*width + moves[k].j + j, 0, 0, i + moves[k].i, j + moves[k].j));
-            valid_moves[i*width+j] = v_moves;
-        }
-    return true;
+    ++grid_i;
+    element = element->NextSiblingElement();
+  }
+}
+}
+if (!hasGrid) {
+  std::cout << "Error! There is no tag 'grid' in xml-file!\n";
+  return false;
+}
+size = width*height;
+std::vector<Step> moves;
+valid_moves.resize(height*width);
+if(connectedness == 2)
+  moves = {{0,1}, {1,0}, {-1,0},  {0,-1}};
+else if(connectedness == 3)
+  moves = {{0,1}, {1,1}, {1,0},  {1,-1},  {0,-1},  {-1,-1}, {-1,0}, {-1,1}};
+else if(connectedness == 4)
+  moves = {{0,1}, {1,1}, {1,0},  {1,-1},  {0,-1},  {-1,-1}, {-1,0}, {-1,1},
+    {1,2}, {2,1}, {2,-1}, {1,-2}, {-1,-2}, {-2,-1}, {-2,1},  {-1,2}};
+else
+moves = {{0,1},   {1,1},   {1,0},   {1,-1},  {0,-1},  {-1,-1}, {-1,0}, {-1,1},
+  {1,2},   {2,1},   {2,-1},  {1,-2},  {-1,-2}, {-2,-1}, {-2,1}, {-1,2},
+  {1,3},   {2,3},   {3,2},   {3,1},   {3,-1},  {3,-2},  {2,-3}, {1,-3},
+  {-1,-3}, {-2,-3}, {-3,-2}, {-3,-1}, {-3,1},  {-3,2},  {-2,3}, {-1,3}};
+for(int i = 0; i < height; i++)
+for(int j = 0; j < width; j++)
+{
+  std::vector<bool> valid(moves.size(), true);
+  for(unsigned int k = 0; k < moves.size(); k++)
+    if((i + moves[k].i) < 0 || (i + moves[k].i) >= height || (j + moves[k].j) < 0 || (j + moves[k].j) >= width
+        || cell_is_obstacle(i + moves[k].i, j + moves[k].j)
+        || !check_line(i, j, i + moves[k].i, j + moves[k].j))
+      valid[k] = false;
+  std::vector<Node> v_moves = {};
+  for(unsigned int k = 0; k < valid.size(); k++)
+    if(valid[k])
+      v_moves.push_back(Node((i + moves[k].i)*width + moves[k].j + j, 0, 0, i + moves[k].i, j + moves[k].j));
+  valid_moves[i*width+j] = v_moves;
+}
+return true;
 }
 */
 
@@ -319,7 +356,7 @@ void Map::get_roadmap(string FileName)
   if(!(myfile>>edges)){
     FAIL("Invalid edge number, expecting an int");
   }
-    for (int i=0;i<edges;i++)
+  for (int i=0;i<edges;i++)
   {
     if (!(myfile>>id1>>id2)){
       FAIL("Invalid edge, expecting 2 ints");
@@ -341,6 +378,7 @@ void Map::get_roadmap(string FileName)
     valid_moves.push_back(neighbors);
   }
   size = int(nodes.size());
+  activated=vector<bool>(size,true);
 }
 
 double Map::min_min_clearT(int node)
@@ -355,48 +393,47 @@ void Map::pre_process()
   for (int i=0; i<size;++i){
     vector<double> min_clearV;
     min_clearV.clear();
-      for (int j=0;j<valid_moves[i].size();++j){
-        double min_t(-1);
-        for (Node exit:valid_moves[i]){
-          if (valid_moves[i][j].id==exit.id) continue;
-          //calc theta
-          Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
-          //cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
+    for (int j=0;j<valid_moves[i].size();++j){
+      double min_t(-1);
+      for (Node exit:valid_moves[i]){
+        if (valid_moves[i][j].id==exit.id) continue;
+        //calc theta
+        Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
+        //cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
 
-          double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
-          double cos_theta((b*b+c*c-a*a)/(2*b*c));
-          //cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
-          //cout<<"cos: "<<cos_theta<<endl;
-          if (cos_theta==-1){ //zero
-            min_t=0;
-            break;
-          }
-          //if (cos_theta==-1) continue;//inf large
-          //find min_t
-          double temp(-(8*agent_size*agent_size)/(1-cos_theta));
-          double t=(sqrt(-4*temp))/2;
-          //cout<<"t: "<<t<<endl;
-          if (min_t==-1 || t<min_t){
-            min_t=t;
-          }
+        double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
+        double cos_theta((b*b+c*c-a*a)/(2*b*c));
+        //cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
+        //cout<<"cos: "<<cos_theta<<endl;
+        if (cos_theta==-1){ //zero
+          min_t=0;
+          break;
         }
-        //cout<<"min t:"<<min_t<<endl;
-        min_clearV.push_back(min_t);
+        //if (cos_theta==-1) continue;//inf large
+        //find min_t
+        double temp((8*agent_size*agent_size)/(1-cos_theta));
+        double t=(sqrt(temp));
+        //double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
+        //cout<<"t: "<<t<<endl;
+        if (min_t==-1 || t<min_t){
+          min_t=t;
+        }
       }
+      //cout<<"min t:"<<min_t<<endl;
+      min_clearV.push_back(min_t);
+    }
     min_clear_time.push_back(min_clearV);
   }
-  /*
-  boost::unordered::unordered_map<int,double>::iterator it;
-  for(int i=0;i<min_clear_time.size();i++)
-  {
-    cout<<i<<": "<<endl;
-    //for (it=min_clear_time[i].begin();it!=min_clear_time[i].end();++it)
-    //    std::cout << it->first <<", " << it->second << std::endl;
-    for (double j:min_clear_time.at(i))
-      cout<<j<<", ";
-    cout<<endl;
+     boost::unordered::unordered_map<int,double>::iterator it;
+     for(int i=0;i<min_clear_time.size();i++)
+     {
+     cout<<i<<": "<<endl;
+  //for (it=min_clear_time[i].begin();it!=min_clear_time[i].end();++it)
+  //    std::cout << it->first <<", " << it->second << std::endl;
+  for (double j:min_clear_time.at(i))
+  cout<<j<<", ";
+  cout<<endl;
   }
-  */
 }
 
 /*
@@ -543,7 +580,7 @@ valid_moves.push_back(neighbors);
 size = int(nodes.size());
 return true;
 }
-  */
+*/
 
 Vector2D Map::fit2line(Vector2D precise_pos, int node1, int node2)
 {
@@ -569,12 +606,12 @@ Vector2D Map::fit2line(Vector2D precise_pos, int node1, int node2)
   Vector2D temp = precise_pos-P1;//get_coord(node1);
   double dis=sqrt(temp*temp);
   /*
-  if (dir)
-  {
-    double edge_length=sqrt(v*v);
-    dis=edge_length-dis;
-  }
-  */
+     if (dir)
+     {
+     double edge_length=sqrt(v*v);
+     dis=edge_length-dis;
+     }
+     */
   cout<<"dis: "<<dis<<endl;
   int rounded=(int) (dis/CN_RESOLUTION);
   double temp2=(rounded+dir)*CN_RESOLUTION;
@@ -589,8 +626,28 @@ int Map::add_node(double i, double j, int node1, int node2)
 {
   //std::cout<<"new agent:"<<agent<<std::endl;
   new_table::iterator it;
-  int s_id= (node1<node2) ? node1 : node2;
-  int l_id= (node1>node2) ? node1 : node2;
+  
+  int n1(node1), n2(node2);
+  int prev(node2), swap;
+  while (isNewNode(n1))
+  {
+    auto temp=get_valid_moves(n1);
+    swap=n1;
+    n1 = temp.at(0).id==prev ? temp.at(1).id : temp.at(0).id;
+    prev=swap;
+  }
+
+  prev=node1;
+  while (isNewNode(n2))
+  {
+    auto temp=get_valid_moves(n2);
+    swap=n2;
+    n2 = temp.at(0).id==prev ? temp.at(1).id : temp.at(0).id;
+    prev=swap;
+  }
+
+  int s_id= (n1<n2) ? n1 : n2;
+  int l_id= (n1>n2) ? n1 : n2;
 
   new_node_ind ind(std::make_tuple(i,j,s_id,l_id));
   //check if exist
@@ -602,9 +659,20 @@ int Map::add_node(double i, double j, int node1, int node2)
   int node_id;
   if (it != new_node_table.end())
   {
-    return -1;
+    node_id=it->second;
+    if (activated.at(node_id))
+      return -1;
+    else
+      return node_id;
   }
-  else
+/*
+  for (int idx=init_node_num;idx<size;idx++)
+  {
+    if (!activated.at(idx)) continue;
+    if (eq(nodes.at(idx).i,i) && eq(nodes.at(idx).j,j))
+      return -1;
+  }
+*/
   {
     node_id=nodes.size();
     gNode tempnode(i,j);
@@ -633,7 +701,7 @@ int Map::add_node(double i, double j, int node1, int node2)
   nodes[node_id].neighbors.push_back(node2);
   nodes[node1].neighbors.push_back(node_id);
   nodes[node2].neighbors.push_back(node_id);
-
+  activated.push_back(false);
   return node_id;
 }
 
@@ -810,8 +878,9 @@ void Map::prt_validmoves() const
 {
 	//std::cout<<"Map:"<<std::endl;
 	for (int i=0;i<valid_moves.size();++i){
+    string act= activated.at(i) ? "+" : "-";
 		auto vecNode=valid_moves[i];
-		std::cout<<"|"<<i<<
+		std::cout<<"|"<<i<<" "<<act<<
 		" ("<<nodes[i].i<<","<<nodes[i].j<<") : ";
 		for (Node n:vecNode){
 			std::cout<<n.id<<", ";
@@ -831,11 +900,19 @@ void Map::alter(Map_deltas map_deltas)
 {
     for (Map_delta delta:map_deltas){
         int node_id(delta.add_node);
-        
+        assert(!activated.at(node_id));
+        activated.at(node_id)=true;
         if (node_id==-1)
             return;
         
         int v1(delta.del_edge.first),v2(delta.del_edge.second);
+        valid_moves.at(node_id).at(0).id=v1;
+        valid_moves.at(node_id).at(0).i=get_i(v1);
+        valid_moves.at(node_id).at(0).j=get_j(v1);
+        valid_moves.at(node_id).at(1).id=v2;
+        valid_moves.at(node_id).at(1).i=get_i(v2);
+        valid_moves.at(node_id).at(1).j=get_j(v2);
+
         
         for (int i=0;i<valid_moves[v1].size();++i){
             if (valid_moves[v1][i].id==v2){
@@ -863,12 +940,13 @@ void Map::alter_back(Map_deltas map_deltas)
 {
     for (Map_delta delta: map_deltas){
         int node_id(delta.add_node);
-        
+        assert(activated.at(node_id));
+        activated.at(node_id)=false;
         if (node_id==-1)
             return;
         
         int v1(delta.del_edge.first),v2(delta.del_edge.second);
-        
+ 
         for (int i=0;i<valid_moves[v1].size();++i){
             if (valid_moves[v1][i].id==node_id){
                 valid_moves[v1][i].i=get_i(v2);
@@ -887,4 +965,16 @@ void Map::alter_back(Map_deltas map_deltas)
             }
         }
     }
+}
+
+int Map::id2ind(int v1, int v2)
+{
+  std::vector<Node> temp_moves=valid_moves.at(v1);
+
+  for (int i=0;i<temp_moves.size();++i){
+    if (temp_moves.at(i).id==v2)
+      return i;
+  }
+  assert(false);
+  return -2;
 }

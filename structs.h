@@ -6,7 +6,6 @@
 #include <iostream>
 #include <chrono>
 #include "const.h"
-#include "handyFunc.h"
 #include <memory>
 #include <set>
 #include <iterator>
@@ -18,6 +17,13 @@
 using boost::multi_index_container;
 using namespace boost::multi_index;
 using namespace std;
+
+bool eq(double a, double b);
+bool lt(double a, double b);
+bool gt(double a, double b);
+bool le(double a, double b);
+bool ge(double a, double b);
+
 struct Agent
 {
     double start_i, start_j, goal_i, goal_j;
@@ -43,6 +49,7 @@ struct Config
   int     connectdness;
   int     debug=0;
   double  agent_size;
+  double  min_dis;
   int  timelimit;
   int 	agent_num;
   //double 	resolution;
@@ -187,7 +194,6 @@ struct Constraint
     friend std::ostream& operator <<(std::ostream& os, const Constraint& con)
     {
 		if(con.agent==-1){
-			os<<std::endl;
 			return os;
 		}
 		if (con.positive){
@@ -232,48 +238,56 @@ struct Move
         else if(id2 < other.id2) return true;
         else return false;
     }
+
+    friend std::ostream& operator <<(std::ostream& os, const Move& m)
+    {
+
+      os<<"{["<<m.id1<<"->"<<m.id2<<"] @:["<<m.t1<<"~"<<m.t2<<"]}"<<endl;
+      return os;
+    }
+
 };
 
 struct Step
 {
-    int i;
-    int j;
-    int id;
-    double cost;
-    //Step(const Node& node): i(node.i), j(node.j), id(node.id), cost(node.g) {}
-    Step(int _i = 0, int _j = 0, int _id = 0, double _cost = -1.0): i(_i), j(_j), id(_id), cost(_cost) {}
+  int i;
+  int j;
+  int id;
+  double cost;
+  //Step(const Node& node): i(node.i), j(node.j), id(node.id), cost(node.g) {}
+  Step(int _i = 0, int _j = 0, int _id = 0, double _cost = -1.0): i(_i), j(_j), id(_id), cost(_cost) {}
 };
 
 struct Conflict
 {
-    int agent1, agent2;
-    double t;
-    Move move1, move2;
-    double overcost;
-    //sPath path1, path2;
-    Conflict(int _agent1 = -1, int _agent2 = -1, Move _move1 = Move(), Move _move2 = Move(), double _t = CN_INFINITY)
-        : agent1(_agent1), agent2(_agent2), t(_t), move1(_move1), move2(_move2) {overcost = 0;}
-    bool operator < (const Conflict& other)
-    {
-        return this->overcost < other.overcost;
-    }
-	friend std::ostream& operator <<(std::ostream& os, const Conflict conflict){
-		int node11=conflict.move1.id1;
-		int node12=conflict.move1.id2;
-		int node21=conflict.move2.id1;
-		int node22=conflict.move2.id2;
-		os<<"[a"<<conflict.agent1<<":"<<node11<<"->"<<node12<<"]\n@["<<conflict.move1.t1<<"~"<<conflict.move1.t2<<"]\n";
-		os<<"[a"<<conflict.agent2<<":"<<node21<<"->"<<node22<<"]\n @["<<conflict.move2.t1<<"~"<<conflict.move2.t2<<"]\n";
-		return os;
-	}
+  int agent1, agent2;
+  double t;
+  Move move1, move2;
+  double overcost;
+  //sPath path1, path2;
+  Conflict(int _agent1 = -1, int _agent2 = -1, Move _move1 = Move(), Move _move2 = Move(), double _t = CN_INFINITY)
+    : agent1(_agent1), agent2(_agent2), t(_t), move1(_move1), move2(_move2) {overcost = 0;}
+  bool operator < (const Conflict& other)
+  {
+    return this->overcost < other.overcost;
+  }
+  friend std::ostream& operator <<(std::ostream& os, const Conflict conflict){
+    int node11=conflict.move1.id1;
+    int node12=conflict.move1.id2;
+    int node21=conflict.move2.id1;
+    int node22=conflict.move2.id2;
+    os<<"[a"<<conflict.agent1<<":"<<node11<<"->"<<node12<<"]\n@["<<conflict.move1.t1<<"~"<<conflict.move1.t2<<"]\n";
+    os<<"[a"<<conflict.agent2<<":"<<node21<<"->"<<node22<<"]\n @["<<conflict.move2.t1<<"~"<<conflict.move2.t2<<"]\n";
+    return os;
+  }
 };
 
 struct Map_delta{
-	int add_node;
-	int agent=-1; //positive agent
-	std::pair<int,int> del_edge;
-	Map_delta(int _add_node = -1, std::pair<int,int> _del_edge=std::make_pair(-1,-1), int a=-1)
-		: add_node(_add_node), del_edge(_del_edge), agent(a){}
+  int add_node;
+  int agent=-1; //positive agent
+  std::pair<int,int> del_edge;
+  Map_delta(int _add_node = -1, std::pair<int,int> _del_edge=std::make_pair(-1,-1), int a=-1)
+    : add_node(_add_node), del_edge(_del_edge), agent(a){}
 };
 typedef std::list<Map_delta> Map_deltas;
 
@@ -324,11 +338,12 @@ struct CBS_Node_aux
   CBS_Node_aux* right_child;
   int id,id_parent,id_left=-1,id_right=-1;
   int cost;
+  Constraint positive_constraint;
 
   Conflict cur_conflict;
   std::list<Constraint> constraint;
 
-  CBS_Node_aux(CBS_Node node):id(node.id),id_parent(node.parent != nullptr? node.parent->id : -1), cost(node.cost),cur_conflict(node.cur_conflict), constraint(node.constraint),id_left(-1),id_right(-1),path(node.paths[0]) {};
+  CBS_Node_aux(CBS_Node node):id(node.id),id_parent(node.parent != nullptr? node.parent->id : -1), cost(node.cost),cur_conflict(node.cur_conflict), constraint(node.constraint),id_left(-1),id_right(-1),path(node.paths[0]),positive_constraint(node.positive_constraint) {};
 
 };
 
@@ -535,7 +550,7 @@ class Vector2D {
     inline void operator -=(const Vector2D &vec) { i -= vec.i; j -= vec.j; }
     bool operator == (const Vector2D v) const
     {
-      return abs(v.i-i)<=CN_EPSILON && abs(v.j-j)<=CN_EPSILON;
+      return eq(v.i,i) && eq(v.j,j);
     }
     friend std::ostream& operator << (std::ostream& os, const Vector2D v){
       os<<"("<<v.i<<","<<v.j<<")";

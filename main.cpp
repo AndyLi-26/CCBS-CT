@@ -31,6 +31,7 @@ int main(int argc, const char *argv[])
       ("debug",po::value<int>()->default_value(0),"debug information")
       ("connectdness",po::value<int>()->default_value(2))
       ("agent_size,a",po::value<float>()->default_value(4.5))
+      ("min_distance",po::value<float>()->default_value(0.45))
       ("agent_num",po::value<int>()->required(),"number of agent")
       ("timelimit",po::value<int>()->default_value(30))
       ("Cardinal","use cardinal for choose conflict")
@@ -45,12 +46,15 @@ int main(int argc, const char *argv[])
     const po::variables_map vm=temp;
 
     config.agent_size = vm["agent_size"].as<float>();
+    config.min_dis = vm["min_distance"].as<float>();
     config.connectdness = vm["connectdness"].as<int>();
     const string& fmap=vm["map"].as<string>();
     Map map = Map(config.agent_size,  config.connectdness);
     map.get_map(fmap);
     cout<<"read map success"<<endl;
-    map.pre_process();
+    bool CR=vm.count("CR");
+    if (CR)
+      map.pre_process();
     
     config.agent_num=vm["agent_num"].as<int>();
     const string& ftask=vm["tasks"].as<string>();
@@ -78,7 +82,6 @@ int main(int argc, const char *argv[])
     bool card=vm.count("Cardinal");
     bool DS=vm.count("DS");
     bool ES=vm.count("ES");
-    bool CR=vm.count("CR");
     bool TR=vm.count("TR");
     config.use_cardinal=card;
     config.use_disjoint_splitting=DS;
