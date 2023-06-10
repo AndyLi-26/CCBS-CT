@@ -29,9 +29,8 @@ class CBS
     bool check_conflict_ori(Move move1, Move move2);
     double get_hl_heuristic(const std::list<Conflict> &conflicts);
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
-    typedef std::pair<std::list<Constraint>,bool> con_return;
-    con_return get_constraint(int agent, Move move1, Move move2, CBS_Node *node);
-    CBS::con_return get_wait_constraint(int agent, Move move1, Move move2);
+    list<Constraint> get_constraint(int agent, Move move1, Move move2, CBS_Node *node);
+    list<Constraint> get_wait_constraint(int agent, Move move1, Move move2);
     void find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::vector<sPath> &paths, const sPath &path,
         const std::list<Conflict> &conflicts, const std::list<Conflict> &semicard_conflicts, const std::list<Conflict> &cardinal_conflicts,
         int &low_level_searches, int &low_level_expanded);
