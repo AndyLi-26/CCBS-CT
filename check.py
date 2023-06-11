@@ -42,7 +42,10 @@ for l in result:
 
 for k in ins:
     print("("+str(k)+":",str(len(ins[k]))+")")
-    [print(i[1:4]+i[7:]) for i in ins[k]]
+    [print((i[9] if i[7] else ""),i[1:4]+i[7:]) for i in ins[k]]
+    #for i in ins[k]:
+    #    print(i[4],": ")
+    #    print(i[1:4]+i[7:])
 
 
 
