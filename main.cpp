@@ -28,7 +28,6 @@ int main(int argc, const char *argv[])
       ("focal_weigth",po::value<float>()->default_value(1.0),"focal weright")
       //("precision",po::value<float>()->default_value(0.00001),"the precision used in math calculation and number comparison")
       //("resolution",po::value<float>()->default_value(0.01),"the resolution of the nodes on the edge")
-      ("debug",po::value<int>()->default_value(0),"debug information")
       ("connectdness",po::value<int>()->default_value(2))
       ("agent_size,a",po::value<float>()->default_value(4.5))
       ("min_distance",po::value<float>()->default_value(0.45))
@@ -77,7 +76,6 @@ int main(int argc, const char *argv[])
 
 
     config.timelimit=vm["timelimit"].as<int>();
-    config.debug = vm["debug"].as<int>();
 
     bool card=vm.count("Cardinal");
     bool DS=vm.count("DS");
