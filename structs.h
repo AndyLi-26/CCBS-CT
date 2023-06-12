@@ -42,9 +42,7 @@ struct Config
   double  focal_weight;
   bool    use_cardinal;
   bool    use_disjoint_splitting;
-  bool    use_edge_split;
   bool    TR;//target reasoning sym breaking
-  bool    cons_reason;
   int     hlh_type;
   int     connectdness;
   double  agent_size;
@@ -305,13 +303,12 @@ struct CBS_Node
   unsigned int conflicts_num;
   unsigned int total_cons;
   unsigned int low_level_expanded;
-  Map_deltas deltas;
   Conflict cur_conflict;
   std::list<Conflict> conflicts;
   std::list<Conflict> semicard_conflicts;
   std::list<Conflict> cardinal_conflicts;
-  CBS_Node(std::vector<sPath> _paths = {}, CBS_Node* _parent = nullptr, std::list<Constraint> _constraint = {},Map_deltas _deltas={}, double _cost = 0, int _conflicts_num = 0, int total_cons_ = 0)
-    :paths(_paths), parent(_parent), constraint(_constraint), deltas(_deltas), cost(_cost), conflicts_num(_conflicts_num), total_cons(total_cons_)
+  CBS_Node(std::vector<sPath> _paths = {}, CBS_Node* _parent = nullptr, std::list<Constraint> _constraint = {}, double _cost = 0, int _conflicts_num = 0, int total_cons_ = 0)
+    :paths(_paths), parent(_parent), constraint(_constraint),  cost(_cost), conflicts_num(_conflicts_num), total_cons(total_cons_)
     {
       low_level_expanded = 0;
       h = 0;

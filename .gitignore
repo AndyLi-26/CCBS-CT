@@ -5,3 +5,5 @@ debug/
 release/
 ./release/*
 ./release
+./test_result.txt
+./.worktree/*

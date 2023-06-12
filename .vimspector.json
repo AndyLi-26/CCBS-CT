@@ -1,0 +1,16 @@
+{
+  "configurations": {
+    "Launch": {
+      "adapter": "vscode-cpptools",
+      "configuration": {
+        "request": "launch",
+        "program": "./debug/CCBS",
+        "args": ["-m", "./Instances/roadmaps/sparse/map.graph", "-t", "./Instances/roadmaps/sparse/20task.task", "--HI_h", "0", "precision", "0.00001", "-o", "./sparse.csv", "-a", "4.5", "--agent_num", "5", "timelimit", "30", "--extra_info", "8", "--debug", "1"],
+        "cwd": "/Users/alii0056/research/CCBS-ES",
+        "externalConsole": false,
+        "MIMode": "lldb"
+      }
+    }
+  }
+}
+    

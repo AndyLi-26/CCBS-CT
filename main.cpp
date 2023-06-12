@@ -79,12 +79,8 @@ int main(int argc, const char *argv[])
 
     bool card=vm.count("Cardinal");
     bool DS=vm.count("DS");
-    bool ES=vm.count("ES");
-    bool TR=vm.count("TR");
     config.use_cardinal=card;
     config.use_disjoint_splitting=DS;
-    config.use_edge_split=ES;
-    config.cons_reason=CR;
     
     cout<<"agents_num="<<task.get_agent_num()<<endl;
     task.prt_agents();
@@ -92,12 +88,9 @@ int main(int argc, const char *argv[])
     Solution solution = cbs.find_solution(map, task, config);
     logger log(config,solution);
     auto found = solution.found?"true":"false";
-    auto Use_edge = config.use_edge_split?"true":"false";
-    auto Cons_reason =config.cons_reason?"true":"false";
     int task_ind=vm["extra_info"].as<int>();
 
-    std::cout<< "Soulution found: " << found <<"\nUse Edge Splitting: "<< Use_edge <<
-      "\nconstraint reasoning: "<<Cons_reason<<
+    std::cout<< "Soulution found: " << found <<
       "\nRuntime: "<<solution.time.count() << "\nMakespan: " << solution.makespan << "\nFlowtime: " << solution.flowtime<< "\nInitial Cost: "<<solution.init_cost<< "\nCollision Checking Time: " << solution.check_time
       << "\nHL expanded: " << solution.high_level_expanded << "\nLL searches: " << solution.low_level_expansions << "\nLL expanded(avg): " << solution.low_level_expanded << std::endl;
     std::cout<<"agent_size: "<<config.agent_size<<std::endl;

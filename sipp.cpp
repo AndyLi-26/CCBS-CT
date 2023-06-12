@@ -19,22 +19,9 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
 {
   Node newNode;
   std::vector<Node> valid_moves = map.get_valid_moves(curNode.id);
-  if (config.debug>1)
-  {
-    cout<<endl;
-    std::cout<<"expanding: "<<curNode.id<<" g:"<<curNode.g<<"interval:("<<curNode.interval.first<<", "<<curNode.interval.second<<") "<<std::endl;
-    for (Node n:valid_moves){
-      std::cout<<"->("<<n.id<<","<<dist(curNode,n)<<")";
-    }
-    std::cout<<std::endl;
-  }
   for(int i=0;i<valid_moves.size();++i)
   {
     Node move = valid_moves[i];
-    if (config.debug>1)
-      std::cout<<"considering: "<<move.id<<"  ->";
-    //if (move.agent.find(-1)==move.agent.end() && move.agent.find(agent.id)==move.agent.end())
-    //  continue;
     newNode.i = move.i;
     newNode.j = move.j;
     newNode.id = move.id;
@@ -56,13 +43,6 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
     }
     else
       intervals.push_back({0, CN_INFINITY});
-    if (config.debug>1)
-    {
-      for (auto intv:intervals){
-        std::cout<<"("<<intv.first<<"~"<<intv.second<<")";
-      }
-      std::cout<<"->";
-    }
     //int to_index=map.valid_moves
     auto cons_it = constraints.find({curNode.id,i});
     int id(0);			
@@ -112,13 +92,6 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
         newNode.f = newNode.g + h;
       }
       succs.push_back(newNode);
-    }
-    if (config.debug>1)
-    {
-      for (Node n:succs){
-        std::cout<<"("<<n.id<<"@"<<n.g<<")";
-      }
-      std::cout<<"]"<<std::endl;
     }
   }
 }
@@ -438,32 +411,18 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
 
 double SIPP::check_endpoint(Node start, Node goal, int exit_id)
 {
-  if(config.debug>1)
-    cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
   double cost = sqrt(pow(start.i - goal.i, 2) + pow(start.j - goal.j, 2));
   if(start.g + cost < goal.interval.first + CN_EPSILON) //<=
     start.g = goal.interval.first - cost;
-  if(config.debug>1)
-  cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
   
   if(constraints.count({start.id, exit_id}) != 0)
   {
     auto it = constraints.find({start.id,exit_id});
     for(unsigned int i = 0; i < it->second.size(); i++)
     {
-      if(config.debug>1)
-      {
-        cout<<"start g:"<<start.g<<" it->second[i].t1:"<<it->second[i].t1<<" it->second[i].t2:"<<it->second[i].t2<<endl;
-        cout<<": ="<<(start.g +CN_EPSILON > it->second[i].t1) <<" and "<< (start.g < it->second[i].t2) <<endl;
-      }
       if(start.g + CN_EPSILON > it->second[i].t1  && start.g + CN_EPSILON < it->second[i].t2) //>= && <
       {
         start.g = it->second[i].t2;
-        if(config.debug>1)
-        {
-          cout<<"changed g:"<<endl;
-          cout<<start.id<<"@"<<start.g<<"->"<<exit_id<<"("<<goal.id<<")@"<<goal.g<<endl;
-        }
       }
     }
   }
@@ -476,19 +435,8 @@ double SIPP::check_endpoint(Node start, Node goal, int exit_id)
 Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, Heuristic &h_values, bool p){
   this->clear();
   this->agent = agent;
-  if (config.debug>1){
-    std::cout<<"planning:"<<std::endl;
-    std::cout<<agent.id<<std::endl;
-    map.prt_validmoves();
-    prt_constraints(cons);
-  }
   this->p =p;	
   make_constraints(cons,map);
-  if (config.debug>1){
-    map.prt_validmoves();
-    prt_cons();
-    prt_intervals();
-  }
   std::vector<Node> starts, goals;
   std::vector<Path> parts, results, new_results;
   Path part, result;
@@ -514,15 +462,7 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
       }
       if(goals.empty())
         return Path();
-      if (config.debug>1){
-        cout<<"starts before plan"<<endl;
-        prt_nodes(starts);
-      }
       parts = find_partial_path(starts, goals, map, h_values, goals.back().interval.second);
-      if (config.debug>1){
-        cout<<"parts"<<endl;
-        prt_paths(parts);
-      }
       expanded += int(close.size());
       new_results.clear();
       if(i == 0)
@@ -545,10 +485,6 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         }
       results = new_results;
 
-      if (config.debug>1){
-        cout<<"results:"<<endl;
-        prt_paths(results);
-      }
       if(results.empty())
         return Path();
       if(i < landmarks.size())
@@ -562,12 +498,6 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         double offset = sqrt(pow(map.get_i(landmarks[i].id1) - map.get_i(id2), 2) + pow(map.get_j(landmarks[i].id1) - map.get_j(id2), 2));
         goals = get_endpoints(id2, map.get_i(id2), map.get_j(id2), landmarks[i].t1 + offset, landmarks[i].t2 + offset);
 
-        if (config.debug>1){
-          cout<<"starts:"<<endl;
-          prt_nodes(starts);
-          cout<<"goals:"<<endl;
-          prt_nodes(goals);
-        }
         if(goals.empty())
           return Path();
         new_results.clear();
@@ -578,16 +508,11 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
           for(unsigned int j = 0; j < starts.size(); j++)
           {
             double g = check_endpoint(starts[j], goals[k],landmarks[i].id2);
-            if(config.debug>1)
-              cout<<"check_endpoint g:"<<g<<endl;
             if(g < best_g)
             {
               best_start_id = j;
               best_g = g;
             }
-          }
-          if (config.debug>1){
-            cout<<"best_g: "<<best_g<<endl;
           }
           if(best_start_id >= 0)
           {
@@ -607,26 +532,10 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
               }
             }
             new_results.push_back(results[best_start_id]);
-            if(config.debug>1)
-            {
-              cout<<"offset: "<<offset<<endl;
-              cout<<"goals[k].g: "<<goals[k].g <<" offset:"<<offset<<" new_results.back().nodes.back().g"<<new_results.back().nodes.back().g<<endl;
-              cout<<": ="<<(goals[k].g-offset)-new_results.back().nodes.back().g<<endl;
-            }
             if(goals[k].g - starts[best_start_id].g > offset + CN_EPSILON && abs((goals[k].g-offset)-new_results.back().nodes.back().g) > CN_EPSILON)
             {
-              if(config.debug>1)
-              {
-                cout<<"old path:"<<endl;
-                prt_path(new_results.back());
-              }
               new_results.back().nodes.push_back(new_results.back().nodes.back());
               new_results.back().nodes.back().g = goals[k].g - offset;
-              if(config.debug>1)
-              {
-                cout<<"old path:"<<endl;
-                prt_path(new_results.back());
-              }  
             }
             new_results.back().nodes.push_back(goals[k]);
           }

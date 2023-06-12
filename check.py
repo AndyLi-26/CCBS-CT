@@ -35,14 +35,17 @@ with open("./test_result.txt") as f:
 
 ins=dict()
 for l in result:
-    ins_idx=l[5]
+    ins_idx=l[3]
     if ins_idx not in ins:
         ins[ins_idx]=[]
     ins[ins_idx].append(l)
 
 for k in ins:
     print("("+str(k)+":",str(len(ins[k]))+")")
-    [print(i[1:4]+i[7:]) for i in ins[k]]
+    [print((i[7] if i[5] else ""),i[1:2]+i[5:]) for i in ins[k]]
+    #for i in ins[k]:
+    #    print(i[4],": ")
+    #    print(i[1:4]+i[7:])
 
 
 
