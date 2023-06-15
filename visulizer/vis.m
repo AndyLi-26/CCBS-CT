@@ -1,7 +1,7 @@
 clc; clear all; close all;
 recording=true;
 if recording
-obj = VideoWriter("case11_CR_ES.mp4", 'MPEG-4');
+obj = VideoWriter("case11_CR_ES_DS.mp4", 'MPEG-4');
 obj.Quality = 100;
 obj.FrameRate = 22;
 open(obj);
@@ -28,7 +28,7 @@ for i=1:length(nodes)
     text(nodes(i,1),nodes(i,2),num2str(i-1),'FontSize',20,'FontWeight','bold');
 end
 
-new=readmatrix('newNode_CR_ES.csv');
+new=readmatrix('newNode_CR_ES_DS.csv');
 plot(new(:,2),new(:,3),'bo',LineWidth=2)
 for i=1:size(new,1)
     i
@@ -78,7 +78,7 @@ end
 
 plots =plot([],[]);agentNum =plot([],[]);
 for t=1:tmax/resolution
-    title(sprintf("CR+ES t=%.1f",t*resolution))
+    title(sprintf("CR+ES+DS t=%.1f",t*resolution))
     delete(plots);delete(agentNum);
     plots=[];agentNum=[];
     for a=1:agents

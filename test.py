@@ -4,13 +4,13 @@ exe = "./debug/CCBS"
 map_address ="./Examples/test_case/case{}/map.graph"
 task_address="./Examples/test_case/case{}/task.task"
 output_address="./test_result.txt"
-
-try:
-    os.remove("test_result.txt")
-    print("removed successfully")
-except OSError as e:
-    print("{e}")
-for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
+if os.path.exists(output_address):
+    os.remove(output_address)
+    print("File deleted successfully.")
+else:
+    print("File does not exist.")
+#for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
+for m in [11]:
     #for m in [7,9,10,11]:
 #for m in [2]:
     for ES in [False,True]:

@@ -13,7 +13,11 @@ bool CBS::init_root(Map &map, const Task &task)
     root.paths.push_back(path);
     root.cost += path.cost;
   }
-  root.low_level_expanded = 0;
+  if (config.debug)
+  {
+    cout<<"init_path"<<endl;
+    prt_paths(root.paths);
+  }
   root.parent = nullptr;
   root.id = 1;
   root.id_str = "1";
@@ -359,7 +363,8 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2, CBS_Node
     return get_wait_constraint(agent, move1, move2);
   }
 
-  move1=split_conf_move(move1,move2,node);
+  //if (config.use_edge_split)
+  //  move1=split_conf_move(move1,move2,node);
   double startTimeA(move1.t1), endTimeA(move1.t2);
   Vector2D A(map->get_i(move1.id1), map->get_j(move1.id1)), A2(map->get_i(move1.id2), map->get_j(move1.id2)),
            B(map->get_i(move2.id1), map->get_j(move2.id1)), B2(map->get_i(move2.id2), map->get_j(move2.id2));
@@ -660,12 +665,32 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     //  p=false;
 
     auto paths = get_paths(&node, task.get_agents_size());
+    if (debug>0){
+      cout<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
+      cout<<"before conflict"<<endl;
+      prt_paths(paths);
+    }
+    if (debug >1){
+      cout<<"ori map"<<endl;
+      map.prt_validmoves();
+    }
+    if (debug>0){
+      cout<<flush;
+      cout<<"conflicts"<<endl;
+      prt_conflicts(parent->conflicts);
+      cout<<"------------------"<<endl;
+    }
     auto time_now = std::chrono::high_resolution_clock::now();
     conflicts = node.conflicts;
     auto cardinal_conflicts = node.cardinal_conflicts;
     auto semicard_conflicts = node.semicard_conflicts;
     if(conflicts.empty() && semicard_conflicts.empty() && cardinal_conflicts.empty())
     {
+      if (debug>0){
+        prt_paths(paths);
+        printBT_aux();
+        map.prt_validmoves();
+      }
       break; //i.e. no conflicts => solution found
     }
     if(!cardinal_conflicts.empty())
@@ -682,9 +707,10 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       conflict = get_conflict(conflicts);
 
     if (config.use_edge_split)
+    {
       gen_new_map(&node);
-    check_conflict(conflict.move1,conflict.move2);
-    conflict=modify_conflict(conflict,&node);
+      conflict=modify_conflict(conflict,&node);
+    }
     parent->cur_conflict=conflict; //del when experiment
                                    //Map_delta_pair info;
     Map_deltas deltasL,deltasR;
@@ -1556,3 +1582,23 @@ void CBS::prt_paths(std::vector<sPath> paths)
   }
 }
 
+void CBS::prt_conflict(Conflict conflict)
+{
+  int node11=conflict.move1.id1;
+  int node12=conflict.move1.id2;
+  int node21=conflict.move2.id1;
+  int node22=conflict.move2.id2;
+  //cout<<"------------------"<<endl;
+  cout<<"conflict: [id] (coord1->coord2) @[t]"<<endl;
+  cout<<"[a"<<conflict.agent1<<":"<<node11<<"->"<<node12<<"] ("<<map->get_i(node11)<<","<<map->get_j(node11)<<") -> ("
+    <<map->get_i(node12)<<","<<map->get_j(node12)<<") @["<<conflict.move1.t1<<"~"<<conflict.move1.t2<<"]"<<endl;
+  cout<<"[a"<<conflict.agent2<<":"<<node21<<"->"<<node22<<"] ("<<map->get_i(node21)<<","<<map->get_j(node21)<<") -> ("
+    <<map->get_i(node22)<<","<<map->get_j(node22)<<") @["<<conflict.move2.t1<<"~"<<conflict.move2.t2<<"]"<<endl;
+  //"[move1_t:"<<conflict.move1.t1<<"~"<<conflict.move1.t2<<"] [move2_t:"<<conflict.move2.t1<<"~"<<conflict.move2.t2<<"]"<<endl;
+}
+
+void CBS::prt_conflicts(list<Conflict> conflicts) {
+  for (Conflict con:conflicts){
+    prt_conflict(con);
+  }
+}
