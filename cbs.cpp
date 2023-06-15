@@ -206,9 +206,6 @@ double CBS::get_hl_heuristic(const std::list<Conflict> &conflicts)
 
 list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2, CBS_Node *node)
 {
-  Move BKUP1=move1,BKUP2=move2;
-  double startT=0,endT=0;
-
   if(move1.id1 == move1.id2)
   {
     //return make_pair(get_wait_constraint(agent,move1,move2),false);
@@ -323,7 +320,6 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
   int low_level_searches(0);
   int low_level_expanded(0);
   int id = 2;
-  bool BREAK=false;
   do
   {
     auto parent = tree.get_front();
@@ -368,8 +364,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
 
       constraintA=get_constraint(conflict.agent1, conflict.move1, conflict.move2,&node);
       if (std::find(constraintsA.begin(),constraintsA.end(),*constraintA.begin())!=constraintsA.end()){
-        cout<<"breaking B"<<endl;
-        BREAK=true;
+	      solution.found = false;
+	      break;
       }
       constraintsA.insert(constraintsA.end(),constraintA.begin(),constraintA.end());
 
@@ -385,8 +381,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     list<Constraint> constraintB;
     constraintB = get_constraint(conflict.agent2, conflict.move2, conflict.move1,&node);
     if (std::find(constraintsB.begin(),constraintsB.end(),*constraintB.begin())!=constraintsB.end()){
-      cout<<"breaking B"<<endl;
-      BREAK=true;
+	      solution.found = false;
+	      break;
     }
     constraintsB.insert(constraintsB.end(),constraintB.begin(),constraintB.end());
     sPath pathB;
