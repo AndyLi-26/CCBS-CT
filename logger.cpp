@@ -46,8 +46,6 @@ void logger::write_exp_result(int task_ind)
   string DS=config.use_disjoint_splitting? "DS":"0";
   int f=solution.found? 1:0;
   fw<<config.agent_num<<","
-    <<DS<<","
-    <<config.agent_size<<","
     <<task_ind<<","
     <<solution.time.count()<<","
     <<f<<","
@@ -55,7 +53,6 @@ void logger::write_exp_result(int task_ind)
     <<solution.flowtime<<","
     <<solution.makespan<<","
     <<solution.high_level_expanded<<","
-    <<solution.new_node<<","
     <<endl;
 
 }
