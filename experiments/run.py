@@ -1,9 +1,9 @@
 import subprocess, os,glob, time,json
 processPool=[]
 exe = "../debug/CCBS"
-map_address ="../Instances/roadmaps_ORI/{}/map.graph"
-task_address="../Instances/roadmaps_ORI/{}/{}_task.task"
-output_address="{}-{}-{}-{}.csv"
+map_address ="../Instances/roadmaps/{}/map.graph"
+task_address="../Instances/roadmaps/{}/{}_task.task"
+output_address="{}-{}-{}.csv"
 with open("./config.json","r") as f:
     config=json.loads(f.read())
     for k,v in config.items():
@@ -21,11 +21,12 @@ for r in config['r']:
                                 es_tag="es" if es=='1' else '0'
                                 cr_tag="cr" if cr=='1' else '0'
                                 ds_tag="ds" if ds=='1' else '0'
+                                card_tag="card" if card=='1' else '0'
 
                                 cmd=[exe,"-m",map_address.format(m),
                                      "-t",task_address.format(m,i),
                                     "--HI_h","0",
-                                     "-o", output_address.format(m,es_tag,cr_tag,ds_tag),
+                                     "-o", output_address.format(m,card_tag,ds_tag),
                                      "-a",r,
                                      "--agent_num",a,
                                      "--timelimit","120",
