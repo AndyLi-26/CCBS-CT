@@ -46,6 +46,6 @@ if __name__=="__main__":
                 alist[l[0]-2]+=l[3]
                 if l[2]<29.9 and l[3]==0:
                     inf_loop[l[0]-2]+=1
-            print(algo,": ")
+            #print(algo,": ")
             print(alist)
-            print(inf_loop)
+            #print(inf_loop)
