@@ -20,7 +20,7 @@ public:
 private:
     bool p=false;
     Agent agent;
-    std::vector<Path> find_partial_path(std::vector<Node> starts, std::vector<Node> goals, const Map &map, Heuristic &h_values, double max_f = CN_INFINITY);
+    std::vector<Path> find_partial_path(std::vector<Node> starts, std::vector<Node> goals, const Map &map, Heuristic &h_values, double max_g = CN_INFINITY);
     Path add_part(Path result, Path part);
     void find_successors(Node curNode, const Map &map, std::list<Node> &succs, Heuristic &h_values, Node goal);
     void add_open(Node newNode);
@@ -40,6 +40,7 @@ private:
     void prt_path(Path P);
     void prt_paths(std::vector<Path> paths);
     void prt_nodes(std::vector<Node> starts);
+    void prt_landmarks();
 
     std::unordered_map<int, Node> close;
     std::list<Node> open;

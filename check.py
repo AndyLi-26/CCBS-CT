@@ -1,5 +1,5 @@
 def check_SameCost(infos):
-    temp=[i[9] for i in infos if i[7]]
+    temp=[i[10] for i in infos if i[8]]
     if len(temp)<2: return True
     a=temp[0]
     for i in temp[1:]:
@@ -35,14 +35,14 @@ with open("./test_result.txt") as f:
 
 ins=dict()
 for l in result:
-    ins_idx=l[5]
+    ins_idx=l[6]
     if ins_idx not in ins:
         ins[ins_idx]=[]
     ins[ins_idx].append(l)
 
 for k in ins:
     print("("+str(k)+":",str(len(ins[k]))+")")
-    [print((i[9] if i[7] else ""),i[1:4]+i[7:]) for i in ins[k]]
+    [print((i[10] if i[8] else ""),i[1:5]+i[8:]) for i in ins[k]]
     #for i in ins[k]:
     #    print(i[4],": ")
     #    print(i[1:4]+i[7:])

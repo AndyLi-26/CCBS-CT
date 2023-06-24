@@ -26,7 +26,6 @@ void edgeSpliter::find_deltas(const Conflict &conf, Map_deltas &deltasR, Map_del
   }
   else
   {
-    cout<<"in two moving"<<endl;
     moving(m1,m2,deltasR,map, h_values,a1);
     moving(m2,m1,deltasL,map, h_values,a2);
   }
@@ -79,7 +78,6 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
   }
   else
   {
-    cout<<"tring case1: "<<endl;
     //case1
     double x0(P11.i),y0(P11.j),x1(P21.i),y1(P21.j),x2(P22.i),y2(P22.j);
     double dx(x2-x1),dy(y2-y1);
@@ -196,8 +194,6 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
 
       double t2=solveQuad(a,b,c) - CN_PRECISION;
 
-      cout<<"solved t2: "<<endl;
-
       if (t2<CN_EPSILON)
         P_new=Vector2D(-1,-1);
       else
@@ -281,9 +277,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
   //final adding
   if (P_new.i!=-1 && validNewNode(P11,P12,P_new))
   {
-    cout<<"before fitting: "<<P_new<<endl;
     P_new=fitPoint(P_new,node11,node12,map);
-    cout<<"after fitting: "<<P_new<<endl;
     if (P_new.i!=-1)
     {
       int new_id=map.add_node(P_new.i,P_new.j,node11,node12);
@@ -293,7 +287,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
           output <<new_id <<","<< P_new.i<<","<<P_new.j<<","<<endl;
         Map_delta new_delta(new_id,{node11,node12});
         deltas.push_back(new_delta);
-        h_values.add_node(new_id,a,node11);
+        h_values.add_node(map,new_delta);
       }
     }
   }
@@ -315,11 +309,12 @@ Vector2D edgeSpliter::case2(Vector2D P0,Vector2D v, Vector2D P2)
   return P;
 }
 
+/*
 double edgeSpliter::round_down(double f)
 {
   return std::floor(f/CN_EPSILON)*CN_EPSILON;
 }
-
+*/
 
 bool edgeSpliter::validNewNode(Vector2D node1,Vector2D node2,Vector2D New)
 {
@@ -331,6 +326,7 @@ bool edgeSpliter::validNewNode(Vector2D node1,Vector2D node2,Vector2D New)
   return true;
 }
 
+/*
 double edgeSpliter::solveQuad(double a, double b, double c)
 {
   double delta(b*b-4*a*c);
@@ -342,7 +338,7 @@ double edgeSpliter::solveQuad(double a, double b, double c)
   
   return t2;
 }
-
+*/
 Vector2D edgeSpliter::fitPoint(Vector2D P, int nFrom, int nTo, Map &map)
 {
   int n1(nFrom), n2(nTo);
@@ -358,7 +354,6 @@ Vector2D edgeSpliter::fitPoint(Vector2D P, int nFrom, int nTo, Map &map)
   prev=nFrom;
   while (map.isNewNode(n2))
   {
-    map.prt_validmoves();
     auto temp=map.get_valid_moves(n2);
     swap=n2;
     n2 = temp.at(0).id==prev ? temp.at(1).id : temp.at(0).id;
@@ -395,28 +390,23 @@ Vector2D edgeSpliter::fitPoint(Vector2D P, int nFrom, int nTo, Map &map)
     return newP;
   else
   {
-    cout<<"fromP: "<<fromP<<" toP: "<<toP<<endl;
     return Vector2D(-1,-1);
   }
 
   if (newP==P1)
   {
-    cout<<"eq P1:"<<P1<<endl;
     return Vector2D(-1,-1);
   }
   if (newP==P2)
   {
-    cout<<"eq P2:"<<P2<<endl;
     return Vector2D(-1,-1);
   }
   if (newP==map.get_coord(nFrom))
   {
-    cout<<"eq nFrom:"<<(map.get_coord(nFrom))<<endl;
     return Vector2D(-1,-1);
   }
   if (newP==map.get_coord(nTo))
   {
-    cout<<"eq nTo:"<<(map.get_coord(nTo))<<endl;
     return Vector2D(-1,-1);
   }
   return newP;

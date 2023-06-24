@@ -73,10 +73,10 @@ void Map::get_map(string FileName)
 
 double Map::get_i(int id) const
 {
-    if(!map_is_roadmap)
-        return int(id/width);
-    else
-        return nodes[id].i;
+  if(!map_is_roadmap)
+    return int(id/width);
+  else
+    return nodes.at(id).i;
 }
 
 Vector2D Map::get_coord(int id) const
@@ -84,7 +84,7 @@ Vector2D Map::get_coord(int id) const
   if (!map_is_roadmap)
     return Vector2D(int(id/width),int(id%width));
   else
-    return Vector2D(nodes[id].i,nodes[id].j);
+    return Vector2D(nodes.at(id).i,nodes.at(id).j);
 }
 
 double Map::get_dist(int id1, int id2) const
@@ -97,15 +97,80 @@ double Map::get_dist(int id1, int id2) const
 
 double Map::get_min_clear_t(Move m1, int s2)
 {
-  if (m1.id2==s2)
-    return get_min_clear_t_sameDestination(m1.id2,m1.id1);
+  cacheTable::iterator it;
+  clearT_ind tempInd=make_pair(make_pair(m1.id1,m1.id2),s2);
+  it=min_clearT.find(tempInd);
+  if (it!=min_clearT.end()) //check cache
+  {
+    return it->second;
+  }
+  if (m1.id2==s2) // special case
+  {
+    double result = get_min_clear_t_sameDestination(m1.id2,m1.id1);
+    min_clearT[tempInd]=result;
+    return result;
+  }
+
+  if (gt(dis_P_l(s2,make_pair(get_coord(m1.id1),get_coord(m1.id2))),d))  // if the node has a larger distance than 2r between line and node, then no need to do futher calc
+  {
+    min_clearT[tempInd]=-1;
+    return -1;
+  }
+
+  if (!in_path(s2,make_pair(get_coord(m1.id1),get_coord(m1.id2))))  // if the node is in 2r distance, than check if it is in path
+  {
+    assert(false);
+    min_clearT[tempInd]=-1;
+    return -1;
+  }
+
+  /*
+     double min_t(-1);
+     for (Node n:get_valid_moves(s2))
+     {
+     Vector2D A(get_coord(s2)),B(get_coord(n.id));
+     if(in_path(l.first))
+
+     }
+     */
+
+
+
+
 }
 
+bool Map::in_path(Vector2D p, Line l)
+{
+  //change from two point form to vector form
+  Vector2D A(l.first);
+  Vector2D V(l.second-l.first);
+  double dis(V.mod());
+  Vector2D unitv(V/dis); 
+
+  double vx(unitv.i), vy(unitv.j);
+  double dx(p.i-l.first.i), dy(p.j-l.first.j);
+
+  double a(vx*vx+vy*vy), b(-dx*vx+dy*vy), c(dx*dx + dy*dy - d*d);
+  double delta(b*b-4*a*c);
+  if(le(delta,0))
+    return false;
+  double t((-b-sqrt(delta))/2*a);
+
+  if (gt(t,0) && lt(t,dis))
+    return true;
+  else 
+    return false;
+}
+
+bool Map::node_in_path(int p, pair<int,int> l)
+{
+  Vector2D P(get_coord(p));
+  Vector2D A(get_coord(l.first)), B(get_coord(l.second));
+  return in_path(P,make_pair(A,B));
+}
 double Map::get_min_clear_t_sameDestination(int main_n, int enter_n)
 {
   if (main_n>=init_node_num) return -1;
-  cout<<"main_n: "<< main_n<<"enter_n"<< enter_n<<get_coord(enter_n)<<endl;
-  prt_validmoves();
   double min_t(-1),t;
   for (Node exit:valid_moves[main_n]){
     //if (valid_moves[main_n][enter_n].id==exit.id) continue;
@@ -129,6 +194,7 @@ double Map::get_min_clear_t_sameDestination(int main_n, int enter_n)
 double Map::cos2min_t(double cos_theta)
 {
   //double temp((8*agent_size*agent_size)/(1-cos_theta));
+
   //double t=(sqrt(temp));
   return sqrt((8*agent_size*agent_size)/(1-cos_theta));
 }
@@ -138,7 +204,7 @@ double Map::get_j(int id) const
   if(!map_is_roadmap)
     return int(id%width);
   else
-    return nodes[id].j;
+    return nodes.at(id).j;
 }
 
 void Map::get_grid(string FileName)
@@ -346,8 +412,8 @@ void Map::get_roadmap(string FileName)
     gNode node(x,y);
     //node.agent.insert(-1);
     nodes.push_back(node);
-    ori_node_ind ind(std::make_pair(x,y));
-    ori_node_table[ind]=nodes.size()-1;
+    //ori_node_ind ind(std::make_pair(x,y));
+    //ori_node_table[ind]=nodes.size()-1;
   }
   nodes_num=n_num;
   init_node_num=n_num;
@@ -381,60 +447,64 @@ void Map::get_roadmap(string FileName)
   activated=vector<bool>(size,true);
 }
 
-double Map::min_min_clearT(int node)
-{
-  vector<double> v=min_clear_time.at(node);
-  return *min_element(v.begin(),v.end());
-}
+/*
+   double Map::min_min_clearT(int node)
+   {
+   vector<double> v=min_clear_time.at(node);
+   return *min_element(v.begin(),v.end());
+   }
+   */
 
-void Map::pre_process()
-{
-  auto dist=[](Vector2D A, Vector2D B) -> double {return sqrt((A-B)*(A-B));};
-  for (int i=0; i<size;++i){
-    vector<double> min_clearV;
-    min_clearV.clear();
-    for (int j=0;j<valid_moves[i].size();++j){
-      double min_t(-1);
-      for (Node exit:valid_moves[i]){
-        if (valid_moves[i][j].id==exit.id) continue;
-        //calc theta
-        Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
-        //cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
+/*
+   void Map::pre_process()
+   {
+   auto dist=[](Vector2D A, Vector2D B) -> double {return sqrt((A-B)*(A-B));};
+   for (int i=0; i<size;++i){
+   vector<double> min_clearV;
+   min_clearV.clear();
+   for (int j=0;j<valid_moves[i].size();++j){
+   double min_t(-1);
+   for (Node exit:valid_moves[i]){
+   if (valid_moves[i][j].id==exit.id) continue;
+//calc theta
+Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
+//cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
 
-        double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
-        double cos_theta((b*b+c*c-a*a)/(2*b*c));
-        //cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
-        //cout<<"cos: "<<cos_theta<<endl;
-        if (cos_theta==-1){ //zero
-          min_t=0;
-          break;
-        }
-        //if (cos_theta==-1) continue;//inf large
-        //find min_t
-        double temp((8*agent_size*agent_size)/(1-cos_theta));
-        double t=(sqrt(temp));
-        //double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
-        //cout<<"t: "<<t<<endl;
-        if (min_t==-1 || t<min_t){
-          min_t=t;
-        }
-      }
-      //cout<<"min t:"<<min_t<<endl;
-      min_clearV.push_back(min_t);
-    }
-    min_clear_time.push_back(min_clearV);
-  }
-     boost::unordered::unordered_map<int,double>::iterator it;
-     for(int i=0;i<min_clear_time.size();i++)
-     {
-     cout<<i<<": "<<endl;
-  //for (it=min_clear_time[i].begin();it!=min_clear_time[i].end();++it)
-  //    std::cout << it->first <<", " << it->second << std::endl;
-  for (double j:min_clear_time.at(i))
-  cout<<j<<", ";
-  cout<<endl;
-  }
+double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
+double cos_theta((b*b+c*c-a*a)/(2*b*c));
+//cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
+//cout<<"cos: "<<cos_theta<<endl;
+if (cos_theta==-1){ //zero
+min_t=0;
+break;
 }
+//if (cos_theta==-1) continue;//inf large
+//find min_t
+double temp((8*agent_size*agent_size)/(1-cos_theta));
+double t=(sqrt(temp));
+//double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
+//cout<<"t: "<<t<<endl;
+if (min_t==-1 || t<min_t){
+min_t=t;
+}
+}
+//cout<<"min t:"<<min_t<<endl;
+min_clearV.push_back(min_t);
+}
+min_clear_time.push_back(min_clearV);
+}
+boost::unordered::unordered_map<int,double>::iterator it;
+for(int i=0;i<min_clear_time.size();i++)
+{
+cout<<i<<": "<<endl;
+//for (it=min_clear_time[i].begin();it!=min_clear_time[i].end();++it)
+//    std::cout << it->first <<", " << it->second << std::endl;
+for (double j:min_clear_time.at(i))
+cout<<j<<", ";
+cout<<endl;
+}
+}
+*/
 
 /*
    void Map::get_roadmap(string FileName)
@@ -613,12 +683,12 @@ Vector2D Map::fit2line(Vector2D precise_pos, int node1, int node2)
      }
      */
   cout<<"dis: "<<dis<<endl;
-  int rounded=(int) (dis/CN_RESOLUTION);
-  double temp2=(rounded+dir)*CN_RESOLUTION;
+  int rounded=(int) (dis/config.min_dis);
+  double temp2=(rounded+dir)*config.min_dis;
   Vector2D newP(P1+unitv*temp2);
   cout<<"================================================================"<<endl;
   cout<<get_coord(node1)<<"--"<<precise_pos<<"--"<<get_coord(node2)<<endl<<"this turned into: "<<newP<<endl<<flush;
-  assert(abs(newP.i-precise_pos.i)<CN_RESOLUTION && abs(newP.j-precise_pos.j)<CN_RESOLUTION);
+  assert(abs(newP.i-precise_pos.i)<config.min_dis && abs(newP.j-precise_pos.j)<config.min_dis);
   return newP;
 }
 
@@ -626,7 +696,7 @@ int Map::add_node(double i, double j, int node1, int node2)
 {
   //std::cout<<"new agent:"<<agent<<std::endl;
   new_table::iterator it;
-  
+
   int n1(node1), n2(node2);
   int prev(node2), swap;
   while (isNewNode(n1))
@@ -665,14 +735,14 @@ int Map::add_node(double i, double j, int node1, int node2)
     else
       return node_id;
   }
-/*
-  for (int idx=init_node_num;idx<size;idx++)
-  {
-    if (!activated.at(idx)) continue;
-    if (eq(nodes.at(idx).i,i) && eq(nodes.at(idx).j,j))
-      return -1;
-  }
-*/
+  /*
+     for (int idx=init_node_num;idx<size;idx++)
+     {
+     if (!activated.at(idx)) continue;
+     if (eq(nodes.at(idx).i,i) && eq(nodes.at(idx).j,j))
+     return -1;
+     }
+     */
   {
     node_id=nodes.size();
     gNode tempnode(i,j);
@@ -876,95 +946,95 @@ bool Map::check_line(int x1, int y1, int x2, int y2)
    */
 void Map::prt_validmoves() const
 {
-	//std::cout<<"Map:"<<std::endl;
-	for (int i=0;i<valid_moves.size();++i){
+  //std::cout<<"Map:"<<std::endl;
+  for (int i=0;i<valid_moves.size();++i){
     string act= activated.at(i) ? "+" : "-";
-		auto vecNode=valid_moves[i];
-		std::cout<<"|"<<i<<" "<<act<<
-		" ("<<nodes[i].i<<","<<nodes[i].j<<") : ";
-		for (Node n:vecNode){
-			std::cout<<n.id<<", ";
-		}
-		std::cout<<std::endl;
-	}
-	std::cout<<"&&&&&&&"<<std::endl<<std::endl;
+    auto vecNode=valid_moves[i];
+    std::cout<<"|"<<i<<" "<<act<<
+      " ("<<nodes[i].i<<","<<nodes[i].j<<") : ";
+    for (Node n:vecNode){
+      std::cout<<n.id<<", ";
+    }
+    std::cout<<std::endl;
+  }
+  std::cout<<"&&&&&&&"<<std::endl<<std::endl;
 }
 
 void Map::prt_set(std::set<int> s) const
 {
-	for (int i:s)
-		std::cout<<i<<",";
+  for (int i:s)
+    std::cout<<i<<",";
 }
 
 void Map::alter(Map_deltas map_deltas)
 {
-    for (Map_delta delta:map_deltas){
-        int node_id(delta.add_node);
-        assert(!activated.at(node_id));
-        activated.at(node_id)=true;
-        if (node_id==-1)
-            return;
-        
-        int v1(delta.del_edge.first),v2(delta.del_edge.second);
-        valid_moves.at(node_id).at(0).id=v1;
-        valid_moves.at(node_id).at(0).i=get_i(v1);
-        valid_moves.at(node_id).at(0).j=get_j(v1);
-        valid_moves.at(node_id).at(1).id=v2;
-        valid_moves.at(node_id).at(1).i=get_i(v2);
-        valid_moves.at(node_id).at(1).j=get_j(v2);
+  for (Map_delta delta:map_deltas){
+    int node_id(delta.add_node);
+    assert(!activated.at(node_id));
+    activated.at(node_id)=true;
+    if (node_id==-1)
+      return;
 
-        
-        for (int i=0;i<valid_moves[v1].size();++i){
-            if (valid_moves[v1][i].id==v2){
-                valid_moves[v1][i].i=get_i(node_id);
-                valid_moves[v1][i].j=get_j(node_id);
-                valid_moves[v1][i].id=node_id;
-                //valid_moves[v1][i].agent=nodes[node_id].agent;
-                break;
-            }
-        }
-        
-        for (int i=0;i<valid_moves[v2].size();++i){
-            if (valid_moves[v2][i].id==v1){
-                valid_moves[v2][i].i=get_i(node_id);
-                valid_moves[v2][i].j=get_j(node_id);
-                valid_moves[v2][i].id=node_id;
-                //valid_moves[v2][i].agent=nodes[node_id].agent;
-                break;
-            }
-        }
+    int v1(delta.del_edge.first),v2(delta.del_edge.second);
+    valid_moves.at(node_id).at(0).id=v1;
+    valid_moves.at(node_id).at(0).i=get_i(v1);
+    valid_moves.at(node_id).at(0).j=get_j(v1);
+    valid_moves.at(node_id).at(1).id=v2;
+    valid_moves.at(node_id).at(1).i=get_i(v2);
+    valid_moves.at(node_id).at(1).j=get_j(v2);
+
+
+    for (int i=0;i<valid_moves[v1].size();++i){
+      if (valid_moves[v1][i].id==v2){
+        valid_moves[v1][i].i=get_i(node_id);
+        valid_moves[v1][i].j=get_j(node_id);
+        valid_moves[v1][i].id=node_id;
+        //valid_moves[v1][i].agent=nodes[node_id].agent;
+        break;
+      }
     }
+
+    for (int i=0;i<valid_moves[v2].size();++i){
+      if (valid_moves[v2][i].id==v1){
+        valid_moves[v2][i].i=get_i(node_id);
+        valid_moves[v2][i].j=get_j(node_id);
+        valid_moves[v2][i].id=node_id;
+        //valid_moves[v2][i].agent=nodes[node_id].agent;
+        break;
+      }
+    }
+  }
 }
 
 void Map::alter_back(Map_deltas map_deltas)
 {
-    for (Map_delta delta: map_deltas){
-        int node_id(delta.add_node);
-        assert(activated.at(node_id));
-        activated.at(node_id)=false;
-        if (node_id==-1)
-            return;
-        
-        int v1(delta.del_edge.first),v2(delta.del_edge.second);
- 
-        for (int i=0;i<valid_moves[v1].size();++i){
-            if (valid_moves[v1][i].id==node_id){
-                valid_moves[v1][i].i=get_i(v2);
-                valid_moves[v1][i].j=get_j(v2);
-                valid_moves[v1][i].id=v2;
-                //valid_moves[v1][i].agent=nodes[i].agent;
-            }
-        }
-        
-        for (int i=0;i<valid_moves[v2].size();++i){
-            if (valid_moves[v2][i].id==node_id){
-                valid_moves[v2][i].i=get_i(v1);
-                valid_moves[v2][i].j=get_j(v1);
-                valid_moves[v2][i].id=v1;
-                //valid_moves[v2][i].agent=nodes[i].agent;
-            }
-        }
+  for (Map_delta delta: map_deltas){
+    int node_id(delta.add_node);
+    assert(activated.at(node_id));
+    activated.at(node_id)=false;
+    if (node_id==-1)
+      return;
+
+    int v1(delta.del_edge.first),v2(delta.del_edge.second);
+
+    for (int i=0;i<valid_moves[v1].size();++i){
+      if (valid_moves[v1][i].id==node_id){
+        valid_moves[v1][i].i=get_i(v2);
+        valid_moves[v1][i].j=get_j(v2);
+        valid_moves[v1][i].id=v2;
+        //valid_moves[v1][i].agent=nodes[i].agent;
+      }
     }
+
+    for (int i=0;i<valid_moves[v2].size();++i){
+      if (valid_moves[v2][i].id==node_id){
+        valid_moves[v2][i].i=get_i(v1);
+        valid_moves[v2][i].j=get_j(v1);
+        valid_moves[v2][i].id=v1;
+        //valid_moves[v2][i].agent=nodes[i].agent;
+      }
+    }
+  }
 }
 
 int Map::id2ind(int v1, int v2)
@@ -978,3 +1048,28 @@ int Map::id2ind(int v1, int v2)
   assert(false);
   return -2;
 }
+
+Vector2D find_intersection(Line l1, Line l2)
+{
+  double x1(l1.first.i), y1(l1.first.j), x2(l1.second.i),y2(l1.second.j);
+  double x3(l2.first.i), y3(l2.first.j), x4(l2.second.i),y4(l2.second.j);
+  double c1(x1*y2-y1*x2), c2(x3*y4-y3*x4);
+  double denominator= (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+  double px=( c1*(x3-x4) - (x1-x2)*c2 ) / denominator;
+  double py=( c1*(y3-y4) - (y1-y2)*c2 ) / denominator;
+  return Vector2D(px,py);
+
+}
+
+double Map::dis_P_l(Vector2D P, Line l)
+{
+  assert(!(l.first==l.second));
+  double x0(P.i),y0(P.j);
+  double x1(l.first.i),y1(l.first.j);
+  double x2(l.second.i),y2(l.second.j);
+  double numerator = abs( (x2-x1)*(y1-y0)-(x1-x0)*(y2-y1) );
+  double denominator = sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) );
+  return numerator/denominator;
+}
+
+

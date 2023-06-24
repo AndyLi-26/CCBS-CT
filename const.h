@@ -11,7 +11,6 @@
 //#define CN_PRECISION     1e-8*3
 #define CN_PRECISION     1e-6 
 #define CN_EPSILON       1e-8
-#define CN_RESOLUTION    0.1
 #define CN_FOCAL_WEIGHT  1.0 // experimental function, focal is supported only on the high-level
 #define CN_OBSTL         1
 //#define CN_MAP_RESOLUTION sqrt(2.0)/4.0

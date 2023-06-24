@@ -18,11 +18,14 @@ using boost::multi_index_container;
 using namespace boost::multi_index;
 using namespace std;
 
-bool eq(double a, double b);
-bool lt(double a, double b);
-bool gt(double a, double b);
-bool le(double a, double b);
-bool ge(double a, double b);
+inline bool eq(double a, double b);
+inline bool lt(double a, double b);
+inline bool gt(double a, double b);
+inline bool le(double a, double b);
+inline bool ge(double a, double b);
+inline double solveQuad(double a, double b, double c);
+inline double round_down(double f);
+
 
 struct Agent
 {
@@ -41,12 +44,13 @@ struct Config
   //double resolution;
   double  focal_weight;
   bool    use_cardinal;
-  bool    use_disjoint_splitting;
-  bool    use_edge_split;
+  bool    DS;
+  bool    ES;
+  bool    ICP;
   bool    TR;//target reasoning sym breaking
-  bool    cons_reason;
+  bool    CT;
   int     hlh_type;
-  int     connectdness;
+  int     connectedness;
   int     debug=0;
   double  agent_size;
   double  min_dis;
@@ -537,9 +541,9 @@ class Vector2D {
     Vector2D(double _i = 0.0, double _j = 0.0):i(_i),j(_j){}
     double i, j;
     
-    double mod(){return sqrt(i*i+j*j);}
-    double dis(Vector2D v){return sqrt(( (*this) - v)*( (*this) - v));}
-    void set(const Vector2D &v) {i=v.i;j=v.j;}
+    inline double mod(){return sqrt(i*i+j*j);}
+    inline double dis(Vector2D v){return sqrt(( (*this) - v)*( (*this) - v));}
+    inline void set(const Vector2D &v) {i=v.i;j=v.j;}
     inline Vector2D operator +(const Vector2D &vec) { return Vector2D(i + vec.i, j + vec.j); }
     inline Vector2D operator -(const Vector2D &vec) { return Vector2D(i - vec.i, j - vec.j); }
     inline Vector2D operator -() { return Vector2D(-i,-j); }
@@ -548,16 +552,17 @@ class Vector2D {
     inline double operator *(const Vector2D &vec){ return i*vec.i + j*vec.j; }
     inline void operator +=(const Vector2D &vec) { i += vec.i; j += vec.j; }
     inline void operator -=(const Vector2D &vec) { i -= vec.i; j -= vec.j; }
-    bool operator == (const Vector2D v) const
+    inline bool operator == (const Vector2D v) const
     {
       return eq(v.i,i) && eq(v.j,j);
     }
-    friend std::ostream& operator << (std::ostream& os, const Vector2D v){
+    inline friend std::ostream& operator << (std::ostream& os, const Vector2D v){
       os<<"("<<v.i<<","<<v.j<<")";
       return os;
     }
 };
 
+typedef pair<Vector2D,Vector2D> Line;
 class Point {
 public:
     double i;
@@ -589,6 +594,7 @@ public:
       return 7;//BETWEEN;
     }
 };
+
 
 
 

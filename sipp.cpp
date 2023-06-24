@@ -303,7 +303,6 @@ void SIPP::make_constraints(std::list<Constraint> &cons,const Map &map)
       bool inserted = false;
       //auto temp=map.get_valid_moves(con.id1,agent.id);
       //int id2=temp[con.id2].id;
-      //cout<<con.t1<<"~"<<con.t2<<","<<con.id1<<"->"<<con.id2<<endl;
       for(unsigned int i = 0; i < landmarks.size(); i++)
         if(landmarks[i].t1 > con.t1 + CN_EPSILON)  // >
         {
@@ -384,6 +383,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
       add_open(*it);
       it++;
     }
+    
     succs.clear();
   }
   return paths;
@@ -481,13 +481,18 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
     std::cout<<agent.id<<std::endl;
     map.prt_validmoves();
     prt_constraints(cons);
+    h_values.prt();
   }
   this->p =p;	
   make_constraints(cons,map);
   if (config.debug>1){
     map.prt_validmoves();
+    cout<<"constraints: "<<endl;
     prt_cons();
+    cout<<"intervals: "<<endl;
     prt_intervals();
+    cout<<"landmarks: "<<endl;
+    prt_landmarks();
   }
   std::vector<Node> starts, goals;
   std::vector<Path> parts, results, new_results;
@@ -510,13 +515,22 @@ Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, He
         if(i == landmarks.size())
           goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
         else
+        {
           goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
+        }
       }
+
       if(goals.empty())
         return Path();
       if (config.debug>1){
         cout<<"starts before plan"<<endl;
         prt_nodes(starts);
+
+        cout<<"goals"<<endl;
+        for (Node n : goals)
+        {
+          cout<<n.id<<": ("<<n.interval.first<<","<<n.interval.second<<")"<<endl;
+        }
       }
       parts = find_partial_path(starts, goals, map, h_values, goals.back().interval.second);
       if (config.debug>1){
@@ -721,5 +735,12 @@ void SIPP::prt_nodes(std::vector<Node> nodes)
   for (Node n:nodes){
     cout<<"id:"<<n.id<<", g:"<<n.g<<", i:"<<n.i<<", j:"<<n.j;
     cout<<endl;
+  }
+}
+
+void SIPP::prt_landmarks()
+{
+  for (Move m: landmarks){
+    cout<<"from "<<m.id1<<" -> "<<m.id2<<"[t:"<<m.t1<<"~"<<m.t2<<"]"<<endl;
   }
 }

@@ -40,17 +40,24 @@ void Heuristic::count(const Map &map, Agent agent)
     }
 }
 
-void Heuristic::add_node(int node_id, unsigned int agent,int next_node)
+void Heuristic::add_node(const Map &map, Map_delta m_del)
 {
-	//int temp=h_values.size();
-	if(node_id==h_values.size()){
-		std::vector<double> temp_vec;
-		int agents=h_values[node_id-1].size();
-		temp_vec.resize(agents);
-		temp_vec[agent]=h_values[next_node][agent];
-		h_values.push_back(temp_vec);
-	}
-	return;
+  if (map.get_size()==h_values.size()) return;
+  int new_id(m_del.add_node);
+  int n1(m_del.del_edge.first),n2(m_del.del_edge.second);
+  int agents=h_values[0].size();
+  vector<double> temp_vec;
+  double d1(map.get_dist(new_id,n1)),d2(map.get_dist(new_id,n2));
+  double h1,h2;
+  
+
+  for (int i=0; i<agents;i++)
+  {
+    h1=h_values[n1][i]+d1;
+    h2=h_values[n2][i]+d2;
+    temp_vec.push_back(min(h1,h2));
+  }
+  h_values.push_back(temp_vec);
 }
 
 Node Heuristic::find_min()
@@ -60,3 +67,15 @@ Node Heuristic::find_min()
     return min;
 }
 
+void Heuristic::prt()
+{
+  for(int i=0;i<h_values.size();i++)
+  {
+    cout<<"| "<<i<<":"; 
+    for (int j=0;j<h_values[i].size();j++)
+    {
+      cout<<" "<<h_values[i][j];
+    }
+    cout<<endl;
+  } 
+}

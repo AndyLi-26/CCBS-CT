@@ -14,7 +14,7 @@ nodes=readmatrix('nodes.csv');
 
 mapSize=[min(nodes,[],'all'),max(nodes,[],'all')];range=mapSize(2)-mapSize(1);
 mapSize=[mapSize(1)-0.01*range,mapSize(2)+0.01*range];
-mapSize=[5,70];
+mapSize=[5,140];
 edges=readmatrix('edges.csv');
 %summary=readmatrix(' summary.txt');%run-time, SoC, makespan
 
@@ -28,7 +28,7 @@ for i=1:length(nodes)
     text(nodes(i,1),nodes(i,2),num2str(i-1),'FontSize',20,'FontWeight','bold');
 end
 
-new=readmatrix('newNode_CR_ES_DS.csv');
+new=readmatrix('newNode.csv');
 plot(new(:,2),new(:,3),'bo',LineWidth=2)
 for i=1:size(new,1)
     i

@@ -29,15 +29,16 @@ int main(int argc, const char *argv[])
       //("precision",po::value<float>()->default_value(0.00001),"the precision used in math calculation and number comparison")
       //("resolution",po::value<float>()->default_value(0.01),"the resolution of the nodes on the edge")
       ("debug",po::value<int>()->default_value(0),"debug information")
-      ("connectdness",po::value<int>()->default_value(2))
+      ("connectedness",po::value<int>()->default_value(2))
       ("agent_size,a",po::value<float>()->default_value(4.5))
       ("min_distance",po::value<float>()->default_value(0.45))
       ("agent_num",po::value<int>()->required(),"number of agent")
       ("timelimit",po::value<int>()->default_value(30))
       ("Cardinal","use cardinal for choose conflict")
       ("DS","use Disjoint_splitting")
-      ("CR","use minimum clearance time reasoning")
+      ("CT","use minimum clearance time reasoning")
       ("ES","use edge split")
+      ("ICP","Incompatable path reasoning")
       ("TR","use target reasoning")
       ("extra_info",po::value<int>()->default_value(-1),"task index");
       
@@ -47,24 +48,11 @@ int main(int argc, const char *argv[])
 
     config.agent_size = vm["agent_size"].as<float>();
     config.min_dis = vm["min_distance"].as<float>();
-    config.connectdness = vm["connectdness"].as<int>();
+    config.connectedness = vm["connectedness"].as<int>();
+
     const string& fmap=vm["map"].as<string>();
-    Map map = Map(config.agent_size,  config.connectdness);
-    map.get_map(fmap);
-    cout<<"read map success"<<endl;
-    bool CR=vm.count("CR");
-    if (CR)
-      map.pre_process();
-    
     config.agent_num=vm["agent_num"].as<int>();
     const string& ftask=vm["tasks"].as<string>();
-    Task task(config.agent_num,fmap[fmap.size()-1]=='d');
-    task.get_task(ftask);
-    if(map.is_roadmap())
-      task.make_ij(map);
-    else
-      task.make_ids(map.get_width());
-    cout<<"read task success"<<endl;
     config.F_debug_info=vm["debug_info"].as<string>();
     config.F_solution=vm["solution_file"].as<string>();
     config.F_exp=vm["result_file"].as<string>();
@@ -73,7 +61,7 @@ int main(int argc, const char *argv[])
     //precision=vm["precision"].as<float>();
     //resolution=vm["resolution"].as<float>();
     cout<<"agent_size"<<config.agent_size<<endl<<flush;
-    cout<<"precision "<<CN_PRECISION<<"resolution "<<CN_RESOLUTION<<endl<<flush;
+    cout<<"precision "<<CN_PRECISION<<"resolution "<<config.min_dis<<endl<<flush;
 
 
     config.timelimit=vm["timelimit"].as<int>();
@@ -81,25 +69,41 @@ int main(int argc, const char *argv[])
 
     bool card=vm.count("Cardinal");
     bool DS=vm.count("DS");
+    bool CT=vm.count("CT");
     bool ES=vm.count("ES");
     bool TR=vm.count("TR");
+    bool ICP=vm.count("ICP");
     config.use_cardinal=card;
-    config.use_disjoint_splitting=DS;
-    config.use_edge_split=ES;
-    config.cons_reason=CR;
+    config.DS=DS;
+    config.ES=ES;
+    config.CT=CT;
+    config.ICP=ICP;
     
+    Map map = Map(config);
+    map.get_map(fmap);
+    cout<<"read map success"<<endl;
+
+    Task task(config.agent_num,!map.is_roadmap());
+    task.get_task(ftask);
+    if(map.is_roadmap())
+      task.make_ij(map);
+    else
+      task.make_ids(map.get_width());
+    cout<<"read task success"<<endl;
+
     cout<<"agents_num="<<task.get_agent_num()<<endl;
     task.prt_agents();
     CBS cbs;
     Solution solution = cbs.find_solution(map, task, config);
     logger log(config,solution);
     auto found = solution.found?"true":"false";
-    auto Use_edge = config.use_edge_split?"true":"false";
-    auto Cons_reason =config.cons_reason?"true":"false";
+    auto Use_edge = config.ES?"true":"false";
+    auto Cons_reason =config.CT?"true":"false";
+    auto ICP_s =config.ICP?"true":"false";
     int task_ind=vm["extra_info"].as<int>();
 
     std::cout<< "Soulution found: " << found <<"\nUse Edge Splitting: "<< Use_edge <<
-      "\nconstraint reasoning: "<<Cons_reason<<
+      "\nconstraint reasoning: "<<Cons_reason<<"\nIncompatable path reasoning: "<<ICP_s<<
       "\nRuntime: "<<solution.time.count() << "\nMakespan: " << solution.makespan << "\nFlowtime: " << solution.flowtime<< "\nInitial Cost: "<<solution.init_cost<< "\nCollision Checking Time: " << solution.check_time
       << "\nHL expanded: " << solution.high_level_expanded << "\nLL searches: " << solution.low_level_expansions << "\nLL expanded(avg): " << solution.low_level_expanded << std::endl;
     std::cout<<"agent_size: "<<config.agent_size<<std::endl;
