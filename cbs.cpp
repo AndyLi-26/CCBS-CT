@@ -797,6 +797,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     }
     else{
       if(config.debug>1)
+        cout<<"start planning"<<endl;
       pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values);
     }
     if (debug>0){
