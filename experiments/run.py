@@ -13,20 +13,20 @@ with open("./config.json","r") as f:
 for r in config['r']:
     for m in config['m']:
         for es in config['es']:
-            for cr in config['cr']:
+            for ct in config['ct']:
                 for ds in config['ds']:
                     for icp in config['icp']:
                         for a in config['a']:
                             for i in config['i']:
                                 es_tag="es" if es=='1' else '0'
-                                cr_tag="cr" if cr=='1' else '0'
+                                ct_tag="ct" if cr=='1' else '0'
                                 ds_tag="ds" if ds=='1' else '0'
                                 icp_tag="icp" if icp=='1' else '0'
 
                                 cmd=[exe,"-m",map_address.format(m),
                                      "-t",task_address.format(m,i),
                                     "--HI_h","0",
-                                     "-o", output_address.format(m,es_tag,cr_tag,ds_tag,icp_tag),
+                                     "-o", output_address.format(m,es_tag,ct_tag,ds_tag,icp_tag),
                                      "-a",r,
                                      "--agent_num",a,
                                      "--timelimit","120",
@@ -34,8 +34,8 @@ for r in config['r']:
                                 ]
                                 if es=='1':
                                     cmd+=["--ES"]
-                                if cr=='1':
-                                    cmd+=["--CR"]
+                                if ct=='1':
+                                    cmd+=["--CT"]
                                 if ds=='1':
                                     cmd+=["--DS"]
                                 if icp=='1':
