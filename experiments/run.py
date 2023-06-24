@@ -19,7 +19,7 @@ for r in config['r']:
                         for a in config['a']:
                             for i in config['i']:
                                 es_tag="es" if es=='1' else '0'
-                                ct_tag="ct" if cr=='1' else '0'
+                                ct_tag="ct" if ct=='1' else '0'
                                 ds_tag="ds" if ds=='1' else '0'
                                 icp_tag="icp" if icp=='1' else '0'
 
