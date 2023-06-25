@@ -422,6 +422,24 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
   //consider min_clear time for node conflict
   //map->prt_validmoves();
   list<Constraint> c(0);
+  int exit_index=id2ind(move1.id1, move1.id2,agent);
+  if (config.CT){
+    if (move1.t1>endT)
+    {
+      Constraint cons(agent, startTimeA, move1.t1, move1.id1, exit_index, move1.id2);
+      c.push_back(cons);
+    }
+    else
+    {
+      Constraint cons(agent, startT, endT,move1.id1, exit_index, move1.id2);
+      c.push_back(cons);
+    }
+  }
+  else{
+    Constraint cons(agent, startTimeA, move1.t1, move1.id1, exit_index, move1.id2);
+    c.push_back(cons);
+  }
+
   if (config.ICP)
   {
     if(move2.id1!=move2.id2 && map->node_in_path(move1.id1,make_pair(move2.id1, move2.id2)))
@@ -441,26 +459,7 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
       }
     }
   }
-  int exit_index=id2ind(move1.id1, move1.id2,agent);
-  if (config.CT){
-    if (move1.t1>endT)
-    {
-      Constraint cons(agent, startTimeA, move1.t1, move1.id1, exit_index, move1.id2);
-      c.push_back(cons);
-      return c;
-    }
-    else
-    {
-      Constraint cons(agent, startT, endT,move1.id1, exit_index, move1.id2);
-      c.push_back(cons);
-      return c;
-    }
-  }
-  else{
-    Constraint cons(agent, startTimeA, move1.t1, move1.id1, exit_index, move1.id2);
-    c.push_back(cons);
-    return c;
-  }
+  return c;
 }
 
 int CBS::id2ind(int v1, int v2,int agent)
