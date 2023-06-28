@@ -2,7 +2,7 @@ import subprocess, os,glob, time,json
 processPool=[]
 exe = "../debug/CCBS"
 map_address ="../Instances/roadmaps/{}/map.graph"
-task_address="../Instances/roadmaps/{}/{}task.task"
+task_address="../Instances/roadmaps/{}/large_agent/{}_task.task"
 output_address="{}-{}-{}-{}-{}.csv"
 with open("./config.json","r") as f:
     config=json.loads(f.read())
@@ -19,7 +19,9 @@ for r in config['r']:
                         for a in config['a']:
                             for i in config['i']:
                                 es_tag="es" if es=='1' else '0'
-                                ct_tag="ct" if ct=='1' else '0'
+                                if ct=='0': ct_tag="0" 
+                                elif ct=='1': ct_tag="ct"
+                                elif ct=="2": ct_tag="ct_abs"
                                 ds_tag="ds" if ds=='1' else '0'
                                 icp_tag="icp" if icp=='1' else '0'
 
@@ -36,6 +38,8 @@ for r in config['r']:
                                     cmd+=["--ES"]
                                 if ct=='1':
                                     cmd+=["--CT"]
+                                elif ct=='2':
+                                    cmd+=["--CT_abs"]
                                 if ds=='1':
                                     cmd+=["--DS"]
                                 if icp=='1':

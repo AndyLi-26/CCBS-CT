@@ -110,33 +110,54 @@ double Map::get_min_clear_t(Move m1, int s2)
     min_clearT[tempInd]=result;
     return result;
   }
+  if (config.CT_abs)
+    return -1;
 
-  if (gt(dis_P_l(s2,make_pair(get_coord(m1.id1),get_coord(m1.id2))),d))  // if the node has a larger distance than 2r between line and node, then no need to do futher calc
+  if (s2==m1.id1 || gt(dis_P_l(s2,make_pair(get_coord(m1.id1),get_coord(m1.id2))),d))  // if the node has a larger distance than 2r between line and node, then no need to do futher calc
   {
     min_clearT[tempInd]=-1;
     return -1;
   }
 
-  if (!in_path(s2,make_pair(get_coord(m1.id1),get_coord(m1.id2))))  // if the node is in 2r distance, than check if it is in path
+  if (!in_path(get_coord(s2),make_pair(get_coord(m1.id1),get_coord(m1.id2))))  // if the node is in 2r distance, than check if it is in path
   {
-    assert(false);
     min_clearT[tempInd]=-1;
     return -1;
   }
 
-  /*
-     double min_t(-1);
-     for (Node n:get_valid_moves(s2))
-     {
-     Vector2D A(get_coord(s2)),B(get_coord(n.id));
-     if(in_path(l.first))
+  //general cases
+  double min_t(-1);
+  for (Node n:get_valid_moves(s2))
+  {
+    Vector2D A(get_coord(s2)),C(get_coord(n.id));
+    Vector2D B(get_coord(m1.id1)), D(get_coord(m1.id2));
+    if(in_path(B,make_pair(A,C)))
+    {
+      min_t=CN_INFINITY;
+      continue;
+    }
+    Line l1(make_pair(B,D)), l2(make_pair(A,C));
+    Vector2D A_(find_intersection(l1,l2));
+    double dA_A_(A_.dis(A)),dD_A_(D.dis(A_));
 
-     }
-     */
-
-
-
-
+    double a(B.dis(C)),b(C.dis(A_)),c(B.dis(A_));
+    double cos_theta((b*b+c*c-a*a)/(2*b*c));
+    if (eq(cos_theta,-1)){ //zero
+      min_t=0;
+      break;
+    }
+    double t=cos2min_t(cos_theta)+dA_A_-dD_A_;
+    if (le(t,0))
+    {
+      min_t=0;
+      break;
+    }
+    if (min_t==-1 || t<min_t){
+      min_t=t;
+    }
+  }
+  min_clearT[tempInd]=min_t;
+  return min_t;
 }
 
 bool Map::in_path(Vector2D p, Line l)
@@ -168,6 +189,7 @@ bool Map::node_in_path(int p, pair<int,int> l)
   Vector2D A(get_coord(l.first)), B(get_coord(l.second));
   return in_path(P,make_pair(A,B));
 }
+
 double Map::get_min_clear_t_sameDestination(int main_n, int enter_n)
 {
   if (main_n>=init_node_num) return -1;
@@ -1049,7 +1071,7 @@ int Map::id2ind(int v1, int v2)
   return -2;
 }
 
-Vector2D find_intersection(Line l1, Line l2)
+Vector2D Map::find_intersection(Line l1, Line l2)
 {
   double x1(l1.first.i), y1(l1.first.j), x2(l1.second.i),y2(l1.second.j);
   double x3(l2.first.i), y3(l2.first.j), x4(l2.second.i),y4(l2.second.j);

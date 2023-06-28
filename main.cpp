@@ -37,6 +37,7 @@ int main(int argc, const char *argv[])
       ("Cardinal","use cardinal for choose conflict")
       ("DS","use Disjoint_splitting")
       ("CT","use minimum clearance time reasoning")
+      ("CT_abs","use more abstract minimum clearance time reasoning")
       ("ES","use edge split")
       ("ICP","Incompatable path reasoning")
       ("TR","use target reasoning")
@@ -70,6 +71,7 @@ int main(int argc, const char *argv[])
     bool card=vm.count("Cardinal");
     bool DS=vm.count("DS");
     bool CT=vm.count("CT");
+    bool CT_abs=vm.count("CT_abs");
     bool ES=vm.count("ES");
     bool TR=vm.count("TR");
     bool ICP=vm.count("ICP");
@@ -77,6 +79,7 @@ int main(int argc, const char *argv[])
     config.DS=DS;
     config.ES=ES;
     config.CT=CT;
+    config.CT_abs=CT_abs;
     config.ICP=ICP;
     
     Map map = Map(config);

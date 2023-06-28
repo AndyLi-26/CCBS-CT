@@ -264,10 +264,10 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
   //prt_constraint(waitCon);
   assert(waitCon.t2-waitCon.t1>CN_EPSILON);
   constraint.push_back(waitCon);
-  if (config.CT)
+  if (config.CT_abs || (config.CT && move2.id2==move1.id1))
   {
-    if (move2.id2==move1.id1)
-    {
+    //if (move2.id2==move1.id1)
+    //{
       vector<Node> nodes=map->get_valid_moves(move1.id1);
       for (Node n :nodes){
         Vector2D toNode(map->get_coord(move1.id1)),fromNode(map->get_coord(n.id));
@@ -292,7 +292,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
           constraint.push_back(edgeCon);
         }
       }
-    }
+    //}
     return constraint;
   }
   else{
@@ -372,23 +372,20 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     return c;
   }
 
-  if (config.CT){
-    if (move2.id2<map->get_init_node_num() && move1.id2==move2.id2){
+  //if (config.CT){
+  if (config.CT_abs || (config.CT && move2.id2==move1.id1)){
+    //if (move2.id2<map->get_init_node_num() && move1.id2==move2.id2){
       Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
       double dist=sqrt((A-B)*(A-B));
       int enter_index=id2ind(move1.id2, move1.id1,agent);
       assert(enter_index!=-2);
       double min_clear=map->get_min_clear_t(move1,move2.id2);
       startT=move1.t1;
-      if (min_clear>-CN_EPSILON)
+      if (!(eq(min_clear,-1)))
       {
         endT=move2.t2-dist+min_clear;
       }
-      else
-      {
-        endT=move2.t2+dist;
-      }
-    }
+    //}
   }
   double delta = move2.t2 - move1.t1;
   while(delta > CN_PRECISION/2.0)

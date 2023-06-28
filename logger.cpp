@@ -44,13 +44,13 @@ void logger::write_exp_result(int task_ind)
     FAIL("did not open result file properly");
   }
   string ES=config.ES ? "ES":"0";
-  string CR=config.CT ? "CR":"0";
+  string CT=config.CT ? "CT":"0";
   string DS=config.DS? "DS":"0";
   string ICP=config.ICP ? "ICP":"0";
   int f=solution.found? 1:0;
   fw<<config.agent_num<<","
     <<ES<<","
-    <<CR<<","
+    <<CT<<","
     <<DS<<","
     <<ICP<<","
     <<config.agent_size<<","

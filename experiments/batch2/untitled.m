@@ -28,7 +28,7 @@ for a=1:2
 end
 
 %plot node expansion
-comparsion=[1,2;1,4;2,3;2,4];
+comparsion=[1,3;1,4;2,3;2,4];
 for a=1:2
     figure('Name','Node expansion')
     for i=1:size(comparsion,1)

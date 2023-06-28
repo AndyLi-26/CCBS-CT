@@ -49,6 +49,7 @@ struct Config
   bool    ICP;
   bool    TR;//target reasoning sym breaking
   bool    CT;
+  bool    CT_abs;
   int     hlh_type;
   int     connectedness;
   int     debug=0;
