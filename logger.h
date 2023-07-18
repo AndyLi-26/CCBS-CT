@@ -4,6 +4,7 @@
 #include "structs.h"
 #include "map.h"
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <fstream>
 class logger

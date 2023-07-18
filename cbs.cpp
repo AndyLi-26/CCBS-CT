@@ -727,7 +727,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       if (debug>1){
         map.prt_validmoves();
       }
-      
+      /*
       list<Constraint> temp = get_constraints(&node, 1);
       list<Constraint> temp2(0);
       for (Constraint cons: temp)
@@ -736,6 +736,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
           temp2.push_back(cons);
       }
       prt_constraints(temp);
+      */
     //printBT_aux();
       
       //prt_history(&node);
