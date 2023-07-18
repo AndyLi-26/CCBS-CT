@@ -192,7 +192,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
       double b(2*(dx*dx*y0*vy-dx*dx*y1*vy+dy*dy*x0*vx-dy*dy*x1*vx+dx*dy*y1*vx+dx*dy*x1*vy-dx*dy*y0*vx-dx*dy*x0*vy));
       double c( -(C-pow((dx*y0 - dy*x0),2) + 2*dx*dx*y1*y0  + 2*dy*dy*x1*x0 - 2*dx*dy*y1*x0 - 2*dx*dy*x1*y0 ));
 
-      double t2=solveQuad(a,b,c) - CN_PRECISION;
+      double t2=solveQuad(a,b,c).first - CN_PRECISION;
 
       if (t2<CN_EPSILON)
         P_new=Vector2D(-1,-1);
@@ -304,7 +304,7 @@ Vector2D edgeSpliter::case2(Vector2D P0,Vector2D v, Vector2D P2)
   double b(2*(x0*vx - x2*vx + y0*vy - y2*vy));
   double c(-(C-x0*x0 +2*x2*x0-y0*y0+2*y2*y0));
 
-  double t2=solveQuad(a,b,c) - CN_PRECISION;
+  double t2=solveQuad(a,b,c).first - CN_PRECISION;
   Vector2D P(P0+v*t2);
   return P;
 }

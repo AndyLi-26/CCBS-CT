@@ -6,6 +6,7 @@
 #include "heuristic.h"
 #include "const.h"
 #include <unordered_map>
+#include <boost/unordered_map.hpp>
 #include <map>
 #include <set>
 class SIPP
@@ -40,11 +41,14 @@ private:
     void prt_path(Path P);
     void prt_paths(std::vector<Path> paths);
     void prt_nodes(std::vector<Node> starts);
+    void prt_node(Node n);
     void prt_landmarks();
+    void prt_open();
 
-    std::unordered_map<int, Node> close;
+    typedef std::tuple<int,int,bool> node_idx;  
+    boost::unordered_map<node_idx, Node> close;
     std::list<Node> open;
-    std::unordered_map<int, std::pair<double, bool>> visited;
+    boost::unordered_map<node_idx, std::pair<double, bool>> visited;
     std::map<std::pair<int, int>, std::vector<Move>> constraints;//stores sets of constraints associated with moves
     std::unordered_map<int, std::vector<std::pair<double, double>>> collision_intervals;//stores sets of collision intervals associated with cells
     std::vector<Move> landmarks;

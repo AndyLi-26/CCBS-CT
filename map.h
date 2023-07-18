@@ -48,6 +48,7 @@ class Map
     bool in_path(Vector2D p, Line l);
     cacheTable min_clearT;
     new_table new_node_table;
+    std::vector<std::vector<double>> min_clear_time; //[main node][enter node]
     //ori_table ori_node_table;
 
   public:
@@ -89,6 +90,7 @@ class Map
     void alter(Map_deltas map_delta);
     void alter_back(Map_deltas map_delta);
     bool equal(Map *m);
+    void pre_process();
 
 };
 

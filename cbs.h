@@ -41,7 +41,7 @@ class CBS
     Move split_conf_move(Move m1,Move m2, CBS_Node *node);
     Conflict modify_conflict(Conflict conflict,CBS_Node *node);
     Move modify_move(Move move,int new_id);
-    bool validNewNode(Vector2D X1,Vector2D X2,Vector2D New);
+    //bool validNewNode(Vector2D X1,Vector2D X2,Vector2D New);
     //typedef std::pair<Map_delta,Map_delta> Map_delta_pair;
     typedef std::pair<Vector2D,Vector2D> node_pair;
     typedef std::pair<int,int> edge;
@@ -65,6 +65,8 @@ class CBS
     void saveCT(const string &fileName,CBS_Node *goal_node,unsigned int agent_num);
     void printBT_aux();
     void printBT(const string& prefix, const int node_id, bool isLeft);
+    void check_collison(CBS_Node *node);
+    void prt_history(CBS_Node *node);
 
     void post_check(vector<sPath> Paths);
     Vector2D ind2Vec(int nodeId);

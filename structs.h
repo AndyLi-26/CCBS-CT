@@ -23,7 +23,7 @@ inline bool lt(double a, double b);
 inline bool gt(double a, double b);
 inline bool le(double a, double b);
 inline bool ge(double a, double b);
-inline double solveQuad(double a, double b, double c);
+inline pair<double,double> solveQuad(double a, double b, double c);
 inline double round_down(double f);
 
 
@@ -72,11 +72,12 @@ struct Node
     Node*   parent;
     std::pair<double, double> interval;
     int interval_id;
-    Node(int _id = -1, double _f = -1, double _g = -1, double _i = -1, double _j = -1, Node* _parent = nullptr, double begin = -1, double end = -1)
-        :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)) {interval_id = 0;}
+    bool from_landMark;
+    Node(int _id = -1, double _f = -1, double _g = -1, double _i = -1, double _j = -1, Node* _parent = nullptr, double begin = -1, double end = -1,int _interval_id = 0, bool _from_landMark=false)
+        :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)),interval_id(_interval_id),from_landMark(_from_landMark) {}
     bool operator <(const Node& other) const //required for heuristic calculation
     {
-        return this->g < other.g;
+        return le(this->g,other.g);
     }
 	struct eqnode 
 	{
@@ -85,8 +86,8 @@ struct Node
 
 			return (s1 == s2) || (s1 && s2 &&
 				s1->id == s2->id) || (s1 && s2 &&
-				abs(s1->i - s2->i)<CN_EPSILON && 
-				abs(s1->j - s2->j)<CN_EPSILON);
+				eq(s1->i, s2->i) && 
+				eq(s1->j, s2->j));
 		}
 	};
 
@@ -117,7 +118,7 @@ struct gNode
 		{
 
 			return (s1 == s2) || (
-			s1->i==s2->i && s1->j==s2->j &&
+			eq(s1->i,s2->i) && eq(s1->j,s2->j) &&
 			s1-> neighbors == s2->neighbors);
 		}
 	};
@@ -193,9 +194,10 @@ struct Constraint
     //double i1, j1, i2, j2; // in case of node constraint i1==i2, j1==j2.
     int id1, id2;
 	int to_id;
+  int CT;
     bool positive;
     Constraint(int _agent = -1, double _t1 = -1, double _t2 = -1, int _id1 = -1, int _id2 = -1,int _to_id=-3, bool _positive = false)
-        : agent(_agent), t1(_t1), t2(_t2), id1(_id1), id2(_id2),to_id(_to_id),positive(_positive) {}
+        : agent(_agent), t1(_t1), t2(_t2), id1(_id1), id2(_id2),to_id(_to_id),positive(_positive) {CT=0;}
     friend std::ostream& operator <<(std::ostream& os, const Constraint& con)
     {
 		if(con.agent==-1){
@@ -204,16 +206,16 @@ struct Constraint
 		if (con.positive){
 			os<<"+";
 		}
-        os<<"a:" <<con.agent <<"["<< con.id1<<"->"<<con.to_id<<"]"<<"("<<con.t1<<"~"<<con.t2<<")";//<<con.i1<<" "<<con.j1<<" "<<con.i2<<" "<<con.j2<<"\n";
+        os<<"CT: "<<con.CT<<" a:" <<con.agent <<"["<< con.id1<<"->"<<con.to_id<<"]"<<"("<<con.t1<<"~"<<con.t2<<")";//<<con.i1<<" "<<con.j1<<" "<<con.i2<<" "<<con.j2<<"\n";
         return os;
     }
     bool operator <(const Constraint& other) const
     {
-        return t1 < other.t1;
+        return lt(t1, other.t1);
     }
     bool operator ==(const Constraint& other) const
     {
-        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2 && abs(t1-other.t1)<=CN_EPSILON && abs(t2-other.t2)<=CN_EPSILON && positive==other.positive;
+        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2 && eq(t1,other.t1) && eq(t2,other.t2) && positive==other.positive;
     }
 };
 
@@ -274,7 +276,7 @@ struct Conflict
     : agent1(_agent1), agent2(_agent2), t(_t), move1(_move1), move2(_move2) {overcost = 0;}
   bool operator < (const Conflict& other)
   {
-    return this->overcost < other.overcost;
+    return lt(this->overcost, other.overcost);
   }
   friend std::ostream& operator <<(std::ostream& os, const Conflict conflict){
     int node11=conflict.move1.id1;
@@ -342,7 +344,7 @@ struct CBS_Node_aux
   CBS_Node_aux* left_child;
   CBS_Node_aux* right_child;
   int id,id_parent,id_left=-1,id_right=-1;
-  int cost;
+  double cost;
   Constraint positive_constraint;
 
   Conflict cur_conflict;
@@ -398,7 +400,7 @@ Open_Elem,
       return true;
     else if(this->constraints < other.constraints)
       return false;
-    else if(this->cost < other.cost)
+    else if(lt(this->cost, other.cost))
       return true;
     else
             return false;
@@ -571,7 +573,7 @@ public:
 
     Point(double _i = 0.0, double _j = 0.0):i (_i), j (_j){}
     Point operator-(Point &p){return Point(i - p.i, j - p.j);}
-    int operator== (Point &p){return (abs(i -p.i)<=CN_EPSILON) && (abs(j - p.j)<=CN_EPSILON);}
+    int operator== (Point &p){return (eq(i,p.i) && eq(j, p.j));}
     int classify(Point &pO, Point &p1)
     {
       Point p2 = *this;
@@ -583,20 +585,17 @@ public:
       Point a = p1 - pO;
       Point b = p2 - pO;
       double sa = a.i * b.j - b.i * a.j;
-      if (sa > CN_EPSILON)
+      if (gt(sa,0))
         return 1;//LEFT;
-      if (sa < -CN_EPSILON)
+      if (lt(sa,0))
         return 2;//RIGHT;
-      if ((a.i * b.i < -CN_EPSILON) || (a.j * b.j < -CN_EPSILON))
+      if (lt(a.i * b.i,0) || lt(a.j * b.j,0))
         return 3;//BEHIND;
-      if ((a.i*a.i + a.j*a.j) < (b.i*b.i + b.j*b.j) + CN_EPSILON)
+      if (lt((a.i*a.i + a.j*a.j), (b.i*b.i + b.j*b.j)))
         return 4;//BEYOND;
 
       return 7;//BETWEEN;
     }
 };
-
-
-
 
 #endif // STRUCTS_H

@@ -13,7 +13,7 @@ for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
     #for m in [7,9,10,11]:
 #for m in [2]:
     for ES in [False,True]:
-        for ct in [False,True]:
+        for ct in [0,1]:
             for ds in [False,True]:
                 for icp in [False,True]:
                     cmd=[exe,"-m",map_address.format(m),
@@ -26,8 +26,10 @@ for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
                          "--extra_info",str(m if isinstance(m,int) else int((m[0] + str(["a","b"].index(m[1])))))]
                     if ES:
                         cmd+=["--ES"]
-                    if ct:
+                    if ct==1:
                         cmd+=["--CT"]
+                    elif ct==2:
+                        cmd+=["--CT_abs"]
                     if ds:
                         cmd+=["--DS"]
                     if icp:

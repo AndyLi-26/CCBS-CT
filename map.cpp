@@ -41,8 +41,8 @@ bool Map::equal(Map *m)
 	for (int i=0;i<m->valid_moves.size();++i){
 		for (int j=0;j<m->valid_moves[i].size();++j){
 			if (valid_moves[i][j].id!=m->valid_moves[i][j].id ||
-			valid_moves[i][j].i!=m->valid_moves[i][j].i ||
-			valid_moves[i][j].j!=m->valid_moves[i][j].j ){
+			!eq(valid_moves[i][j].i, m->valid_moves[i][j].i) ||
+			!eq(valid_moves[i][j].j, m->valid_moves[i][j].j) ){
 				std::cout<<"this:"<<std::endl;
 				prt_validmoves();
 				std::cout<<"ori"<<std::endl;
@@ -107,6 +107,7 @@ double Map::get_min_clear_t(Move m1, int s2)
   if (m1.id2==s2) // special case
   {
     double result = get_min_clear_t_sameDestination(m1.id2,m1.id1);
+    //assert(false);
     min_clearT[tempInd]=result;
     return result;
   }
@@ -126,7 +127,7 @@ double Map::get_min_clear_t(Move m1, int s2)
   }
 
   //general cases
-  double min_t(-1);
+  double min_t(-1),t_pre,t,offset,t1,t2;
   for (Node n:get_valid_moves(s2))
   {
     Vector2D A(get_coord(s2)),C(get_coord(n.id));
@@ -140,13 +141,44 @@ double Map::get_min_clear_t(Move m1, int s2)
     Vector2D A_(find_intersection(l1,l2));
     double dA_A_(A_.dis(A)),dD_A_(D.dis(A_));
 
-    double a(B.dis(C)),b(C.dis(A_)),c(B.dis(A_));
-    double cos_theta((b*b+c*c-a*a)/(2*b*c));
-    if (eq(cos_theta,-1)){ //zero
-      min_t=0;
-      break;
+    Vector2D v(B-A_);
+    Vector2D unitV(v/v.mod());
+    double quad_a(unitV.i*unitV.i+unitV.j*unitV.j);
+    double dx(C.i-A_.i),dy(C.j-A_.j);
+    double quad_b(-2*dx*unitV.i-2*dy*unitV.j);
+    double quad_c(dx*dx+dy*dy-d*d);
+    double delta=quad_b*quad_b-4*quad_a*quad_c;
+    if (ge(delta,0))
+    {
+      
+      if (eq(delta,0)) delta=0;
+      t1=(-quad_b-sqrt(delta))/(2*quad_a);
+      t2=(-quad_b+sqrt(delta))/(2*quad_a);
+      if (gt(t1,B.dis(A_)))
+        t_pre=CN_INFINITY;
+      else if (gt(t2,0))
+        t_pre=t2+C.dis(A_);
+      else
+      {
+        double a(B.dis(C)),b(C.dis(A_)),c(B.dis(A_));
+        double cos_theta((b*b+c*c-a*a)/(2*b*c));
+        if (eq(cos_theta,-1)){ //zero
+          min_t=0;
+          break;
+        }
+        t_pre=cos2min_t(cos_theta);
+      }
     }
-    double t=cos2min_t(cos_theta)+dA_A_-dD_A_;
+    else{
+      double a(B.dis(C)),b(C.dis(A_)),c(B.dis(A_));
+      double cos_theta((b*b+c*c-a*a)/(2*b*c));
+      if (eq(cos_theta,-1)){ //zero
+        min_t=0;
+        break;
+      }
+      t_pre=cos2min_t(cos_theta);
+    }
+    t=t_pre+dA_A_-dD_A_;
     if (le(t,0))
     {
       min_t=0;
@@ -171,7 +203,7 @@ bool Map::in_path(Vector2D p, Line l)
   double vx(unitv.i), vy(unitv.j);
   double dx(p.i-l.first.i), dy(p.j-l.first.j);
 
-  double a(vx*vx+vy*vy), b(-dx*vx+dy*vy), c(dx*dx + dy*dy - d*d);
+  double a(vx*vx+vy*vy), b(-2*dx*vx-2*dy*vy), c(dx*dx + dy*dy - d*d);
   double delta(b*b-4*a*c);
   if(le(delta,0))
     return false;
@@ -192,20 +224,53 @@ bool Map::node_in_path(int p, pair<int,int> l)
 
 double Map::get_min_clear_t_sameDestination(int main_n, int enter_n)
 {
+  //cout<<"main_n: "<<main_n<<"-->"<<enter_n<<endl;
   if (main_n>=init_node_num) return -1;
-  double min_t(-1),t;
+  double min_t(-1),t,t1,t2;
   for (Node exit:valid_moves[main_n]){
     //if (valid_moves[main_n][enter_n].id==exit.id) continue;
     if (enter_n==exit.id) continue;
-    //calc cos theta
     int nA(main_n),nB(enter_n),nC(exit.id);
     Vector2D A(get_coord(nA)),B(get_coord(nB)),C(get_coord(nC));
-    double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
-    double cos_theta((b*b+c*c-a*a)/(2*b*c));
-    if (eq(cos_theta,-1)){ //zero
-      return 0;
+    //check if C is in the path
+    Vector2D v(B-A);
+    Vector2D unitV(v/v.mod());
+    double quad_a(unitV.i*unitV.i+unitV.j*unitV.j);
+    double dx(C.i-A.i),dy(C.j-A.j);
+    double quad_b(-2*dx*unitV.i-2*dy*unitV.j);
+    double quad_c(dx*dx+dy*dy-d*d);
+    double delta=quad_b*quad_b-4*quad_a*quad_c;
+    if (ge(delta,0))
+    {
+      
+      if (eq(delta,0)) delta=0;
+      t1=(-quad_b-sqrt(delta))/(2*quad_a);
+      t2=(-quad_b+sqrt(delta))/(2*quad_a);
+      if (gt(t1,get_dist(nB,nA)))
+        t=CN_INFINITY;
+      else if (gt(t2,0))
+        t=t2+get_dist(nA,nC);
+      else
+      {
+        double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
+        //cout<<"a: "<<a<<" b: "<<b<<" c: "<<c<<endl;
+        double cos_theta((b*b+c*c-a*a)/(2*b*c));
+        if (eq(cos_theta,-1)) //zero
+          return 0;
+        t=cos2min_t(cos_theta);
+      }
     }
-    t=cos2min_t(cos_theta);
+    else
+    {
+      double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
+      //cout<<"nA: "<<nA<<" nB: "<<nB<<" nC: "<<nC<<endl;
+      //cout<<"a: "<<a<<" b: "<<b<<" c: "<<c<<endl;
+      double cos_theta((b*b+c*c-a*a)/(2*b*c));
+      if (eq(cos_theta,-1)){ //zero
+        return 0;
+      }
+      t=cos2min_t(cos_theta);
+    }
     if (min_t==-1 || t<min_t){
       min_t=t;
     }
@@ -218,6 +283,7 @@ double Map::cos2min_t(double cos_theta)
   //double temp((8*agent_size*agent_size)/(1-cos_theta));
 
   //double t=(sqrt(temp));
+  //cout<<"cos theta: "<<cos_theta<<" retval: "<<sqrt((8*agent_size*agent_size)/(1-cos_theta))<<endl;
   return sqrt((8*agent_size*agent_size)/(1-cos_theta));
 }
 
@@ -478,57 +544,6 @@ void Map::get_roadmap(string FileName)
    */
 
 /*
-   void Map::pre_process()
-   {
-   auto dist=[](Vector2D A, Vector2D B) -> double {return sqrt((A-B)*(A-B));};
-   for (int i=0; i<size;++i){
-   vector<double> min_clearV;
-   min_clearV.clear();
-   for (int j=0;j<valid_moves[i].size();++j){
-   double min_t(-1);
-   for (Node exit:valid_moves[i]){
-   if (valid_moves[i][j].id==exit.id) continue;
-//calc theta
-Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
-//cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
-
-double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
-double cos_theta((b*b+c*c-a*a)/(2*b*c));
-//cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
-//cout<<"cos: "<<cos_theta<<endl;
-if (cos_theta==-1){ //zero
-min_t=0;
-break;
-}
-//if (cos_theta==-1) continue;//inf large
-//find min_t
-double temp((8*agent_size*agent_size)/(1-cos_theta));
-double t=(sqrt(temp));
-//double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
-//cout<<"t: "<<t<<endl;
-if (min_t==-1 || t<min_t){
-min_t=t;
-}
-}
-//cout<<"min t:"<<min_t<<endl;
-min_clearV.push_back(min_t);
-}
-min_clear_time.push_back(min_clearV);
-}
-boost::unordered::unordered_map<int,double>::iterator it;
-for(int i=0;i<min_clear_time.size();i++)
-{
-cout<<i<<": "<<endl;
-//for (it=min_clear_time[i].begin();it!=min_clear_time[i].end();++it)
-//    std::cout << it->first <<", " << it->second << std::endl;
-for (double j:min_clear_time.at(i))
-cout<<j<<", ";
-cout<<endl;
-}
-}
-*/
-
-/*
    void Map::get_roadmap(string FileName)
    {
    string line;
@@ -673,47 +688,47 @@ size = int(nodes.size());
 return true;
 }
 */
+/*
+   Vector2D Map::fit2line(Vector2D precise_pos, int node1, int node2)
+   {
+   cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<endl;
+   cout<<"n1: "<<node1<<" n2: "<<node2<<endl;
+   Vector2D P1,P2;
+   int dir(node1>node2);
+   cout<<"dir: "<<dir<<endl;
+   if (dir)
+   {
+   P1=get_coord(node2);
+   P2=get_coord(node1);
+   }
+   else
+   {
+   P1=get_coord(node1);
+   P2=get_coord(node2);
+   }
+   cout<<"P1:"<<P1<<" P2:"<<P2<<endl<<flush;
+   Vector2D v=P2-P1;
+   Vector2D unitv=v/sqrt(v*v);
+   cout<<"unitv: "<<unitv<<endl;
+   Vector2D temp = precise_pos-P1;//get_coord(node1);
+   double dis=sqrt(temp*temp);
 
-Vector2D Map::fit2line(Vector2D precise_pos, int node1, int node2)
-{
-  cout<<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"<<endl;
-  cout<<"n1: "<<node1<<" n2: "<<node2<<endl;
-  Vector2D P1,P2;
-  int dir(node1>node2);
-  cout<<"dir: "<<dir<<endl;
-  if (dir)
-  {
-    P1=get_coord(node2);
-    P2=get_coord(node1);
-  }
-  else
-  {
-    P1=get_coord(node1);
-    P2=get_coord(node2);
-  }
-  cout<<"P1:"<<P1<<" P2:"<<P2<<endl<<flush;
-  Vector2D v=P2-P1;
-  Vector2D unitv=v/sqrt(v*v);
-  cout<<"unitv: "<<unitv<<endl;
-  Vector2D temp = precise_pos-P1;//get_coord(node1);
-  double dis=sqrt(temp*temp);
-  /*
-     if (dir)
-     {
-     double edge_length=sqrt(v*v);
-     dis=edge_length-dis;
-     }
-     */
-  cout<<"dis: "<<dis<<endl;
-  int rounded=(int) (dis/config.min_dis);
-  double temp2=(rounded+dir)*config.min_dis;
-  Vector2D newP(P1+unitv*temp2);
-  cout<<"================================================================"<<endl;
-  cout<<get_coord(node1)<<"--"<<precise_pos<<"--"<<get_coord(node2)<<endl<<"this turned into: "<<newP<<endl<<flush;
-  assert(abs(newP.i-precise_pos.i)<config.min_dis && abs(newP.j-precise_pos.j)<config.min_dis);
-  return newP;
-}
+   if (dir)
+   {
+   double edge_length=sqrt(v*v);
+   dis=edge_length-dis;
+   }
 
+   cout<<"dis: "<<dis<<endl;
+   int rounded=(int) (dis/config.min_dis);
+   double temp2=(rounded+dir)*config.min_dis;
+   Vector2D newP(P1+unitv*temp2);
+   cout<<"================================================================"<<endl;
+   cout<<get_coord(node1)<<"--"<<precise_pos<<"--"<<get_coord(node2)<<endl<<"this turned into: "<<newP<<endl<<flush;
+   assert(abs(newP.i-precise_pos.i)<config.min_dis && abs(newP.j-precise_pos.j)<config.min_dis);
+   return newP;
+   }
+   */
 int Map::add_node(double i, double j, int node1, int node2)
 {
   //std::cout<<"new agent:"<<agent<<std::endl;
@@ -1094,4 +1109,48 @@ double Map::dis_P_l(Vector2D P, Line l)
   return numerator/denominator;
 }
 
+void Map::pre_process()
+{
+  auto dist=[](Vector2D A, Vector2D B) -> double {return sqrt((A-B)*(A-B));};
+  for (int i=0; i<size;++i){
+    vector<double> min_clearV;
+    min_clearV.clear();
+    for (int j=0;j<valid_moves[i].size();++j){
+      double min_t(-1);
+      for (Node exit:valid_moves[i]){
+        if (valid_moves[i][j].id==exit.id) continue;
+        //calc theta
+        Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
+        //cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
 
+        double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
+        double cos_theta((b*b+c*c-a*a)/(2*b*c));
+        //cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
+        //cout<<"cos: "<<cos_theta<<endl;
+        if (cos_theta==-1){ //zero
+          min_t=0;
+          break;
+        }
+        //if (cos_theta==-1) continue;//inf large
+        //find min_t
+        double temp((8*agent_size*agent_size)/(1-cos_theta));
+        double t=(sqrt(temp));
+        //double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
+        //cout<<"t: "<<t<<endl;
+        if (min_t==-1 || t<min_t){
+          min_t=t;
+        }
+      }
+      //cout<<"min t:"<<min_t<<endl;
+      min_clearV.push_back(min_t);
+    }
+    min_clear_time.push_back(min_clearV);
+  }
+  for(int i=0;i<min_clear_time.size();i++)
+  {
+    cout<<i<<": "<<endl;
+    for (double j:min_clear_time.at(i))
+      cout<<j<<", ";
+    cout<<endl;
+  }
+}

@@ -21,7 +21,7 @@ int main(int argc, const char *argv[])
       ("help", "produce help message")
       ("map,m", po::value<std::string>()->required(), "input file for map")
       ("tasks,t", po::value<std::string>()->required(), "input file for all the tasks")
-      ("debug_info",po::value<std::string>()->default_value(""),"output file for debug info, such as new node, path etc")
+      ("debug_info",po::value<std::string>()->default_value(""),"output file for debug info, such as new node")
       ("solution_file",po::value<std::string>()->default_value(""),"solution file")
       ("result_file,o",po::value<std::string>()->default_value(""),"result file")
       ("HI_h,h",po::value<int>()->default_value(0),"HI level heutistic, 0: none, 1:simplex model, 2: count" )
@@ -84,6 +84,7 @@ int main(int argc, const char *argv[])
     
     Map map = Map(config);
     map.get_map(fmap);
+    //map.pre_process();
     cout<<"read map success"<<endl;
 
     Task task(config.agent_num,!map.is_roadmap());

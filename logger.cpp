@@ -44,10 +44,11 @@ void logger::write_exp_result(int task_ind)
     FAIL("did not open result file properly");
   }
   string ES=config.ES ? "ES":"0";
-  string CT=config.CT ? "CT":"0";
+  string CT=config.CT_abs? "CT_abs" : (config.CT ? "CT":"0");
   string DS=config.DS? "DS":"0";
   string ICP=config.ICP ? "ICP":"0";
   int f=solution.found? 1:0;
+  fw<<std::setprecision(9)<<std::fixed;
   fw<<config.agent_num<<","
     <<ES<<","
     <<CT<<","
@@ -63,7 +64,7 @@ void logger::write_exp_result(int task_ind)
     <<solution.high_level_expanded<<","
     <<solution.new_node<<","
     <<endl;
-
+  fw.close();
 }
 void logger::write_nodes(const Map &map)
 {
