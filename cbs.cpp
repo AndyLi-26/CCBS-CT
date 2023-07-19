@@ -272,7 +272,6 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
     //if (move2.id2==move1.id1)
     //{
     //cout<<"using ct wait on node: "<<move1.id1<<endl;
-    assert(move1.id1==move1.id2 && move1.id2==move2.id2 && move2.id1!=move2.id2);
       vector<Node> nodes=map->get_valid_moves(move1.id1);
       for (Node n :nodes){
         Vector2D toNode(map->get_coord(move1.id1)),fromNode(map->get_coord(n.id));
@@ -378,20 +377,17 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     return c;
   }
 
-  //if (config.CT){
   if (config.CT_abs || (config.CT && move2.id2==move1.id1)){
-    //if (move2.id2<map->get_init_node_num() && move1.id2==move2.id2){
-      Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
-      double dist=sqrt((A-B)*(A-B));
-      int enter_index=id2ind(move1.id2, move1.id1,agent);
-      assert(enter_index!=-2);
-      double min_clear=map->get_min_clear_t(move1,move2.id2);
-      startT=move1.t1;
-      if (!(eq(min_clear,-1) || min_clear==CN_INFINITY))
-      {
-        endT=move2.t2-dist+min_clear;
-      }
-    //}
+    Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
+    double dist=sqrt((A-B)*(A-B));
+    int enter_index=id2ind(move1.id2, move1.id1,agent);
+    assert(enter_index!=-2);
+    double min_clear=map->get_min_clear_t(move1,move2.id2);
+    startT=move1.t1;
+    if (!(eq(min_clear,-1) || min_clear==CN_INFINITY))
+    {
+      endT=move2.t2-dist+min_clear;
+    }
   }
   double delta = move2.t2 - move1.t1;
   while(delta > CN_PRECISION/2.0)
@@ -694,7 +690,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
   int low_level_expanded(0);
   int id = 2;
   int debug=config.debug;
-  bool BREAK=false;
+  //bool BREAK=false;
   do
   {
     auto parent = tree.get_front();
@@ -829,10 +825,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         cout<<"new constraintA:  ";
         prt_constraints(constraintA);
       }
-      if (std::find(constraintsA.begin(),constraintsA.end(),*constraintA.begin())!=constraintsA.end()){
-        cout<<"breaking B"<<endl;
+      /*if (std::find(constraintsA.begin(),constraintsA.end(),*constraintA.begin())!=constraintsA.end()){
+        cout<<"breaking A ";
+        cout<<"expanded: "<<expanded<<endl;
         BREAK=true;
-      }
+      }*/
     /*if ((conflict.move1.id1==144 && conflict.move1.id2==145 && conflict.agent1==0))
     {
       cout<<"new constraint: "<<endl;
@@ -909,10 +906,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         cout<<"new constraintB:  ";
         prt_constraints(constraintB);
       }
-      if (std::find(constraintsB.begin(),constraintsB.end(),*constraintB.begin())!=constraintsB.end()){
-        cout<<"breaking B"<<endl;
+      /*if (std::find(constraintsB.begin(),constraintsB.end(),*constraintB.begin())!=constraintsB.end()){
+        cout<<"breaking B";
+        cout<<"expanded: "<<expanded<<endl;
         BREAK=true;
-      }
+      }*/
       if (debug>1){
         cout<<"moveB1:";
         prt_move(conflict.move2);
