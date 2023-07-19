@@ -789,11 +789,6 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     time_spent = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - time_now);
     time += time_spent.count();
     expanded++;
-    if (expanded >100)
-    {
-      solution.found = false;
-      break;
-    }
     std::list<Constraint> constraintsA = get_constraints(&node, conflict.agent1);
     if (debug>0)
     {

@@ -98,7 +98,7 @@ def getNewCmds(idx):
          "-o", f"{idx}/result",
          "-a","0.5",
          "--agent_num",str(N),
-         "--timelimit","120",
+         "--timelimit","5",
          "--extra_info",str(idx),
          "--DS","--CT"]
 
@@ -108,7 +108,7 @@ def getNewCmds(idx):
          "-o", f"{idx}/result",
          "-a","0.5",
          "--agent_num",str(N),
-         "--timelimit","120",
+         "--timelimit","5",
          "--extra_info",str(idx),
          "--DS"]
     return [cmd1,cmd2]

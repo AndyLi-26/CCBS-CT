@@ -7,6 +7,7 @@ obj.FrameRate = 20;
 open(obj);
 end
 agent_size=0.5;
+d=@(a,b) norm(nodes(a+1,:)-nodes(b+1,:));
 %draw mapi
 global nodes resolution
 resolution=0.01;
