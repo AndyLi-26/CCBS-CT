@@ -6,7 +6,7 @@ import shutil
 nodes=[]
 dist=lambda x,y:math.sqrt((nodes[x][0]-nodes[y][0])**2+(nodes[x][1]-nodes[y][1])**2)
 N=10
-P=5
+P=12
 processPoll=[]
 lst=list(range(170))
 idx_taken=[]

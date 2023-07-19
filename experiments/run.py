@@ -27,11 +27,11 @@ for r in config['r']:
 
                                 cmd=[exe,"-m",map_address.format(m),
                                      "-t",task_address.format(m,i),
-                                    "--HI_h","0",
+                                    "--HI_h","2",
                                      "-o", output_address.format(m,es_tag,ct_tag,ds_tag,icp_tag),
                                      "-a",r,
                                      "--agent_num",a,
-                                     "--timelimit","120",
+                                     "--timelimit","30",
                                      "--extra_info",i
                                 ]
                                 if es=='1':
