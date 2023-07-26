@@ -733,7 +733,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       }
       prt_constraints(temp);
       */
-    //printBT_aux();
+      //printBT_aux();
       
       //prt_history(&node);
 
@@ -975,7 +975,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       prt_path(pathB);
     }
     */
-      assert(!BREAK); 
+      //assert(!BREAK); 
 
     low_level_searches++;
     low_level_expanded += pathB.expanded;

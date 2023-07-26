@@ -8,7 +8,7 @@ open(obj);
 end
 agent_size=0.5;
 d=@(a,b) norm(nodes(a+1,:)-nodes(b+1,:));
-%draw mapi
+%draw map
 global nodes resolution
 resolution=0.01;
 nodes=readmatrix('nodes.csv');

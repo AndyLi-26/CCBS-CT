@@ -9,7 +9,7 @@ with open("./config.json","r") as f:
     for k,v in config.items():
         config[k]=v.split(" ")
     print(config)
-
+algo=[]
 for r in config['r']:
     for m in config['m']:
         for es in config['es']:
