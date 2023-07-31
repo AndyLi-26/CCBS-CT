@@ -531,11 +531,28 @@ struct Solution
     int cardinal_solved;
     int semicardinal_solved;
     int new_node;
+    int n_ct1; //move version
+    int n_ct2; //wait version
+    int n_ct3; //icp version
+    int n_ct4; //move abs version
+    int n_ct5; //wait abs version
+    int n_ds;
+    int n_standard;
+    double t_ct1;
+    double t_ct2;
+    double t_ct3;
+    double t_ct4;
+    double t_ct5; 
+    double t_ds;
+    double t_standard; 
+
     std::chrono::duration<double> time;
     std::chrono::duration<double> init_time;
     std::vector<sPath> paths;
     Solution(double _flowtime = -1, double _makespan = -1, std::vector<sPath> _paths = {})
-        : flowtime(_flowtime), makespan(_makespan), paths(_paths) { init_cost = -1; constraints_num = 0; low_level_expanded = 0; low_level_expansions = 0; cardinal_solved = 0; semicardinal_solved = 0; max_constraints = 0; new_node=-1;}
+        : flowtime(_flowtime), makespan(_makespan), paths(_paths) { init_cost = -1; constraints_num = 0; low_level_expanded = 0; low_level_expansions = 0; cardinal_solved = 0; semicardinal_solved = 0; max_constraints = 0; new_node=-1;
+        n_ct1=0;n_ct2=0;n_ct3=0;n_ct4=0;n_ct5=0;n_ds=0;n_standard=0;
+        t_ct3=0;t_ct2=0;t_ct1=0;t_ct4=0;t_ct5=0;t_ds=0;t_standard=0;}
     ~Solution() { paths.clear(); found = false;}
 };
 

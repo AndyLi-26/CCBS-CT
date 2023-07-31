@@ -112,6 +112,15 @@ int main(int argc, const char *argv[])
       << "\nHL expanded: " << solution.high_level_expanded << "\nLL searches: " << solution.low_level_expansions << "\nLL expanded(avg): " << solution.low_level_expanded << std::endl;
     std::cout<<"agent_size: "<<config.agent_size<<std::endl;
     std::cout<<"introduce new node: "<<map.get_new_node_num()<<std::endl;
+    cout<<"ct status: "<<endl;
+    cout<<" standard  n: "<<solution.n_standard<<"  ave t: "<<(solution.t_standard/solution.n_standard)<<endl;
+    cout<<" ds  n: "<<solution.n_ds<<"  ave t: "<<(solution.t_ds/solution.n_ds)<<endl;
+    cout<<" move to same node  n: "<<solution.n_ct1<<" ave t: "<<(solution.t_ct1/solution.n_ct1)<<endl;
+    cout<<" wait ct  n: "<<solution.n_ct2<< " ave t: "<< (solution.t_ct2/solution.n_ct2)<<endl;
+    cout<<" icp ct  n: "<<solution.n_ct3<< " ave t: "<< (solution.t_ct3 / solution.n_ct3)<<endl;
+    cout<<" move abs version  n: "<<solution.n_ct4<<" ave t: "<<( solution.t_ct4 / solution.n_ct4)<<endl;
+    cout<<" wait abs version  n: "<<solution.n_ct5<<" ave t: "<<( solution.t_ct5 / solution.n_ct5)<<endl;
+
     if (config.F_solution!="")
     {
       log.write_to_log_summary();

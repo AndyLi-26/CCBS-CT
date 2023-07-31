@@ -88,7 +88,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
           //cout<<"new g: "<<newNode.g<<endl;
         }
         newNode.interval = interval;
-      if(gt(newNode.g - cost ,curNode.interval.second) || gt(newNode.g, newNode.interval.second)) // >= || >=
+      if(gt(newNode.g - cost ,curNode.interval.second) || gt(newNode.g, newNode.interval.second)) // > || >
           continue;
       if(it != visited.end())
       {
@@ -464,7 +464,7 @@ double SIPP::check_endpoint(Node start, Node goal, int exit_id)
         cout<<"start g:"<<start.g<<" it->second[i].t1:"<<it->second[i].t1<<" it->second[i].t2:"<<it->second[i].t2<<endl;
         //cout<<": ="<<(start.g +CN_EPSILON > it->second[i].t1) <<" and "<< (start.g < it->second[i].t2) <<endl;
       }
-      if(ge(start.g, it->second[i].t1)  && lt(start.g, it->second[i].t2)) //>= && <
+      if(ge(start.g, it->second[i].t1)  && le(start.g, it->second[i].t2)) //>= && <
       {
         start.g = it->second[i].t2;
         if(config.debug>1)

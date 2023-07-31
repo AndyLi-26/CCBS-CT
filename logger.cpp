@@ -63,6 +63,20 @@ void logger::write_exp_result(int task_ind)
     <<solution.makespan<<","
     <<solution.high_level_expanded<<","
     <<solution.new_node<<","
+    <<solution.n_standard<<","
+    <<solution.t_standard<<","
+    <<solution.n_ds<<","
+    <<solution.t_ds<<","
+    <<solution.n_ct1<<","
+    <<solution.t_ct1<<","
+    <<solution.n_ct2<<","
+    <<solution.t_ct2<<","
+    <<solution.n_ct3<<","
+    <<solution.t_ct3<<","
+    <<solution.n_ct4<<","
+    <<solution.t_ct4<<","
+    <<solution.n_ct5<<","
+    <<solution.t_ct5<<","
     <<endl;
   fw.close();
 }

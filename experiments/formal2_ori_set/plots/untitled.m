@@ -1,14 +1,14 @@
-clc; clear all; close all;
+clc; clear all;
 %read all data
 map=["sparse","dense","super-dense"];
 algo=["-0-0-0-0","-0-0-ds-0","-0-ct-ds-0","-0-ct_abs-ds-0","-0-0-ds-icp","-0-ct_abs-ds-icp"];
 algo_name=["vanillia","ds","ds+ct","ds+ct_abs","ds+icp","ds+ct_abs+icp"];
 mark=["","-o","-x","-+","-*","-hexagram"]
-a_size=[0.5,4.5];
+a_size=[0.353553];
 
-y_tot=zeros(39,3);
-scatterx_tot=zeros(3900,3);
-scattery_tot=zeros(3900,3);
+y_tot=zeros(38,3);
+scatterx_tot=zeros(950,3);
+scattery_tot=zeros(950,3);
 c_tot=cell(1,3);
 tot_stat=[0,0,0];
 
@@ -17,7 +17,7 @@ for m=1:3
     for alg=1:length(algo)
         T = readtable(strcat(map(m),algo(alg),".csv"));
         T=T{:,:};
-        for a=1:2
+        for a=1:1
             temp=T(T(:,2)==a_size(a),:);
             all_data{a,alg}=temp; 
         end
@@ -25,7 +25,7 @@ for m=1:3
     %plot succ rate
     figure('Name',strcat(map(m),' succ rate')); hold on;
     title("succ rate")
-    for a=1:2
+    for a=1:1
         subplot(2,1,a); hold on; title(sprintf("agent size=%f",a_size(a)));
         for alg=1:length(algo)
             data=all_data{a,alg};
@@ -49,7 +49,7 @@ for m=1:3
     
     %plot node expansion
     comparsion=[2,3;2,4 ;2,5;2,6];
-    for a=1:2
+    for a=1:1
         figure('Name',strcat(map(m),' Node expansion, r=',num2str(a_size(a))));
         for i=1:size(comparsion,1)
             subplot(2,2,i); hold on; 

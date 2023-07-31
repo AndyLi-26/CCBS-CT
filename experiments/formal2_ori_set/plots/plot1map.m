@@ -3,53 +3,54 @@ clc; clear all; close all;
 map=["sparse","dense","super-dense"];
 algo=["-0-0-0-0","-0-0-ds-0","-0-ct-ds-0","-0-ct_abs-ds-0","-0-0-ds-icp","-0-ct_abs-ds-icp"];
 algo_name=["vanillia","ds","ds+ct","ds+ct_abs","ds+icp","ds+ct_abs+icp"];
-mark=["","-o","-x","-+","-*","-hexagram"]
-a_size=[0.5,4.5];
-
-y_tot=zeros(39,3);
-scatterx_tot=zeros(3900,3);
-scattery_tot=zeros(3900,3);
+a_size=[0.353553];
+y_tot=zeros(38,3);
+scatterx_tot=zeros(950,3);
+scattery_tot=zeros(950,3);
 c_tot=cell(1,3);
 tot_stat=[0,0,0];
-
 for m=1:3
     all_data=cell(2,length(algo));
     for alg=1:length(algo)
         T = readtable(strcat(map(m),algo(alg),".csv"));
         T=T{:,:};
-        for a=1:2
+        for a=1:length(a_size)
             temp=T(T(:,2)==a_size(a),:);
             all_data{a,alg}=temp; 
         end
     end
     %plot succ rate
-    figure('Name',strcat(map(m),' succ rate')); hold on;
-    title("succ rate")
-    for a=1:2
-        subplot(2,1,a); hold on; title(sprintf("agent size=%f",a_size(a)));
-        for alg=1:length(algo)
-            data=all_data{a,alg};
-            x=unique(data(:,1));
-            tsum = accumarray(data(:,1),data(:,5));
-            y = tsum(x(:));
-            if a==1 && (alg==1 || alg==2 || alg==6)
-                switch alg
-                    case 1
-                        y_tot(:,1)=y_tot(:,1)+y;
-                    case 2
-                        y_tot(:,2)=y_tot(:,2)+y;
-                    case 6   
-                        y_tot(:,3)=y_tot(:,3)+y;
-                end
-            end
-            plot(x,y,mark(alg));
-        end
-        legend(algo_name);
-    end
+    figure; hold on;
+
+    title(strcat(map(m),' succ rate'));
+    
+    data=all_data{a,1};
+    x=unique(data(:,1));
+    tsum = accumarray(data(:,1),data(:,5));
+    y = tsum(x(:))/25*100;
+    y_tot(:,1)=y_tot(:,1)+tsum(x(:));
+    plot(x,y,'b-o');
+
+    data=all_data{a,2};
+    x=unique(data(:,1));
+    tsum = accumarray(data(:,1),data(:,5));
+    y = tsum(x(:))/25*100;
+    y_tot(:,2)=y_tot(:,2)+tsum(x(:));
+    plot(x,y,'r-s');
+
+    data=all_data{a,6};
+    x=unique(data(:,1));
+    tsum = accumarray(data(:,1),data(:,5));
+    y = tsum(x(:))/25*100;
+    y_tot(:,3)=y_tot(:,3)+tsum(x(:));
+    plot(x,y,"g-diamond");
+
+    legend(["vanillia","DS","DS+CT"]);
+    
     
     %plot node expansion
     comparsion=[2,3;2,4 ;2,5;2,6];
-    for a=1:2
+    for a=1:length(a_size)
         figure('Name',strcat(map(m),' Node expansion, r=',num2str(a_size(a))));
         for i=1:size(comparsion,1)
             subplot(2,2,i); hold on; 
@@ -89,8 +90,6 @@ for m=1:3
     end
 
 end
-
-
 figure(); hold on; title("total succ rate")
 plot(x,y_tot(:,1),'b-o');
 plot(x,y_tot(:,2),'r-s');

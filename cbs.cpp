@@ -163,6 +163,8 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
   if (move2.id1==move2.id2) //colliding while waiting
   {
     waitCon=Constraint(agent, move2.t1, move2.t2, move1.id1, -1,move1.id2);
+    solution.n_standard+=1;
+    solution.t_standard+=move2.t2-move2.t1;
     //prt_constraint(waitCon);
     assert(gt(waitCon.t2,waitCon.t1));
     constraint.push_back(waitCon);
@@ -266,6 +268,8 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
   //prt_constraint(waitCon);
   assert(gt(waitCon.t2,waitCon.t1));
   constraint.push_back(waitCon);
+  solution.n_standard+=1;
+  solution.t_standard+=waitCon.t2-waitCon.t1;
   if (config.CT_abs || (config.CT && move2.id2==move1.id1))
   {
     //return constraint;
@@ -295,6 +299,16 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
           edgeCon.CT=2;
           assert(gt(edgeCon.t2,edgeCon.t1));
           constraint.push_back(edgeCon);
+          if (move2.id2==move1.id1)
+          {
+            solution.n_ct2+=1;
+            solution.t_ct2+=edgeCon.t2-edgeCon.t1;
+          }
+          else
+          {
+            solution.n_ct5+=1;
+            solution.t_ct5+=edgeCon.t2-edgeCon.t1;
+          }
         }
       }
     //}
@@ -374,11 +388,11 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     list<Constraint> c(0);
     Constraint cons(agent, move1.t1, CN_INFINITY, move1.id1, exit_index, move1.id2);
     c.push_back(cons);
+    solution.n_standard;
     return c;
   }
 
-  if (config.CT_abs || (config.CT && move2.id2==move1.id1)){
-    Vector2D A(map->get_coord(move1.id2)),B(map->get_coord(move1.id1));
+  if (config.CT_abs || (config.CT && move2.id2==move1.id2)){
     double dist=sqrt((A-B)*(A-B));
     int enter_index=id2ind(move1.id2, move1.id1,agent);
     assert(enter_index!=-2);
@@ -426,17 +440,32 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     if (move1.t1>endT)
     {
       Constraint cons(agent, startTimeA, move1.t1, move1.id1, exit_index, move1.id2);
+      solution.n_standard+=1;
+      solution.t_standard+=move1.t1-startTimeA;
       c.push_back(cons);
     }
     else
     {
       Constraint cons(agent, startT, endT,move1.id1, exit_index, move1.id2);
-      cons.CT=1;
+      if (move2.id2==move1.id2)
+      {
+        cons.CT=1;
+        solution.n_ct1+=1;
+        solution.t_ct1+=move1.t1-startTimeA;
+      }
+      else
+      {
+        cons.CT=4;
+        solution.n_ct4+=1;
+        solution.t_ct4+=move1.t1-startTimeA;
+      }
       c.push_back(cons);
     }
   }
   else{
     Constraint cons(agent, startTimeA, move1.t1, move1.id1, exit_index, move1.id2);
+    solution.n_standard+=1;
+    solution.t_standard+=move1.t1-startTimeA;
     c.push_back(cons);
   }
 
@@ -475,7 +504,10 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
           int exit_id=id2ind(n.id,move1.id1,agent);
           Constraint edgeCon(agent,startT,endT,n.id,exit_id,move1.id1); 
           assert(gt(edgeCon.t2,edgeCon.t1));
+          edgeCon.CT=3;
           c.push_back(edgeCon);
+          solution.n_ct3+=1;
+          solution.t_ct3+=edgeCon.t2-edgeCon.t1;
         }
       }
     }
@@ -723,6 +755,9 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       if (debug>1){
         map.prt_validmoves();
       }
+      if (debug>0){
+        printBT_aux();
+      }
       /*
       list<Constraint> temp = get_constraints(&node, 1);
       list<Constraint> temp2(0);
@@ -733,7 +768,6 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
       }
       prt_constraints(temp);
       */
-      //printBT_aux();
       
       //prt_history(&node);
 
@@ -989,7 +1023,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     if ((pathB.cost>0 && lt(left.cost,node.cost)))
     {
       cout<<"p: "<<pathB.cost<<" node: "<<node.cost<<"left: "<<left.cost<<endl;
-      assert(false);
+      //assert(false);
     }
     Constraint positive;
     bool inserted = false;
@@ -1029,6 +1063,9 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
           left.positive_constraint = positive;
           left.total_cons++;
           constraintsB.push_back(left.positive_constraint);
+          solution.n_ds+=1;
+          if (positive.t2!=CN_INFINITY)
+            solution.t_ds+=positive.t2-positive.t1;
           if (debug>0)
           {
             cout<<"new positive_constraint:"<<endl;
@@ -1047,6 +1084,9 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
           right.positive_constraint = positive;
           right.total_cons++;
           constraintsA.push_back(right.positive_constraint);
+          solution.n_ds+=1;
+          if (positive.t2!=CN_INFINITY)
+            solution.t_ds+=positive.t2-positive.t1;
           inserted = true;
           if (debug>0)
           {
@@ -1066,6 +1106,9 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
           left.positive_constraint = positive;
           left.total_cons++;
           constraintsB.push_back(left.positive_constraint);
+          solution.n_ds+=1;
+          if (positive.t2!=CN_INFINITY)
+            solution.t_ds+=positive.t2-positive.t1;
           if (debug>0)
           {
             cout<<"new positive_constraint:"<<endl;

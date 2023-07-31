@@ -111,8 +111,6 @@ double Map::get_min_clear_t(Move m1, int s2)
     min_clearT[tempInd]=result;
     return result;
   }
-  if (config.CT_abs)
-    return -1;
 
   if (s2==m1.id1 || gt(dis_P_l(s2,make_pair(get_coord(m1.id1),get_coord(m1.id2))),d))  // if the node has a larger distance than 2r between line and node, then no need to do futher calc
   {
@@ -122,11 +120,13 @@ double Map::get_min_clear_t(Move m1, int s2)
 
   if (!in_path(get_coord(s2),make_pair(get_coord(m1.id1),get_coord(m1.id2))))  // if the node is in 2r distance, than check if it is in path
   {
+    cout<<"to far2"<<endl;
     min_clearT[tempInd]=-1;
     return -1;
   }
 
   //general cases
+  cout<<"calculating general casese"<<endl;
   double min_t(-1),t_pre,t,offset,t1,t2;
   for (Node n:get_valid_moves(s2))
   {
