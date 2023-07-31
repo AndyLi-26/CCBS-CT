@@ -120,13 +120,11 @@ double Map::get_min_clear_t(Move m1, int s2)
 
   if (!in_path(get_coord(s2),make_pair(get_coord(m1.id1),get_coord(m1.id2))))  // if the node is in 2r distance, than check if it is in path
   {
-    cout<<"to far2"<<endl;
     min_clearT[tempInd]=-1;
     return -1;
   }
 
   //general cases
-  cout<<"calculating general casese"<<endl;
   double min_t(-1),t_pre,t,offset,t1,t2;
   for (Node n:get_valid_moves(s2))
   {
