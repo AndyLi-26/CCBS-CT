@@ -675,7 +675,7 @@ Conflict CBS::modify_conflict(Conflict conflict, CBS_Node *node)
 }
 
 Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
-{
+{ 
   /*
   ofstream fw("conflicts", std::ios::out);
   if (!fw.is_open()){
