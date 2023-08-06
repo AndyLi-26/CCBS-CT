@@ -55,7 +55,7 @@ for m in ["sparse","dense","super-dense"]:
             all_data[m][algoName]=temp
 idx_list=[]
 for a in range(3,41):
-    for r in ["0.353553"]:
+    for r in ["0.353553385"]:
         for i in range(1,26):
             idx_list.append((int(a),float(r),int(i)))
 

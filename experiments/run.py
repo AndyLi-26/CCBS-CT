@@ -32,7 +32,8 @@ for r in config['r']:
                                      "-a",r,
                                      "--agent_num",a,
                                      "--timelimit","30",
-                                     "--extra_info",i
+                                     "--extra_info",i,
+                                     "--Cardinal"
                                 ]
                                 if es=='1':
                                     cmd+=["--ES"]
