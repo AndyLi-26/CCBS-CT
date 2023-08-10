@@ -23,5 +23,33 @@ inline pair<double,double> solveQuad(double a, double b, double c) {
   return make_pair(t1,t2);
 }
 
+inline unsigned int floorSingle(float number){
+    unsigned int* ptr = (unsigned int*)&number;
+    int s = *ptr >> 31;
+    int e = *ptr & 0x7f800000;
+    e >>= 23;
+    e-=127;
+    int m = *ptr & 0x007fffff;
+    
+    unsigned long temp=1;
+    temp<<=23;
+    unsigned int retval= m|temp;
+    retval>>=(23-e-8);
+
+}
+
+inline unsigned long floorDouble(double number){
+  unsigned long* ptr = (unsigned long*)&number;
+  long e = *ptr & 0x7ff0000000000000;
+  e >>= 52;
+  e-=1023;
+  long m = *ptr & 0x00fffffffffffff;
+
+  unsigned long temp=1;
+  temp<<=52;
+  unsigned long retval= m|temp;
+  retval>>=(52-e-8);
+  return retval;
+}
 
 #endif
