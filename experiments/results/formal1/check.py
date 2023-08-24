@@ -71,8 +71,6 @@ for m,l in all_data.items():
         for k,v in l.items():
             if idx in v:
                 temp.append(v[idx])
-            else:
-                print("missing: ",m,k,idx)
         #print("----")
         #[print(i) for i in temp]
         #if idx[1]==4.5: continue

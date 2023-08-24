@@ -29,12 +29,12 @@ for fn in file_list:
         for l in f:
             l=l.strip().split(',')
             l=list(map(convert,l))
-            if l[0]==2: continue
-            temp.append(l)
+            if l[5] in (0.5, 4.5):
+                temp.append(l)
         temp=s_l(temp)
         data=[] 
         for l in temp:
-            l=[l[0]]+l[5:]
+            l=l[:14]
             l=",".join(map(str,l))
             data.append(l)
 
