@@ -104,52 +104,6 @@ bool CBS::check_conflict(Move move1, Move move2)
         return true;
     return false;
 }
-/*
-// my version
-Constraint CBS::get_wait_constraint(int agent, Move move1, Move move2)
-{
-double radius = 2*config.agent_size;
-double i0(map->get_i(move2.id1)), j0(map->get_j(move2.id1)), i1(map->get_i(move2.id2)), j1(map->get_j(move2.id2)), i2(map->get_i(move1.id1)), j2(map->get_j(move1.id1));
-std::pair<double,double> interval;
-Point point(i2,j2), p0(i0,j0), p1(i1,j1);
-int cls = point.classify(p0, p1);
-double dist = fabs((i0 - i1)*j2 + (j1 - j0)*i2 + (j0*i1 - i0*j1))/sqrt(pow(i0 - i1, 2) + pow(j0 - j1, 2));
-double da = (i0 - i2)*(i0 - i2) + (j0 - j2)*(j0 - j2);
-double db = (i1 - i2)*(i1 - i2) + (j1 - j2)*(j1 - j2);
-double ha = sqrt(da - dist*dist+CN_PRECISION);
-double size = sqrt(radius*radius - dist*dist);
-
-if(da < radius*radius)
-{
-if(db < radius*radius)
-{
-interval.first = move2.t1;
-interval.second = move2.t2;
-}
-else
-{
-interval.first = move2.t1;
-interval.second = move2.t2 - ha + size;
-}
-}
-else
-{
-if(db < radius*radius)
-{
-interval.first = move2.t2 - size + sqrt(db - dist*dist+CN_PRECISION);
-interval.second = move2.t2;
-}
-else
-{
-interval.first = move1.t1 + ha - size;
-interval.second = move1.t1 + ha + size;
-}
-}
-
-return Constraint(agent, interval.first, interval.second, move1.id1, -1,move1.id2); // exit index -1 means wait
-}
-*/
-
 //original version
 list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
 {
@@ -160,6 +114,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
     }
     list<Constraint> constraint(0);
     Constraint waitCon;
+    /*
     if (move2.id1==move2.id2) //colliding while waiting
     {
         waitCon=Constraint(agent, move2.t1, move2.t2, move1.id1, -1,move1.id2);
@@ -169,13 +124,13 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
         assert(gt(waitCon.t2,waitCon.t1));
         constraint.push_back(waitCon);
         return constraint;
-    }
+    }*/
     if(config.debug>1)
     {
         cout<<"collising: "<< check_conflict(move1,move2);
     }
     double radius = 2*config.agent_size;
-    std::pair<double,double> interval;
+    Interval interval({-1,-1});
 
     if(config.EQ)
     {
@@ -271,9 +226,103 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
     }
     else
     {
-        Vector2D standardCons(binary_search_constraint(agent,move1,move2));
-        interval.first=standardCons.i;
-        interval.second=standardCons.j;
+        if(eq(move1.t1,move1.t2))
+        {
+            if(config.debug>1)
+            {
+                cout<<"printted here"<<endl;
+                prt_double(move1.t1);
+                cout<<endl;
+                prt_double(move1.t2);
+                cout<<endl;
+            }
+            assert(move1.t2>move1.t1);
+            interval={move1.t1,move1.t1+CN_EPSILON};
+            //return Constraint(agent, move1.t1, move1.t1+CN_EPSILON, move1.id1, move1.id2);
+
+        }
+        else
+        {
+            if(move1.t2==CN_INFINITY)
+                move1.t2=move2.t2;
+            double startTimeA(move1.t1), endTimeA(move1.t2);
+            //Vector2D A(map->get_i(move1.id1), map->get_j(move1.id1)), A2(map->get_i(move1.id2), map->get_j(move1.id2)),
+            //         B(map->get_i(move2.id1), map->get_j(move2.id1)), B2(map->get_i(move2.id2), map->get_j(move2.id2));
+            //search the second half working
+            if(move2.id1 == move2.id2)
+                return {Constraint(agent, move2.t1, move2.t2, move1.id1, move1.id2)};
+            double delta = move1.t2 - move1.t1;
+            //cout<<"start: "<<move1<<endl;
+            //while(gt(delta,CN_PRECISION/2.0))
+            while(!eq(delta,0))
+            {
+                if(check_conflict(move1, move2))
+                {
+                    move1.t1 += delta;
+                }
+                else
+                {
+                    move1.t1 -= delta;
+                }
+                //cout<<"start: "<<move1<<endl;
+                if(gt(move1.t1, move2.t2))
+                {
+                    move1.t1 = move2.t2;
+                    //cout<<"break here"<<endl;
+                    break;
+                }
+                delta /= 2.0;
+            }
+            //if(le(delta, CN_PRECISION/2.0) && check_conflict(move1, move2))
+            if(eq(delta,0) && check_conflict(move1, move2))
+            {
+                //cout<<"in here"<<endl;
+                move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
+                //cout<<"start: "<<move1<<endl;
+                //move1.t1 = fmax(move1.t1,startTimeA+CN_PRECISION);
+                move1.t1 = fmax(move1.t1,startTimeA + CN_EPSILON);
+                //cout<<"start: "<<move1<<endl;
+            }
+            interval.second=move1.t1;
+
+            //reset all the var
+            move1.t1=startTimeA;
+            delta = move1.t2 - move1.t1;
+
+            //search the first half working
+            //while(gt(delta,CN_PRECISION/2.0))
+            while(!eq(delta,0))
+            {
+                //cout<<move1<<endl;
+                if(check_conflict(move1, move2))
+                {
+                    move1.t2 -= delta;
+                    //cout<<"A: ";
+                    //cout<<move1<<endl;
+                }
+                else
+                {
+                    move1.t2 += delta;
+                }
+                if((lt(move1.t2, move2.t1)))
+                {
+                    //cout<<"A: ";
+                    move1.t2 = move2.t1;
+                    break;
+                }
+                delta /= 2.0;
+            }
+            //if(le(delta, CN_PRECISION/2.0) && check_conflict(move1, move2))
+            if(eq(delta,0) && check_conflict(move1, move2))
+            {
+                move1.t2 = fmax(move1.t2 - delta*2, move2.t1);
+                //move1.t2 = fmin(move1.t2,interval.second-CN_PRECISION);
+                move1.t2 = fmin(move1.t2,interval.second - CN_EPSILON);
+            }
+            interval.first=move1.t2;
+            assert(interval.first!=-1 && interval.second!=-1);
+            assert(lt_raw(interval.first,interval.second));
+        }
     }
 
     waitCon=Constraint(agent, interval.first, interval.second, move1.id1, -1,move1.id2);
@@ -333,8 +382,8 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
             if (check_conflict(tempM,move2))
             {
                 int exit_id=id2ind(n.id,move1.id1,agent);
-                Vector2D standardCons(binary_search_constraint(agent,tempM,move2));
-                Constraint edgeCon(agent,standardCons.i,standardCons.j,n.id,exit_id,move1.id1);
+                Interval standardCons(binary_search_constraint(agent,tempM,move2));
+                Constraint edgeCon(agent,standardCons.first,standardCons.second,n.id,exit_id,move1.id1);
                 edgeCon.CT=2;
                 assert(gt(edgeCon.t2,edgeCon.t1));
                 constraint.push_back(edgeCon);
@@ -399,6 +448,7 @@ double CBS::get_hl_heuristic(const std::list<Conflict> &conflicts)
     }
 }
 
+/*
 Vector2D CBS::binary_search_constraint(int agent, Move move1, Move move2)
 {
     double startTimeA(move1.t1), endTimeA(move1.t2);
@@ -436,13 +486,57 @@ Vector2D CBS::binary_search_constraint(int agent, Move move1, Move move2)
 
     return Vector2D(startTimeA,move1.t1);
 }
-
+*/
+Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
+{
+    double startTimeA(move1.t1), endTimeA(move1.t2);
+    if(move2.t2 == CN_INFINITY)
+        return make_pair(move1.t1,CN_INFINITY);
+    double delta = move2.t2 - move1.t1;
+    //cout<<"start: "<<move1.t1<<endl;
+    while(!eq(delta,0))
+    {
+        //cout<<move1<<endl;
+        if(check_conflict(move1, move2))
+        {
+            //cout<<"A"<<endl;
+            move1.t1 += delta;
+            move1.t2 += delta;
+        }
+        else
+        {
+            //cout<<"B"<<endl;
+            move1.t1 -= delta;
+            move1.t2 -= delta;
+        }
+        //cout<<"after shift"<<move1<<endl;
+        if(gt(move1.t1, move2.t2))
+        {
+            //cout<<"break here"<<endl;
+            move1.t1 = move2.t2;
+            move1.t2 = move1.t1 + endTimeA - startTimeA;
+            //cout<<move1<<endl;
+            break;
+        }
+        delta /= 2.0;
+    }
+    if(eq(delta,0) && check_conflict(move1, move2))
+    {
+        //cout<<"mod here"<<endl;
+        move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
+        //cout<<move1<<endl;
+        move1.t1 = fmax(move1.t1,startTimeA+CN_EPSILON);
+        //cout<<move1<<endl;
+        move1.t2 = move1.t1 + endTimeA - startTimeA;
+        //cout<<move1<<endl;
+    }
+    return make_pair(startTimeA,move1.t1);
+}
 
 list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
 {
     Move BKUP1(move1),BKUP2(move2);
     double startT=0,endT=0;
-
     if(move1.id1 == move1.id2)
     {
         //return make_pair(get_wait_constraint(agent,move1,move2),false);
@@ -469,17 +563,17 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
         }
     }
     //if(delta < CN_PRECISION/2.0 + CN_PRECISION && check_conflict(move1, move2))
-    Vector2D standardCons(binary_search_constraint(agent,move1,move2));
+    Interval standardCons(binary_search_constraint(agent,move1,move2));
     //consider min_clear time for node conflict
     //map->prt_validmoves();
     list<Constraint> c(0);
     int exit_index=id2ind(move1.id1, move1.id2,agent);
     if (config.CT || config.CT_abs){
-        if (gt(standardCons.j,endT))
+        if (gt(standardCons.second,endT))
         {
-            Constraint cons(agent, standardCons.i, standardCons.j, move1.id1, exit_index, move1.id2);
+            Constraint cons(agent, standardCons.first, standardCons.second, move1.id1, exit_index, move1.id2);
             solution.n_standard+=1;
-            solution.t_standard+=standardCons.j-standardCons.i;
+            solution.t_standard+=standardCons.second-standardCons.first;
             c.push_back(cons);
         }
         else
@@ -501,9 +595,9 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
         }
     }
     else{
-        Constraint cons(agent, standardCons.i,standardCons.j, move1.id1, exit_index, move1.id2);
+        Constraint cons(agent, standardCons.first,standardCons.second, move1.id1, exit_index, move1.id2);
         solution.n_standard+=1;
-        solution.t_standard+=standardCons.j-standardCons.i;
+        solution.t_standard+=standardCons.second-standardCons.first;
         c.push_back(cons);
     }
 
@@ -570,12 +664,12 @@ Conflict CBS::get_conflict(std::list<Conflict> &conflicts)
     auto best_it = conflicts.begin();
     for(auto it = conflicts.begin(); it != conflicts.end(); it++)
     {
-        if(gt(it->overcost,0))
+        if(gt_raw(it->overcost,0))
         {
-            if(lt(best_it->overcost, it->overcost) || (eq(best_it->overcost, it->overcost) && lt(best_it->t, it->t)))
+            if(lt_raw(best_it->overcost, it->overcost) || (eq_raw(best_it->overcost, it->overcost) && lt_raw(best_it->t, it->t)))
                 best_it = it;
         }
-        else if(lt(best_it->t, it->t))
+        else if(lt_raw(best_it->t, it->t))
             best_it = it;
     }
 
@@ -634,7 +728,7 @@ Move CBS::find_sub_conflict(Move m1,Move m2,CBS_Node *node)
         double dt(map->get_dist(id1,id2));
 
         Move temp(curT,curT+dt,id1,id2);
-        if (check_conflict(temp,m2) || ge(curT+dt,m2.t2))
+        if (check_conflict(temp,m2) || ge_raw(curT+dt,m2.t2))
         {
             return temp;
         }
@@ -1466,26 +1560,24 @@ Conflict CBS::check_paths(const sPath &pathA, const sPath &pathB)
     while(a < nodesA.size() - 1 || b < nodesB.size() - 1)
     {
         //cout<<"a: "<<a<<" b: "<<b<<endl<<flush;
-        double temp=pow(map->get_i(nodesA[a].id) - map->get_i(nodesB[b].id), 2) + pow(map->get_j(nodesA[a].id) - map->get_j(nodesB[b].id), 2);
-        if (eq(temp,0)) temp=0;
-        double dist = sqrt(temp);
+        double dist=map->get_dist(nodesA[a].id, nodesB[b].id);
         if(a < nodesA.size() - 1 && b < nodesB.size() - 1) // if both agents have not reached their goals yet
         {
-            if(lt(dist, (nodesA[a+1].g - nodesA[a].g) + (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2))
+            if(lt_raw(dist, (nodesA[a+1].g - nodesA[a].g) + (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2))
                 if(check_conflict(Move(nodesA[a], nodesA[a+1]), Move(nodesB[b], nodesB[b+1]))){
                     return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a], nodesA[a+1]), Move(nodesB[b], nodesB[b+1]), std::min(nodesA[a].g, nodesB[b].g));
                 }
         }
         else if(a == nodesA.size() - 1) // if agent A has already reached the goal
         {
-            if(lt(dist, (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2))
+            if(lt_raw(dist, (nodesB[b+1].g - nodesB[b].g) + config.agent_size*2))
                 if(check_conflict(Move(nodesA[a].g, CN_INFINITY, nodesA[a].id, nodesA[a].id), Move(nodesB[b], nodesB[b+1]))){
                     return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a].g, CN_INFINITY, nodesA[a].id, nodesA[a].id), Move(nodesB[b], nodesB[b+1]), std::min(nodesA[a].g, nodesB[b].g));
                 }
         }
         else if(b == nodesB.size() - 1) // if agent B has already reached the goal
         {
-            if(lt(dist, (nodesA[a+1].g - nodesA[a].g) + config.agent_size*2))
+            if(lt_raw(dist, (nodesA[a+1].g - nodesA[a].g) + config.agent_size*2))
                 if(check_conflict(Move(nodesA[a], nodesA[a+1]), Move(nodesB[b].g, CN_INFINITY, nodesB[b].id, nodesB[b].id))){
                     return Conflict(pathA.agentID, pathB.agentID, Move(nodesA[a], nodesA[a+1]), Move(nodesB[b].g, CN_INFINITY, nodesB[b].id, nodesB[b].id), std::min(nodesA[a].g, nodesB[b].g));
                 }
@@ -1498,16 +1590,16 @@ Conflict CBS::check_paths(const sPath &pathA, const sPath &pathB)
         {
             a++;
         }
-        else if(eq(nodesA[a+1].g, nodesB[b+1].g))
+        else if(eq_raw(nodesA[a+1].g, nodesB[b+1].g))
         {
             a++;
             b++;
         }
-        else if(lt(nodesA[a+1].g,nodesB[b+1].g))
+        else if(lt_raw(nodesA[a+1].g,nodesB[b+1].g))
         {
             a++;
         }
-        else if(gt(nodesA[a+1].g,nodesB[b+1].g))
+        else if(gt_raw(nodesA[a+1].g,nodesB[b+1].g))
         {
             b++;
         }

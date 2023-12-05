@@ -2,7 +2,7 @@
 #define CBS_H
 #include <chrono>
 #include <math.h>
-#include <stack> 
+#include <stack>
 #include "structs.h"
 #include "map.h"
 #include "task.h"
@@ -39,7 +39,7 @@ class CBS
     Conflict get_conflict(std::list<Conflict> &conflicts);
     Move find_sub_conflict(Move m1,Move m2,CBS_Node *node);
     Move split_conf_move(Move m1,Move m2, CBS_Node *node);
-    Vector2D binary_search_constraint(int agent, Move move1, Move move2);
+    Interval binary_search_constraint(int agent, Move move1, Move move2);
     Conflict modify_conflict(Conflict conflict,CBS_Node *node);
     Move modify_move(Move move,int new_id);
     //bool validNewNode(Vector2D X1,Vector2D X2,Vector2D New);

@@ -28,7 +28,6 @@ inline bool lt_raw(double a, double b);
 inline bool gt_raw(double a, double b);
 inline bool le_raw(double a, double b);
 inline bool ge_raw(double a, double b);
-inline Interval solveQuad(double a, double b, double c);
 inline double round_down(double f);
 
 typedef std::pair<double,double> Interval;
@@ -73,7 +72,7 @@ struct Config
 struct Node
 {
     int     id;
-    double  f, g, i, j;
+    double  f, g, i, j,prev_g;
     //int agent;  //visible to some agent, -1 is everyone
     //std::vector<int> negtive_list;
     Node*   parent;
@@ -84,7 +83,7 @@ struct Node
         :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)),interval_id(_interval_id),from_landMark(_from_landMark) {}
     bool operator <(const Node& other) const //required for heuristic calculation
     {
-        return le(this->g,other.g);
+        return le_raw(this->g,other.g);
     }
     struct eqnode
     {
@@ -255,11 +254,9 @@ struct Move
 
     friend std::ostream& operator <<(std::ostream& os, const Move& m)
     {
-
         os<<"{["<<m.id1<<"->"<<m.id2<<"] @:["<<m.t1<<"~"<<m.t2<<"]}"<<endl;
         return os;
     }
-
 };
 
 struct Step
