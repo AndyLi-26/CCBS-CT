@@ -1,8 +1,11 @@
 clc; clear all; close all;
-obj = VideoWriter("a5Split0.mp4", 'MPEG-4');
-obj.Quality = 60;
-obj.FrameRate = 30;
-open(obj);
+recording=false;
+if (recording)
+    obj = VideoWriter("a5Split0.mp4", 'MPEG-4');
+    obj.Quality = 60;
+    obj.FrameRate = 30;
+    open(obj);
+end
 agent_size=4.5;
 %draw map
 global nodes resolution
@@ -40,7 +43,7 @@ end
 %h = image(xlim,ylim,I);
 %uistack(h,'bottom')
 %xlim([30,320]);ylim([30,620])
-exportgraphics(gca,'sparse.png','Resolution',300)
+%exportgraphics(gca,'sparse.png','Resolution',300)
 %% plot tasks
 tasks=readmatrix('tasks.csv');
 %agents=size(tasks,1);
@@ -49,24 +52,27 @@ agents=length(extractfield(a,"name"));
 colors=jet(agents+1);
 %colors=double([0xb6,0xd7,0xa8;0xa4,0xc2,0xf4])/255;
 for i=1:agents
-    plot(nodes(tasks(i,1)+1,1),nodes(tasks(i,1)+1,2),'.',MarkerFaceColor=colors(i,:),MarkerSize=10);
+    plot(nodes(tasks(i,1)+1,1),nodes(tasks(i,1)+1,2),'.',MarkerFaceColor=colors(i,:),MarkerSize=40);
     text(nodes(tasks(i,1)+1,1),nodes(tasks(i,1)+1,2),num2str(i),'Color','black','FontSize',9)
 end
 for i=1:agents
-    plot(nodes(tasks(i,2)+1,1),nodes(tasks(i,2)+1,2),'o',MarkerEdgeColor=colors(i,:),MarkerSize=60,LineWidth=8);
+    plot(nodes(tasks(i,2)+1,1),nodes(tasks(i,2)+1,2),'o',MarkerEdgeColor=colors(i,:),MarkerSize=30,LineWidth=8);
 end
-%f = getframe(gcf);
-%writeVideo(obj,f);
-
+if (recording)
+f = getframe(gcf);
+writeVideo(obj,f);
+end
 %gen animation
 paths=cell(1,agents);
+t_end=0;
 for i=1:agents
     info=readmatrix(['paths/',num2str(i-1),'.csv']);
+    t_end=max(t_end,info(1,5))
     paths(i)={genPathMatrix(info)};
 end
 
 plots =plot([],[]);agentNum =plot([],[]);
-for t=1:summary(3)/resolution
+for t=1:t_end/resolution
     title(sprintf("t=%.1f",t*resolution))
     delete(plots);delete(agentNum);
     plots=[];agentNum=[];
@@ -83,13 +89,17 @@ for t=1:summary(3)/resolution
     end
     drawnow;
     grid off;
-    f = getframe(gcf);
-    writeVideo(obj,f);
-    %exportgraphics(gcf,'ccbs_unsolve.gif','Append',true);
+    if (recording)
+        f = getframe(gcf);
+        writeVideo(obj,f);
+        exportgraphics(gcf,'ccbs_unsolve.gif','Append',true);
+    end
 end
+if (recording)
 f = getframe(gcf);
-%exportgraphics(gcf,'paper.gif','Append',true);
+exportgraphics(gcf,'paper.gif','Append',true);
 obj.close();
+end
 
 function out = circle(x0,y0,radius,color)
 pos = [[x0,y0]-radius 2*radius 2*radius];

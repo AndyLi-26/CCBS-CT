@@ -1,57 +1,56 @@
 #include "map.h"
 Map::Map(Map *m) 
 { 
-	grid=m->grid;
-	nodes=m->nodes;
-	height=m->height;
-	width=m->width;
-	size=m->size;
-	init_node_num=m->init_node_num;
-	for (int i=0;i<m->valid_moves.size();++i){
-		std::vector<Node> neighbors;
-		for (int j=0;j<m->valid_moves[i].size();++j){
-			Node new_node;
-			new_node.id=m->valid_moves[i][j].id;
-			new_node.i=m->valid_moves[i][j].i;
-			new_node.j=m->valid_moves[i][j].j;
-			neighbors.push_back(new_node);
-		}
-		valid_moves.push_back(neighbors);
-	}
-	
-	for (gNode original:m->nodes){
-		gNode temp;
-		temp.i=original.i;
-		temp.j=original.j;
-		nodes.push_back(temp);
-	}
-	
+  grid=m->grid;
+  nodes=m->nodes;
+  height=m->height;
+  width=m->width;
+  size=m->size;
+  init_node_num=m->init_node_num;
+  for (int i=0;i<m->valid_moves.size();++i){
+    std::vector<Node> neighbors;
+    for (int j=0;j<m->valid_moves[i].size();++j){
+      Node new_node;
+      new_node.id=m->valid_moves[i][j].id;
+      new_node.i=m->valid_moves[i][j].i;
+      new_node.j=m->valid_moves[i][j].j;
+      neighbors.push_back(new_node);
+    }
+    valid_moves.push_back(neighbors);
+  }
+
+  for (gNode original:m->nodes){
+    gNode temp;
+    temp.i=original.i;
+    temp.j=original.j;
+    nodes.push_back(temp);
+  }
 }
 
 bool Map::equal(Map *m)
 {
-	if (grid!=m->grid)
-		return false;
-	if (height!=m->height)
-		return false;
-	if (width!=m->width)
-		return false;
-	if (init_node_num!=m->init_node_num)
-		return false;
-	for (int i=0;i<m->valid_moves.size();++i){
-		for (int j=0;j<m->valid_moves[i].size();++j){
-			if (valid_moves[i][j].id!=m->valid_moves[i][j].id ||
-			!eq(valid_moves[i][j].i, m->valid_moves[i][j].i) ||
-			!eq(valid_moves[i][j].j, m->valid_moves[i][j].j) ){
-				std::cout<<"this:"<<std::endl;
-				prt_validmoves();
-				std::cout<<"ori"<<std::endl;
-				m->prt_validmoves();
-				return false;
-			}
-		}
-	}
-	return true;
+  if (grid!=m->grid)
+    return false;
+  if (height!=m->height)
+    return false;
+  if (width!=m->width)
+    return false;
+  if (init_node_num!=m->init_node_num)
+    return false;
+  for (int i=0;i<m->valid_moves.size();++i){
+    for (int j=0;j<m->valid_moves[i].size();++j){
+      if (valid_moves[i][j].id!=m->valid_moves[i][j].id ||
+          !eq(valid_moves[i][j].i, m->valid_moves[i][j].i) ||
+          !eq(valid_moves[i][j].j, m->valid_moves[i][j].j) ){
+        std::cout<<"this:"<<std::endl;
+        prt_validmoves();
+        std::cout<<"ori"<<std::endl;
+        m->prt_validmoves();
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 void Map::get_map(string FileName)
@@ -148,7 +147,7 @@ double Map::get_min_clear_t(Move m1, int s2)
     double delta=quad_b*quad_b-4*quad_a*quad_c;
     if (ge(delta,0))
     {
-      
+
       if (eq(delta,0)) delta=0;
       t1=(-quad_b-sqrt(delta))/(2*quad_a);
       t2=(-quad_b+sqrt(delta))/(2*quad_a);
@@ -240,32 +239,32 @@ double Map::get_min_clear_t_sameDestination(int main_n, int enter_n)
     double delta=quad_b*quad_b-4*quad_a*quad_c;
     if (ge(delta,0))
     {
-      
+
       if (eq(delta,0)) delta=0;
       t1=(-quad_b-sqrt(delta))/(2*quad_a);
       t2=(-quad_b+sqrt(delta))/(2*quad_a);
       if (gt(t1,get_dist(nB,nA)))
-        t=CN_INFINITY;
+	t=CN_INFINITY;
       else if (gt(t2,0))
-        t=t2+get_dist(nA,nC);
+	t=t2+get_dist(nA,nC);
       else
       {
-        double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
-        //cout<<"a: "<<a<<" b: "<<b<<" c: "<<c<<endl;
-        double cos_theta((b*b+c*c-a*a)/(2*b*c));
-        if (eq(cos_theta,-1)) //zero
-          return 0;
-        t=cos2min_t(cos_theta);
+	double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
+	//cout<<"a: "<<a<<" b: "<<b<<" c: "<<c<<endl;
+	double cos_theta((b*b+c*c-a*a)/(2*b*c));
+	if (eq(cos_theta,-1)) //zero
+	  return 0;
+	t=cos2min_t(cos_theta);
       }
     }
     else
-    {
+  {
       double a(get_dist(nB,nC)),b(get_dist(nA,nC)),c(get_dist(nA,nB));
       //cout<<"nA: "<<nA<<" nB: "<<nB<<" nC: "<<nC<<endl;
       //cout<<"a: "<<a<<" b: "<<b<<" c: "<<c<<endl;
       double cos_theta((b*b+c*c-a*a)/(2*b*c));
       if (eq(cos_theta,-1)){ //zero
-        return 0;
+	return 0;
       }
       t=cos2min_t(cos_theta);
     }
@@ -406,10 +405,10 @@ else if (value == CNS_TAG_GRID)
     if (!element)
     {
       std::cout << "Error! Not enough '" << CNS_TAG_ROW << "' tags inside '" << CNS_TAG_GRID << "' tag."
-        << std::endl;
+	<< std::endl;
       std::cout << "Number of '" << CNS_TAG_ROW
-        << "' tags should be equal (or greater) than the value of '" << CNS_TAG_HEIGHT
-        << "' tag which is " << height << std::endl;
+	<< "' tags should be equal (or greater) than the value of '" << CNS_TAG_HEIGHT
+	<< "' tag which is " << height << std::endl;
       return false;
     }
     std::string str = element->GetText();
@@ -423,19 +422,19 @@ else if (value == CNS_TAG_GRID)
     if (elems.size() > 0)
       for (grid_j = 0; grid_j < width; ++grid_j)
       {
-        if (grid_j == int(elems.size()))
-          break;
-        stream.str("");
-        stream.clear();
-        stream << elems[grid_j];
-        stream >> val;
-        grid[grid_i][grid_j] = val;
+	if (grid_j == int(elems.size()))
+	  break;
+	stream.str("");
+	stream.clear();
+	stream << elems[grid_j];
+	stream >> val;
+	grid[grid_i][grid_j] = val;
       }
 
     if (grid_j != width)
     {
       std::cout << "Invalid value on " << CNS_TAG_GRID << " in the " << grid_i + 1 << " " << CNS_TAG_ROW
-        << std::endl;
+	<< std::endl;
       return false;
     }
     ++grid_i;
@@ -468,8 +467,8 @@ for(int j = 0; j < width; j++)
   std::vector<bool> valid(moves.size(), true);
   for(unsigned int k = 0; k < moves.size(); k++)
     if((i + moves[k].i) < 0 || (i + moves[k].i) >= height || (j + moves[k].j) < 0 || (j + moves[k].j) >= width
-        || cell_is_obstacle(i + moves[k].i, j + moves[k].j)
-        || !check_line(i, j, i + moves[k].i, j + moves[k].j))
+	|| cell_is_obstacle(i + moves[k].i, j + moves[k].j)
+	|| !check_line(i, j, i + moves[k].i, j + moves[k].j))
       valid[k] = false;
   std::vector<Node> v_moves = {};
   for(unsigned int k = 0; k < valid.size(); k++)
@@ -829,9 +828,9 @@ void Map::printPPM()
     for(int j = 0; j < width; j++)
     {
       if(grid[i][j]==1)
-        std::cout<<"0 0 0\n";
+	std::cout<<"0 0 0\n";
       else
-        std::cout<<"255 255 255\n";
+	std::cout<<"255 255 255\n";
     }
 }
 
@@ -891,77 +890,77 @@ bool Map::check_line(int x1, int y1, int x2, int y2)
       error += delta_y;
       num = (gap - error)/delta_x;
       for(k = 1; k <= num; k++)
-        if(cell_is_obstacle(x1 - n*step_x, y1 + k*step_y))
-          return false;
+	if(cell_is_obstacle(x1 - n*step_x, y1 + k*step_y))
+	  return false;
       for(k = 1; k <= num; k++)
-        if(cell_is_obstacle(x2 + n*step_x, y2 - k*step_y))
-          return false;
+	if(cell_is_obstacle(x2 + n*step_x, y2 - k*step_y))
+	  return false;
     }
     error = 0;
     for(x = x1; x != x2 + step_x; x++)
     {
       if(cell_is_obstacle(x, y))
-        return false;
+	return false;
       if(x < x2 - extraCheck)
       {
-        num = (gap + error)/delta_x;
-        for(k = 1; k <= num; k++)
-          if(cell_is_obstacle(x, y + k*step_y))
-            return false;
+	num = (gap + error)/delta_x;
+	for(k = 1; k <= num; k++)
+	  if(cell_is_obstacle(x, y + k*step_y))
+	    return false;
       }
       if(x > x1 + extraCheck)
       {
-        num = (gap - error)/delta_x;
-        for(k = 1; k <= num; k++)
-          if(cell_is_obstacle(x, y - k*step_y))
-            return false;
+	num = (gap - error)/delta_x;
+	for(k = 1; k <= num; k++)
+	  if(cell_is_obstacle(x, y - k*step_y))
+	    return false;
       }
       error += delta_y;
       if((error<<1) > delta_x)
       {
-        y += step_y;
-        error -= delta_x;
+	y += step_y;
+	error -= delta_x;
       }
     }
   }
   else
-  {
+{
     int extraCheck = int(agent_size*delta_x/sqrt(pow(delta_x, 2) + pow(delta_y, 2)) + 0.5 - CN_PRECISION);
     for(int n = 1; n <= extraCheck; n++)
     {
       error += delta_x;
       num = (gap - error)/delta_y;
       for(k = 1; k <= num; k++)
-        if(cell_is_obstacle(x1 + k*step_x, y1 - n*step_y))
-          return false;
+	if(cell_is_obstacle(x1 + k*step_x, y1 - n*step_y))
+	  return false;
       for(k = 1; k <= num; k++)
-        if(cell_is_obstacle(x2 - k*step_x, y2 + n*step_y))
-          return false;
+	if(cell_is_obstacle(x2 - k*step_x, y2 + n*step_y))
+	  return false;
     }
     error = 0;
     for(y = y1; y != y2 + step_y; y += step_y)
     {
       if(cell_is_obstacle(x, y))
-        return false;
+	return false;
       if(y < y2 - extraCheck)
       {
-        num = (gap + error)/delta_y;
-        for(k = 1; k <= num; k++)
-          if(cell_is_obstacle(x + k*step_x, y))
-            return false;
+	num = (gap + error)/delta_y;
+	for(k = 1; k <= num; k++)
+	  if(cell_is_obstacle(x + k*step_x, y))
+	    return false;
       }
       if(y > y1 + extraCheck)
       {
-        num = (gap - error)/delta_y;
-        for(k = 1; k <= num; k++)
-          if(cell_is_obstacle(x - k*step_x, y))
-            return false;
+	num = (gap - error)/delta_y;
+	for(k = 1; k <= num; k++)
+	  if(cell_is_obstacle(x - k*step_x, y))
+	    return false;
       }
       error += delta_x;
       if((error<<1) > delta_y)
       {
-        x += step_x;
-        error -= delta_y;
+	x += step_x;
+	error -= delta_y;
       }
     }
   }
@@ -998,7 +997,7 @@ void Map::prt_validmoves() const
 void Map::prt_set(std::set<int> s) const
 {
   for (int i:s)
-    std::cout<<i<<",";
+  std::cout<<i<<",";
 }
 
 void Map::alter(Map_deltas map_deltas)
@@ -1021,21 +1020,21 @@ void Map::alter(Map_deltas map_deltas)
 
     for (int i=0;i<valid_moves[v1].size();++i){
       if (valid_moves[v1][i].id==v2){
-        valid_moves[v1][i].i=get_i(node_id);
-        valid_moves[v1][i].j=get_j(node_id);
-        valid_moves[v1][i].id=node_id;
-        //valid_moves[v1][i].agent=nodes[node_id].agent;
-        break;
+	valid_moves[v1][i].i=get_i(node_id);
+	valid_moves[v1][i].j=get_j(node_id);
+	valid_moves[v1][i].id=node_id;
+	//valid_moves[v1][i].agent=nodes[node_id].agent;
+	break;
       }
     }
 
     for (int i=0;i<valid_moves[v2].size();++i){
       if (valid_moves[v2][i].id==v1){
-        valid_moves[v2][i].i=get_i(node_id);
-        valid_moves[v2][i].j=get_j(node_id);
-        valid_moves[v2][i].id=node_id;
-        //valid_moves[v2][i].agent=nodes[node_id].agent;
-        break;
+	valid_moves[v2][i].i=get_i(node_id);
+	valid_moves[v2][i].j=get_j(node_id);
+	valid_moves[v2][i].id=node_id;
+	//valid_moves[v2][i].agent=nodes[node_id].agent;
+	break;
       }
     }
   }
@@ -1054,19 +1053,19 @@ void Map::alter_back(Map_deltas map_deltas)
 
     for (int i=0;i<valid_moves[v1].size();++i){
       if (valid_moves[v1][i].id==node_id){
-        valid_moves[v1][i].i=get_i(v2);
-        valid_moves[v1][i].j=get_j(v2);
-        valid_moves[v1][i].id=v2;
-        //valid_moves[v1][i].agent=nodes[i].agent;
+	valid_moves[v1][i].i=get_i(v2);
+	valid_moves[v1][i].j=get_j(v2);
+	valid_moves[v1][i].id=v2;
+	//valid_moves[v1][i].agent=nodes[i].agent;
       }
     }
 
     for (int i=0;i<valid_moves[v2].size();++i){
       if (valid_moves[v2][i].id==node_id){
-        valid_moves[v2][i].i=get_i(v1);
-        valid_moves[v2][i].j=get_j(v1);
-        valid_moves[v2][i].id=v1;
-        //valid_moves[v2][i].agent=nodes[i].agent;
+	valid_moves[v2][i].i=get_i(v1);
+	valid_moves[v2][i].j=get_j(v1);
+	valid_moves[v2][i].id=v1;
+	//valid_moves[v2][i].agent=nodes[i].agent;
       }
     }
   }
@@ -1116,28 +1115,28 @@ void Map::pre_process()
     for (int j=0;j<valid_moves[i].size();++j){
       double min_t(-1);
       for (Node exit:valid_moves[i]){
-        if (valid_moves[i][j].id==exit.id) continue;
-        //calc theta
-        Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
-        //cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
+	if (valid_moves[i][j].id==exit.id) continue;
+	//calc theta
+	Vector2D A(get_coord(i)),B(get_coord(valid_moves[i][j].id)),C(get_coord(exit.id));
+	//cout<<"node A: "<<i<<A<<", node B: "<<valid_moves[i][j].id<<B<<" , node C:"<<exit.id<<C<<endl;
 
-        double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
-        double cos_theta((b*b+c*c-a*a)/(2*b*c));
-        //cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
-        //cout<<"cos: "<<cos_theta<<endl;
-        if (cos_theta==-1){ //zero
-          min_t=0;
-          break;
-        }
-        //if (cos_theta==-1) continue;//inf large
-        //find min_t
-        double temp((8*agent_size*agent_size)/(1-cos_theta));
-        double t=(sqrt(temp));
-        //double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
-        //cout<<"t: "<<t<<endl;
-        if (min_t==-1 || t<min_t){
-          min_t=t;
-        }
+	double a(dist(B,C)),b(dist(A,C)),c(dist(A,B));
+	double cos_theta((b*b+c*c-a*a)/(2*b*c));
+	//cout<<"a: "<<a<<"b: "<<b<<"c: "<<c<<endl;
+	//cout<<"cos: "<<cos_theta<<endl;
+	if (cos_theta==-1){ //zero
+	  min_t=0;
+	  break;
+	}
+	//if (cos_theta==-1) continue;//inf large
+	//find min_t
+	double temp((8*agent_size*agent_size)/(1-cos_theta));
+	double t=(sqrt(temp));
+	//double t(sqrt((2*agent_size*agent_size)/(1-cos_theta)));
+	//cout<<"t: "<<t<<endl;
+	if (min_t==-1 || t<min_t){
+	  min_t=t;
+	}
       }
       //cout<<"min t:"<<min_t<<endl;
       min_clearV.push_back(min_t);
@@ -1148,7 +1147,7 @@ void Map::pre_process()
   {
     cout<<i<<": "<<endl;
     for (double j:min_clear_time.at(i))
-      cout<<j<<", ";
+    cout<<j<<", ";
     cout<<endl;
   }
 }

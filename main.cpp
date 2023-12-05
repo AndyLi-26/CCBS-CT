@@ -41,8 +41,9 @@ int main(int argc, const char *argv[])
       ("ES","use edge split")
       ("ICP","Incompatable path reasoning")
       ("TR","use target reasoning")
+      ("EQ","use equation to calculate the constraint")
       ("extra_info",po::value<int>()->default_value(-1),"task index");
-      
+
     po::variables_map temp;
     po::store(po::parse_command_line(argc,argv,desc),temp);
     const po::variables_map vm=temp;
@@ -75,13 +76,15 @@ int main(int argc, const char *argv[])
     bool ES=vm.count("ES");
     bool TR=vm.count("TR");
     bool ICP=vm.count("ICP");
+    bool EQ=vm.count("EQ");
     config.use_cardinal=card;
     config.DS=DS;
     config.ES=ES;
     config.CT=CT;
     config.CT_abs=CT_abs;
     config.ICP=ICP;
-    
+    config.EQ=EQ;
+
     Map map = Map(config);
     map.get_map(fmap);
     //map.pre_process();

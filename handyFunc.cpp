@@ -7,11 +7,28 @@ inline bool gt(double a, double b) {return a-b > CN_EPSILON;}
 inline bool le(double a, double b) {return a-b <= CN_EPSILON;}
 inline bool ge(double a, double b) {return a-b >= -CN_EPSILON;}
 
+inline bool eq_raw(double a, double b) {return a==b;}
+inline bool lt_raw(double a, double b) {return a<b;}
+inline bool gt_raw(double a, double b) {return a>b;}
+inline bool le_raw(double a, double b) {return a<=b;}
+inline bool ge_raw(double a, double b) {return a>=b;}
+
+inline void prt_double(double a)
+{
+    const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&a);
+    for (int i =8 - 1; i >= 0; --i) {
+        for (int j = 7; j >= 0; --j) {
+            std::cout << ((bytes[i] >> j) & 1);
+        }
+        std::cout << ' '; // Separate bytes with a spacs
+    }
+}
+
 inline double round_down (double f){
   return std::floor(f/CN_EPSILON)*CN_EPSILON;
 }
 
-inline pair<double,double> solveQuad(double a, double b, double c) {
+inline Interval solveQuad(double a, double b, double c) {
   double delta(b*b-4*a*c);
   if (!(delta>-CN_EPSILON))
     cout<<"delta"<<delta<<endl;
@@ -30,7 +47,7 @@ inline unsigned int floorSingle(float number){
     e >>= 23;
     e-=127;
     int m = *ptr & 0x007fffff;
-    
+
     unsigned long temp=1;
     temp<<=23;
     unsigned int retval= m|temp;

@@ -1,6 +1,9 @@
 ./debug/*
 ./debug
 ./visulizer/*.mp4
+visulizer/*.mp4
+./visulizer/*.gif
+visulizer/*.gif
 debug/
 release/
 ./release/*
