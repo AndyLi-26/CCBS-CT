@@ -53,8 +53,12 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                 //    continue;
                 if (le_raw(moveCons.first,interval.first))
                 {
-                    if(ge_raw(moveCons.second,interval.second))
+                    if(ge_raw(moveCons.second,curNode.interval.second))
+                    {
+                        interval.second=curNode.interval.second;
+                        curIntervals.push_back(interval);
                         break;
+                    }
                     //if(lt_raw(moveCons.second,interval.second))
                     if(ge_raw(moveCons.second,interval.first))
                         interval.first=moveCons.second;
@@ -62,8 +66,9 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                 }
                 else {
                     interval.second=moveCons.first;
+                    curIntervals.push_back(interval);
                     //cout<<interval.first<<", "<<interval.second<<endl;
-                    if(ge_raw(moveCons.second,interval.second))
+                    if(ge_raw(moveCons.second,curNode.interval.second))
                         break;
                     interval.first=moveCons.second;
                     interval.second=curNode.interval.second;
@@ -120,16 +125,16 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
         */
         for(Interval next:nextIntervals)
         {
+            newNode.interval_id=id;
+            newNode.interval=next;
+            id++;
             //for (;it!=nextIntervals.end();++it)
             for (Interval cur:curIntervals)
             {
                 //cout<<"cur: "<<cur.first<<" ~ "<<cur.second<<endl;
             //while (lt_raw(i.first+cost,it->second)  && gt_raw(i.second+cost,it->first)) // iterate all reachable next interval
-                if(!(lt_raw(cur.first+cost,next.second) && gt_raw(cur.second+cost,next.first)))
+                if(!(lt_raw(cur.first+cost,next.second) && gt_raw(cur.second,next.first-cost)))
                     continue;
-                newNode.interval_id=id;
-                newNode.interval=next;
-                id++;
                 //cout<<"over lapping: "<<endl;
                 //cout<<"next: "<<next.first<<" ~ "<<next.second<<endl;
                 auto vis_it = visited.find(make_tuple(move.id,newNode.interval_id,false));

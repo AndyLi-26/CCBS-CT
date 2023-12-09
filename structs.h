@@ -610,7 +610,7 @@ class Point {
                 return 1;//LEFT;
             if (lt_raw(sa,0))
                 return 2;//RIGHT;
-            if (lt_raw(a.i * b.i,0) || lt(a.j * b.j,0))
+            if (lt_raw(a.i * b.i,0) || lt_raw(a.j * b.j,0))
                 return 3;//BEHIND;
             if (lt_raw((a.i*a.i + a.j*a.j), (b.i*b.i + b.j*b.j)))
                 return 4;//BEYOND;

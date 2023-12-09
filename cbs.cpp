@@ -53,8 +53,8 @@ bool CBS::init_root(Map &map, const Task &task)
 bool CBS::check_conflict(Move move1, Move move2)
 {
     double r(2*config.agent_size);
-    if (lt(move1.t2+r,move2.t1) || lt(move2.t2+r , move1.t1))
-        return false;
+    //if (lt(move1.t2+r,move2.t1) || lt(move2.t2+r , move1.t1))
+    //    return false;
     double startTimeA(move1.t1), endTimeA(move1.t2), startTimeB(move2.t1), endTimeB(move2.t2);
     double m1i1(map->get_i(move1.id1)), m1i2(map->get_i(move1.id2)), m1j1(map->get_j(move1.id1)), m1j2(map->get_j(move1.id2));
     double m2i1(map->get_i(move2.id1)), m2i2(map->get_i(move2.id2)), m2j1(map->get_j(move2.id1)), m2j2(map->get_j(move2.id2));
@@ -243,8 +243,8 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
         }
         else
         {
-            if(move1.t2==CN_INFINITY)
-                move1.t2=move2.t2;
+            //if(move1.t2==CN_INFINITY)
+            //    move1.t2=move2.t2;
             double startTimeA(move1.t1), endTimeA(move1.t2);
             //Vector2D A(map->get_i(move1.id1), map->get_j(move1.id1)), A2(map->get_i(move1.id2), map->get_j(move1.id2)),
             //         B(map->get_i(move2.id1), map->get_j(move2.id1)), B2(map->get_i(move2.id2), map->get_j(move2.id2));
@@ -265,9 +265,9 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
                     move1.t1 -= delta;
                 }
                 //cout<<"start: "<<move1<<endl;
-                if(gt(move1.t1, move2.t2))
+                if(gt(move1.t1, move1.t2))
                 {
-                    move1.t1 = move2.t2;
+                    move1.t1 = move1.t2;
                     //cout<<"break here"<<endl;
                     break;
                 }
@@ -280,9 +280,11 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
                 move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
                 //cout<<"start: "<<move1<<endl;
                 //move1.t1 = fmax(move1.t1,startTimeA+CN_PRECISION);
-                move1.t1 = fmax(move1.t1,startTimeA + CN_EPSILON);
                 //cout<<"start: "<<move1<<endl;
             }
+            move1.t1 = fmin(move1.t1, move1.t2);
+            move1.t1 = fmin(move1.t1, move2.t2);
+            move1.t1 = fmax(move1.t1,startTimeA + CN_EPSILON);
             interval.second=move1.t1;
 
             //reset all the var
@@ -304,7 +306,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
                 {
                     move1.t2 += delta;
                 }
-                if((lt(move1.t2, move2.t1)))
+                if((lt(move1.t2, move1.t1)))
                 {
                     //cout<<"A: ";
                     move1.t2 = move2.t1;
@@ -317,8 +319,10 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
             {
                 move1.t2 = fmax(move1.t2 - delta*2, move2.t1);
                 //move1.t2 = fmin(move1.t2,interval.second-CN_PRECISION);
-                move1.t2 = fmin(move1.t2,interval.second - CN_EPSILON);
             }
+            move1.t2 = fmax(move1.t2, move1.t1);
+            move1.t2 = fmax(move1.t2, move2.t1);
+            move1.t2 = fmin(move1.t2,interval.second - CN_EPSILON);
             interval.first=move1.t2;
             assert(interval.first!=-1 && interval.second!=-1);
             assert(lt_raw(interval.first,interval.second));
@@ -525,11 +529,12 @@ Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
         //cout<<"mod here"<<endl;
         move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
         //cout<<move1<<endl;
-        move1.t1 = fmax(move1.t1,startTimeA+CN_EPSILON);
-        //cout<<move1<<endl;
         move1.t2 = move1.t1 + endTimeA - startTimeA;
         //cout<<move1<<endl;
     }
+    move1.t1 = fmin(move1.t1, move1.t2);
+    move1.t1 = fmin(move1.t1, move2.t2);
+    move1.t1 = fmax(move1.t1,startTimeA+CN_EPSILON);
     return make_pair(startTimeA,move1.t1);
 }
 
@@ -1324,7 +1329,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         time_spent = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t);
-        if(time_spent.count() > config.timelimit || node.id==5)
+        if(time_spent.count() > config.timelimit)
         {
             solution.found = false;
             if (debug>0){
