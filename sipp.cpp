@@ -49,9 +49,9 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
             for(unsigned int i = 0; i < moveColls_it->second.size(); i++)
             {
                 moveCons=moveColls_it->second[i];
-                //cout<<"moveCons: "<<moveCons.first<<","<<moveCons.second<<endl;
-                //if(gt_raw(moveCons.second,interval.first))
-                //    continue;
+                cout<<"moveCons: "<<moveCons.first<<","<<moveCons.second<<endl;
+                if(gt_raw(moveCons.first,interval.second))
+                    break;
                 if (le_raw(moveCons.first,interval.first))
                 {
                     if(ge_raw(moveCons.second,curNode.interval.second))
@@ -86,9 +86,9 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
         assert(curNode.interval.first!=-1);
         if(config.debug>1 || p)
         {
-            //cout<<"cur interval"<<endl;
-            //for (auto i:curIntervals)
-            //    cout<<"("<<i.first<<","<<i.second<<")"<<endl;
+            cout<<"cur interval"<<endl;
+            for (auto i:curIntervals)
+                cout<<"("<<i.first<<","<<i.second<<")"<<endl;
         }
 
         std::vector<Interval> nextIntervals(0);
@@ -110,9 +110,9 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
 
         if(config.debug>1 || p)
         {
-            //cout<<"next interval"<<endl;
-            //for (auto i:nextIntervals)
-            //    cout<<"("<<i.first<<","<<i.second<<")"<<endl;
+            cout<<"next interval"<<endl;
+            for (auto i:nextIntervals)
+                cout<<"("<<i.first<<","<<i.second<<")"<<endl;
         }
 
         int id(0);
@@ -133,11 +133,13 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
             for (Interval cur:curIntervals)
             {
                 //cout<<"cur: "<<cur.first<<" ~ "<<cur.second<<endl;
+                //cout<<"next: "<<next.first<<" ~ "<<next.second<<endl;
+                //cout<<"cur+csot: "<<cur.first+cost<<" ~ "<<cur.second+cost<<endl;
+                //cout<<"cur+cost: "<<cur.first+cost<<"   next-cost: "<<next.first-cost<<endl;
             //while (lt_raw(i.first+cost,it->second)  && gt_raw(i.second+cost,it->first)) // iterate all reachable next interval
                 if(!(lt_raw(cur.first+cost,next.second) && gt_raw(cur.second,next.first-cost)))
                     continue;
                 //cout<<"over lapping: "<<endl;
-                //cout<<"next: "<<next.first<<" ~ "<<next.second<<endl;
                 auto vis_it = visited.find(make_tuple(move.id,newNode.interval_id,false));
                 if (vis_it!=visited.end())
                     if(vis_it->second.second)

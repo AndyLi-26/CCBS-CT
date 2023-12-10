@@ -331,7 +331,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
 
     waitCon=Constraint(agent, interval.first, interval.second, move1.id1, -1,move1.id2);
     //prt_constraint(waitCon);
-    assert(gt(waitCon.t2,waitCon.t1));
+    assert(waitCon.t2>waitCon.t1);
     constraint.push_back(waitCon);
     solution.n_standard+=1;
     solution.t_standard+=waitCon.t2-waitCon.t1;
@@ -1169,7 +1169,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         else{
-            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==53);
+            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==1020);
         }
         if (debug>0){
             cout<<"new_path:";
@@ -1206,11 +1206,15 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         if ((pathA.cost>0 && lt(right.cost,node.cost)))
         {
             cout<<"p: "<<pathA.cost<<" node: "<<node.cost<<"right: "<<right.cost<<endl;
+            prt_path(paths.at(conflict.agent1));
+            cout<<endl<<flush;
             assert(false);
         }
         if ((pathB.cost>0 && lt(left.cost,node.cost)))
         {
             cout<<"p: "<<pathB.cost<<" node: "<<node.cost<<"left: "<<left.cost<<endl;
+            prt_path(paths.at(conflict.agent2));
+            cout<<endl<<flush;
             assert(false);
         }
         if ((right.constraint==parent->constraint) && (right.paths.at(0)==parent->paths.at(0)))
