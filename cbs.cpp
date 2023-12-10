@@ -1169,7 +1169,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         else{
-            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==1020);
+            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values);
         }
         if (debug>0){
             cout<<"new_path:";
