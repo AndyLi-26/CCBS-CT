@@ -12,15 +12,15 @@ else:
 for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
     #for m in [7,9,10,11]:
 #for m in [2]:
-    for ES in [False,True]:
-        for ct in [0,1]:
+    for ES in [False]:
+        for ct in [0,1,2]:
             for ds in [False,True]:
                 for icp in [False,True]:
                     cmd=[exe,"-m",map_address.format(m),
                          "-t",task_address.format(m),
                         "--HI_h","0","precision","0.00001",
                          "-o", output_address,
-                         "-a",str(4.5),
+                         "-a",str(0.5),
                          "--agent_num",str(10),
                          "timelimit","30",
                          "--extra_info",str(m if isinstance(m,int) else int((m[0] + str(["a","b"].index(m[1])))))]
@@ -55,7 +55,7 @@ for m in [1,2,"3a","3b","4a","4b",5,6,7,8,9,10,11,12]:
                                     processPool.pop(p)
                                     finish = True
                                     p-=1
-                    
+
                     print(subprocess.list2cmdline(cmd))
                     try:
                         processPool.append(subprocess.Popen(cmd))

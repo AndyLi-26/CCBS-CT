@@ -9,7 +9,7 @@
 #define CN_AGENT_SIZE    sqrt(2.0)/4.0 //radius; only values in range (0; 0.5] are supported
 #define CN_CONNECTEDNESS 2 // possible variants 2,3,4,5
 //#define CN_PRECISION     1e-8*3
-#define CN_PRECISION     1e-6 
+//#define CN_PRECISION     1e-6
 #define CN_EPSILON       1e-8
 #define CN_FOCAL_WEIGHT  1.0 // experimental function, focal is supported only on the high-level
 #define CN_OBSTL         1

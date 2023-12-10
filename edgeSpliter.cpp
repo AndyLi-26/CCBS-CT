@@ -47,7 +47,7 @@ void edgeSpliter::waiting(Move m1, Move m2, Map_deltas &deltas, Map &map, Heuris
     assert(n.i!=-1 && n.j!=-1);
     Vector2D nextNode(n.i,n.j);
     Move tempM1(-1,-1,fromID,waitingID);
-    
+
     moving(tempM1,m2,deltas,map, h_values,a);
   }
 }
@@ -68,7 +68,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
   {
     if (m2.id1==m1.id2) //other agent is waiting on the moving agent's destination
     {
-      double new_t=round_down(totalT-d) - CN_PRECISION;
+      double new_t=round_down(totalT-d) - CN_EPSILON;
       P_new=Vector2D(P11+v*(new_t));
     }
     else
@@ -146,7 +146,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
               P_new=Vector2D(-1,-1);
             else
               P_new=case2(P11,v,P22);
-            
+
         if (lt(P21.i,P22.i))
           if (lt(P11.i,P21.i))
             if(le(P11.dis(P21),d))
@@ -172,7 +172,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
               P_new=Vector2D(-1,-1);
             else
               P_new=case2(P11,v,P22);
-            
+
         if (lt(P21.i,P22.i))
           if (lt(P11.i,P21.i))
             if(le(P11.dis(P21),d))
@@ -192,7 +192,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
       double b(2*(dx*dx*y0*vy-dx*dx*y1*vy+dy*dy*x0*vx-dy*dy*x1*vx+dx*dy*y1*vx+dx*dy*x1*vy-dx*dy*y0*vx-dx*dy*x0*vy));
       double c( -(C-pow((dx*y0 - dy*x0),2) + 2*dx*dx*y1*y0  + 2*dy*dy*x1*x0 - 2*dx*dy*y1*x0 - 2*dx*dy*x1*y0 ));
 
-      double t2=solveQuad(a,b,c).first - CN_PRECISION;
+      double t2=solveQuad(a,b,c).first - CN_EPSILON;
 
       if (t2<CN_EPSILON)
         P_new=Vector2D(-1,-1);
@@ -254,7 +254,7 @@ void edgeSpliter::moving(Move m1, Move m2, Map_deltas &deltas, Map &map, Heurist
               if (gt(P22.dis(P_new),d))
                 P_new=case2(P11,v,P22);
         }
-        else // dir:left up to right down   
+        else // dir:left up to right down
         {
           if(ge(P_new.i,P21.i) && ge(P_new.i,P22.i) && le(P_new.j,P21.j) && le(P_new.j,P22.j))
             if(gt(P21.i,P22.i))
@@ -304,7 +304,7 @@ Vector2D edgeSpliter::case2(Vector2D P0,Vector2D v, Vector2D P2)
   double b(2*(x0*vx - x2*vx + y0*vy - y2*vy));
   double c(-(C-x0*x0 +2*x2*x0-y0*y0+2*y2*y0));
 
-  double t2=solveQuad(a,b,c).first - CN_PRECISION;
+  double t2=solveQuad(a,b,c).first - CN_EPSILON;
   Vector2D P(P0+v*t2);
   return P;
 }
@@ -335,7 +335,7 @@ double edgeSpliter::solveQuad(double a, double b, double c)
   double sqrtDelta(sqrt(delta));
   double t1( round_down( (-b+sqrtDelta)/(2*a) ));
   double t2( round_down( (-b-sqrtDelta)/(2*a) ));
-  
+
   return t2;
 }
 */
@@ -374,7 +374,7 @@ Vector2D edgeSpliter::fitPoint(Vector2D P, int nFrom, int nTo, Map &map)
     P1=map.get_coord(n2);
     P2=map.get_coord(n1);
   }
-  
+
   Vector2D v=P2-P1;
   Vector2D unitv=v/sqrt(v*v);
   double dis=P.dis(P1);

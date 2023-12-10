@@ -343,30 +343,39 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
         //cout<<"using ct wait on node: "<<move1.id1<<endl;
         vector<Node> nodes=map->get_valid_moves(move1.id1);
         for (Node n :nodes){
-            Vector2D toNode(map->get_coord(move1.id1)),fromNode(map->get_coord(n.id));
-            Vector2D temp(toNode-fromNode);
-            double dis=sqrt(temp*temp);
+            double dis=map->get_dist(move1.id1,n.id);
             int enter_index=id2ind(move1.id1,n.id,agent);
             assert(enter_index!=-2);
             //double min_clear=map->get_min_clear_t_ori(move1.id1,enter_index);
-            Move tempMove(-1,-1,n.id,move1.id1);
-            double min_clear=map->get_min_clear_t(tempMove,move2.id2);
-            //double min_clear=map->get_min_clear_t(move1,n.id);
-            if (eq(min_clear,-1) || min_clear==CN_INFINITY) //min_clear==-1
-                continue;
-            //double startT(interval.second-dis),endT(startT+min_clear);
-            double startT(interval.second-dis),endT(move2.t2-dis+min_clear);
-            if (gt(startT,0) && gt(min_clear,0))
+            Move tempMove(interval.second-dis,interval.second,n.id,move1.id1);
+            if(config.EQ)
             {
-                assert(gt(endT,startT));
-                int exit_id=id2ind(n.id,move1.id1,agent);
-                Constraint edgeCon(agent,startT,endT,n.id,exit_id,move1.id1);
-                edgeCon.CT=2;
-                assert(gt(edgeCon.t2,edgeCon.t1));
-                constraint.push_back(edgeCon);
-                solution.n_ct2+=1;
-                solution.t_ct2+=edgeCon.t2-edgeCon.t1;
+                double min_clear=map->get_min_clear_t(tempMove,move2.id2);
+                //double min_clear=map->get_min_clear_t(move1,n.id);
+                if (eq(min_clear,-1) || min_clear==CN_INFINITY) //min_clear==-1
+                    continue;
+                //double startT(interval.second-dis),endT(startT+min_clear);
+                interval={waitCon.t2-dis,waitCon.t2-dis+min_clear};
+                //double startT(interval.second-dis),endT(move2.t2-dis+min_clear);
+                if (gt(interval.first,0) && gt(min_clear,0))
+                {
+                    assert(gt_raw(interval.second,interval.first));
+                    int exit_id=id2ind(n.id,move1.id1,agent);
+                    Constraint edgeCon(agent,interval.first,interval.second,n.id,exit_id,move1.id1);
+                    edgeCon.CT=2;
+                    assert(gt(edgeCon.t2,edgeCon.t1));
+                    constraint.push_back(edgeCon);
+                    solution.n_ct2+=1;
+                    solution.t_ct2+=edgeCon.t2-edgeCon.t1;
+                }
             }
+            else{
+                if (check_conflict(tempMove,move2)){
+                    list<Constraint> new_cons=get_constraint(agent,tempMove,move2);
+                    constraint.insert(constraint.end(),new_cons.begin(),new_cons.end());
+                }
+            }
+
         }
         //}
         return constraint;
@@ -375,24 +384,23 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
     {
         vector<Node> nodes=map->get_valid_moves(move1.id1);
         for (Node n :nodes){
-            Vector2D toNode(map->get_coord(move1.id1)),fromNode(map->get_coord(n.id));
-            Vector2D temp(toNode-fromNode);
-            double dis=sqrt(temp*temp);
+            double dis=map->get_dist(move1.id1,n.id);
             int enter_index=id2ind(move1.id1,n.id,agent);
             assert(enter_index!=-2);
             //double min_clear=map->get_min_clear_t_ori(move1.id1,enter_index);
-            double startT(interval.second-dis),endT(interval.second);
-            Move tempM(startT,endT,n.id,move1.id1);
+            Move tempM(interval.second-dis,interval.second,n.id,move1.id1);
             if (check_conflict(tempM,move2))
             {
                 int exit_id=id2ind(n.id,move1.id1,agent);
-                Interval standardCons(binary_search_constraint(agent,tempM,move2));
-                Constraint edgeCon(agent,standardCons.first,standardCons.second,n.id,exit_id,move1.id1);
-                edgeCon.CT=2;
-                assert(gt(edgeCon.t2,edgeCon.t1));
-                constraint.push_back(edgeCon);
-                solution.n_ct5+=1;
-                solution.t_ct5+=edgeCon.t2-edgeCon.t1;
+                //Interval standardCons(binary_search_constraint(agent,tempM,move2));
+                //Constraint edgeCon(agent,standardCons.first,standardCons.second,n.id,exit_id,move1.id1);
+                list<Constraint> new_cons=get_constraint(agent,tempM,move2);
+                constraint.insert(constraint.end(),new_cons.begin(),new_cons.end());
+                //edgeCon.CT=2;
+                //assert(gt(edgeCon.t2,edgeCon.t1));
+                //constraint.push_back(edgeCon);
+                //solution.n_ct5+=1;
+                //solution.t_ct5+=edgeCon.t2-edgeCon.t1;
             }
         }
         return constraint;
@@ -558,32 +566,54 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
         solution.n_standard;
         return c;
     }
-    if (config.CT_abs || (config.CT && move2.id2==move1.id2)){
-        double dist=sqrt((A-B)*(A-B));
-        double min_clear=map->get_min_clear_t(move1,move2.id2);
-        startT=move1.t1;
-        if (!(eq(min_clear,-1) || min_clear==CN_INFINITY))
-        {
-            endT=move2.t2-dist+min_clear;
-        }
-    }
-    //if(delta < CN_PRECISION/2.0 + CN_PRECISION && check_conflict(move1, move2))
     Interval standardCons(binary_search_constraint(agent,move1,move2));
-    //consider min_clear time for node conflict
-    //map->prt_validmoves();
+    Interval addedCons;
     list<Constraint> c(0);
     int exit_index=id2ind(move1.id1, move1.id2,agent);
-    if (config.CT || config.CT_abs){
-        if (gt(standardCons.second,endT))
+    if (config.CT_abs || (config.CT && move2.id2==move1.id2)){
+        double dist=map->get_dist(move1.id1,move1.id2);
+        Interval CTcons{-1,-1};
+        if(config.EQ){
+            double min_clear=map->get_min_clear_t(move1,move2.id2);
+            startT=move1.t1;
+            if (!(eq(min_clear,-1) || min_clear==CN_INFINITY))
+            {
+                CTcons={move1.t1,move2.t2-dist+min_clear};
+
+            }
+        }
+        else {
+            Move tempMove(standardCons.second,standardCons.second+dist,move1.id1,move1.id2);
+            double min_clear=-1;
+            vector<Node> nodes=map->get_valid_moves(move2.id2);
+            for (Node n :nodes){
+                double tempDis=map->get_dist(move2.id2,n.id);
+                Move tempMove2(move2.t2,move2.t2+tempDis,move2.id2,n.id);
+                if (check_conflict(tempMove,tempMove2)){
+                    Interval tempInterval=binary_search_constraint(agent,tempMove,move2);
+                    if(tempInterval.second<min_clear)
+                        min_clear=tempInterval.second;
+                }
+            }
+            CTcons={move1.t1,min_clear};
+        }
+    //}
+    //if(delta < CN_PRECISION/2.0 + CN_PRECISION && check_conflict(move1, move2))
+    //consider min_clear time for node conflict
+    //map->prt_validmoves();
+    //if (config.CT || config.CT_abs){
+        if (gt(standardCons.second,CTcons.second))
         {
             Constraint cons(agent, standardCons.first, standardCons.second, move1.id1, exit_index, move1.id2);
             solution.n_standard+=1;
             solution.t_standard+=standardCons.second-standardCons.first;
             c.push_back(cons);
+            addedCons=standardCons;
         }
         else
         {
-            Constraint cons(agent, startT, endT,move1.id1, exit_index, move1.id2);
+            Constraint cons(agent, CTcons.first, CTcons.second,move1 .id1, exit_index, move1.id2);
+            addedCons=CTcons;
             if (move2.id2==move1.id2)
             {
                 cons.CT=1;
@@ -601,6 +631,7 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     }
     else{
         Constraint cons(agent, standardCons.first,standardCons.second, move1.id1, exit_index, move1.id2);
+        addedCons=standardCons;
         solution.n_standard+=1;
         solution.t_standard+=standardCons.second-standardCons.first;
         c.push_back(cons);
@@ -610,43 +641,60 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     {
         if(move2.id1!=move2.id2 && map->node_in_path(move1.id1,make_pair(move2.id1, move2.id2)))
         {
-            Vector2D B(map->get_coord(move1.id1));
-            Vector2D A(map->get_coord(move2.id1));
-            Vector2D C(map->get_coord(move2.id2));
-            Vector2D v(C-A);
-            Vector2D unitV(v/v.mod());
-            double quad_a(unitV.i*unitV.i+unitV.j*unitV.j);
-            double dx(B.i-A.i),dy(B.j-A.j);
-            double quad_b(-2*dx*unitV.i-2*dy*unitV.j);
-            double quad_c(dx*dx+dy*dy-4*config.agent_size*config.agent_size);
-            pair<double, double> t_pair=solveQuad(quad_a,quad_b,quad_c);
-            Constraint waitCon(agent,t_pair.first,t_pair.second,move1.id1,-1,move1.id1);
-            c.push_back(waitCon);
-
-            vector<Node> nodes=map->get_valid_moves(move1.id1);
-            for (Node n :nodes){
-                Vector2D toNode(map->get_coord(move1.id1)),fromNode(map->get_coord(n.id));
-                Vector2D temp(toNode-fromNode);
-                double dis=sqrt(temp*temp);
-                int enter_index=id2ind(move1.id1,n.id,agent);
-                assert(enter_index!=-2);
-                Move tempMove(-1,-1,n.id,move1.id1);
-                double min_clear=map->get_min_clear_t(tempMove,move2.id2);
-                if (eq(min_clear,-1)) //min_clear==-1
-                    continue;
-                double startT(t_pair.second-dis),endT(move2.t2-dis+min_clear);
-                if (gt(startT,0) && gt(min_clear,0))
-                {
-                    assert(gt(endT,startT));
-                    int exit_id=id2ind(n.id,move1.id1,agent);
-                    Constraint edgeCon(agent,startT,endT,n.id,exit_id,move1.id1);
-                    assert(gt(edgeCon.t2,edgeCon.t1));
-                    edgeCon.CT=3;
-                    c.push_back(edgeCon);
-                    solution.n_ct3+=1;
-                    solution.t_ct3+=edgeCon.t2-edgeCon.t1;
+            if (config.EQ) {
+                Vector2D B(map->get_coord(move1.id1));
+                Vector2D A(map->get_coord(move2.id1));
+                Vector2D C(map->get_coord(move2.id2));
+                Vector2D v(C-A);
+                Vector2D unitV(v/v.mod());
+                double quad_a(unitV.i*unitV.i+unitV.j*unitV.j);
+                double dx(B.i-A.i),dy(B.j-A.j);
+                double quad_b(-2*dx*unitV.i-2*dy*unitV.j);
+                double quad_c(dx*dx+dy*dy-4*config.agent_size*config.agent_size);
+                pair<double, double> t_pair=solveQuad(quad_a,quad_b,quad_c);
+                Constraint waitCon(agent,t_pair.first,t_pair.second,move1.id1,-1,move1.id1);
+                c.push_back(waitCon);
+                vector<Node> nodes=map->get_valid_moves(move1.id1);
+                for (Node n :nodes){
+                    double dis=map->get_dist(move1.id1,n.id);
+                    int enter_index=id2ind(move1.id1,n.id,agent);
+                    assert(enter_index!=-2);
+                    Move tempPreMove(addedCons.first,addedCons.second,n.id,move1.id1);
+                    if(config.EQ)
+                    {
+                        double min_clear=map->get_min_clear_t(tempPreMove,move2.id2);
+                        if (eq(min_clear,-1)) //min_clear==-1
+                            continue;
+                        double startT(t_pair.second-dis),endT(move2.t2-dis+min_clear);
+                        if (gt(startT,0) && gt(min_clear,0))
+                        {
+                            assert(gt(endT,startT));
+                            int exit_id=id2ind(n.id,move1.id1,agent);
+                            Constraint edgeCon(agent,startT,endT,n.id,exit_id,move1.id1);
+                            assert(gt(edgeCon.t2,edgeCon.t1));
+                            edgeCon.CT=3;
+                            c.push_back(edgeCon);
+                            solution.n_ct3+=1;
+                            solution.t_ct3+=edgeCon.t2-edgeCon.t1;
+                        }
+                    }
+                    //else {
+                    //    Move
+                    //    if (check_conflict(tempMove,move2)){
+                    //        list<Constraint> new_cons=get_constraint(agent,tempMove,move2);
+                    //        constraint.insert(constraint.end(),new_cons.begin(),new_cons.end());
+                    //    }
+                    //}
                 }
             }
+            else {
+                Move tempWaitM(move2.t1,move2.t2,move1.id1,move1.id1);
+                if (check_conflict(tempWaitM,move2)) {
+                    list<Constraint> waitCons=get_constraint(agent,tempWaitM,move2);
+                    c.insert(c.end(),waitCons.begin(),waitCons.end());
+                }
+            }
+
         }
     }
     return c;
@@ -859,6 +907,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     int low_level_expanded(0);
     int id = 2;
     int debug=config.debug;
+    int IDX=0;
     //bool BREAK=false;
     do
     {
@@ -874,6 +923,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         auto paths = get_paths(&node, task.get_agents_size());
         if (debug>0){
             cout<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
+            cout<<"ID: "<<IDX++<<endl;
             cout<<"before conflict"<<endl;
             prt_paths(paths);
         }
@@ -1119,7 +1169,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         else{
-            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values);
+            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==53);
         }
         if (debug>0){
             cout<<"new_path:";
@@ -1127,6 +1177,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<endl<<flush;
             //assert(false);
         }
+
         /*
            if (BREAK)
            {
@@ -1160,7 +1211,15 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         if ((pathB.cost>0 && lt(left.cost,node.cost)))
         {
             cout<<"p: "<<pathB.cost<<" node: "<<node.cost<<"left: "<<left.cost<<endl;
-            //assert(false);
+            assert(false);
+        }
+        if ((right.constraint==parent->constraint) && (right.paths.at(0)==parent->paths.at(0)))
+        {
+            assert(false);
+        }
+        if ((left.constraint==parent->constraint) && (left.paths.at(0)==parent->paths.at(0)))
+        {
+            assert(false);
         }
         Constraint positive;
         bool inserted = false;

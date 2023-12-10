@@ -160,6 +160,10 @@ struct sNode
         id = n.id;
         g = n.g;
     }
+    bool operator ==(const sNode& other) const //required for heuristic calculation
+    {
+       return id==other.id && g==other.g;
+    }
 };
 
 struct sPath
@@ -190,6 +194,16 @@ struct sPath
         }
         os<<"\n";
         return os;
+    }
+    bool operator ==(const sPath& other) const
+    {
+      if (!eq(cost,other.cost)) return false;
+      if (agentID!=other.agentID) return false;
+      if (nodes.size()!=other.nodes.size()) return false;
+      for (int i=0;i<nodes.size();++i)
+        if (!(nodes.at(i)==other.nodes.at(i))) return false;
+
+      return true;
     }
 };
 

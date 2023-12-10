@@ -78,12 +78,13 @@ class Map
         std::vector<Node> get_valid_moves(int id) const;
         //cr part
         double get_min_clear_t(Move m1, int s2);
-        double fit2grid(double val){return round(val/CN_PRECISION)*CN_PRECISION;}
+        double fit2grid(double val){return round(val/CN_EPSILON)*CN_EPSILON;}
         Vector2D fit2line(Vector2D precise_pos, int node1, int node2);
         void print_map();
         void printPPM();
         double cos2min_t(double cos_theta);
-        int id2ind(int v1,int v2);
+        int id2ind(int v1,int id) const;
+        int ind2id(int v1,int ind) const;
         bool node_in_path(int p, pair<int, int> l);
         void prt_set(std::set<int> s) const;
         void prt_validmoves() const;

@@ -19,7 +19,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
 {
     Node newNode;
     std::vector<Node> valid_moves = map.get_valid_moves(curNode.id);
-    if(config.debug>1)
+    if(config.debug>1 || p)
     {
         std::cout<<"expanding: "<<curNode.id<<" g:"<<curNode.g<<"interval:("<<curNode.interval.first<<", "<<curNode.interval.second<<") "<<std::endl;
         for (Node n:valid_moves){
@@ -30,16 +30,17 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
     for(int i=0;i<valid_moves.size();++i)
     {
         Node move=valid_moves[i];
-        if (config.debug>1)
+        if (config.debug>1 || p)
         {
             cout<<"-------------------------"<<endl;
-            //cout<<"checking: "<<move.id<<endl;
+            cout<<"checking: "<<move.id<<endl;
         }
         newNode.i = move.i;
         newNode.j = move.j;
         newNode.id = move.id;
         double cost = dist(curNode, newNode);
         vector<Interval> curIntervals(0);
+        //cout<<"cons idx: "<<curNode.id<<" ~ "<<i<<endl;
         auto moveColls_it = constraints.find({curNode.id,i});
         if(moveColls_it != constraints.end())
         {
@@ -55,8 +56,8 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                 {
                     if(ge_raw(moveCons.second,curNode.interval.second))
                     {
-                        interval.second=curNode.interval.second;
-                        curIntervals.push_back(interval);
+                        //interval.second=curNode.interval.second;
+                        //curIntervals.push_back(interval);
                         break;
                     }
                     //if(lt_raw(moveCons.second,interval.second))
@@ -83,7 +84,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
         else
             curIntervals.push_back(curNode.interval);
         assert(curNode.interval.first!=-1);
-        if(config.debug>1)
+        if(config.debug>1 || p)
         {
             //cout<<"cur interval"<<endl;
             //for (auto i:curIntervals)
@@ -107,7 +108,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
         else
             nextIntervals.push_back({0, CN_INFINITY});
 
-        if(config.debug>1)
+        if(config.debug>1 || p)
         {
             //cout<<"next interval"<<endl;
             //for (auto i:nextIntervals)
@@ -181,7 +182,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
             //if (it!=nextIntervals.end())
             //    break;
         }
-        if(config.debug>1)
+        if(config.debug>1 || p)
         {
             for (Node n:succs){
                 std::cout<<"("<<n.id<<"@"<<n.g<<")";
@@ -189,7 +190,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
             std::cout<<"]"<<std::endl;
         }
     }
-    if(config.debug>1)
+    if(config.debug>1 || p)
         cout<<"----------"<<endl;
 }
 
@@ -230,7 +231,7 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
     if(curNode.parent != nullptr)
         do
         {
-            if (config.debug>1)
+            if (config.debug>1 || p)
                 cout<<curNode.parent->id<<"@"<<curNode.parent->g<<"->"<<(curNode.prev_g)<<"->"<<curNode.id<<"@"<<curNode.g<<endl;
             assert(curNode.prev_g!=-1);
             assert(curNode.prev_g>=curNode.parent->g);
@@ -240,7 +241,7 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
                 Node add = *curNode.parent;
                 add.g = curNode.prev_g;
                 path.nodes.insert(path.nodes.begin(), add);
-                if (config.debug>1)
+                if (config.debug>1 || p)
                     cout<<"insert a wait: "<<path.nodes[0].g<<endl;
             }
             curNode = *curNode.parent;
@@ -253,7 +254,7 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
         add.g = 0;
         path.nodes.insert(path.nodes.begin(), add);
     }*/
-    if(config.debug>1)
+    if(config.debug>1 || p)
     {
         cout<<"recons nodes: "<<endl;
         prt_nodes(path.nodes);
@@ -286,7 +287,7 @@ void SIPP::add_collision_interval(int id, std::pair<double, double> interval)
     else
         collision_intervals[id].push_back(interval);
     std::sort(collision_intervals[id].begin(), collision_intervals[id].end());
-    if(config.debug>1)
+    if(config.debug>1 || p)
     {
         cout<<"id: "<<id<<endl;
         cout<<"----------------------"<<endl;
@@ -320,7 +321,7 @@ void SIPP::add_collision_interval(int id, std::pair<double, double> interval)
             i--;
         }
     }
-    if(config.debug>1)
+    if(config.debug>1 || p)
     {
         cout<<"after: "<<endl;
         for(unsigned int i = 0; i < collision_intervals[id].size(); i++)
@@ -394,13 +395,13 @@ void SIPP::add_move_constraint(Move move)
     }
 }
 
-void SIPP::make_constraints(std::list<Constraint> &cons)
+void SIPP::make_constraints(std::list<Constraint> &cons,const Map &map)
 {
     for(auto con : cons)
     {
         if(con.positive == false)
         {
-            if(con.id1 == con.id2) // wait consatraint
+            if(con.id2 == -1) // wait consatraint
                 add_collision_interval(con.id1, std::make_pair(con.t1, con.t2));
             else
                 add_move_constraint(Move(con));
@@ -408,15 +409,20 @@ void SIPP::make_constraints(std::list<Constraint> &cons)
         else
         {
             bool inserted = false;
+            int id2;
+            if (con.id2==-1)
+               id2=con.id1;
+            else
+                id2=map.ind2id(con.id1,con.id2);
             for(unsigned int i = 0; i < landmarks.size(); i++)
                 if(gt_raw(landmarks[i].t1, con.t1))  // >
                 {
-                    landmarks.insert(landmarks.begin() + i, Move(con.t1, con.t2, con.id1, con.id2));
+                    landmarks.insert(landmarks.begin() + i, Move(con.t1, con.t2, con.id1, id2));
                     inserted = true;
                     break;
                 }
             if(!inserted)
-                landmarks.push_back(Move(con.t1, con.t2, con.id1, con.id2));
+                landmarks.push_back(Move(con.t1, con.t2, con.id1, id2));
         }
     }
 }
@@ -564,17 +570,20 @@ std::vector<Node> SIPP::get_endpoints(int node_id, double node_i, double node_j,
     return nodes;
 }
 
-pair<double,double> SIPP::check_endpoint(Node start, Node goal)
+pair<double,double> SIPP::check_endpoint(Node start, Node goal,const Map &map)
 {
-    double cost = sqrt(pow(start.i - goal.i, 2) + pow(start.j - goal.j, 2));
+    //double cost = sqrt(pow(start.i - goal.i, 2) + pow(start.j - goal.j, 2));
+    double cost=map.get_dist(start.id,goal.id);
+    double ind=map.id2ind(start.id,goal.id);
     if(lt_raw(start.g+cost, goal.interval.first)) //<=
         start.g = goal.interval.first - cost;
-    if(constraints.count({start.id, goal.id}) != 0)
+
+    if(constraints.count({start.id, ind}) != 0)
     {
-        auto it = constraints.find({start.id, goal.id});
+        auto it = constraints.find({start.id, ind});
         for(unsigned int i = 0; i < it->second.size(); i++)
         {
-            if (config.debug>1)
+            if (config.debug>1 || p)
             {
                cout<<"start g: "<<start.g<<" it t1: "<<it->second[i].first<<endl;
                cout<<"g:     0b";
@@ -604,7 +613,7 @@ pair<double,double> SIPP::check_endpoint(Node start, Node goal)
 Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, Heuristic &h_values, bool p)
 {
     auto temp=find_path_aux(agent, map, cons, h_values, p);
-    if(config.debug>1)
+    if(config.debug>1 || p)
         prt_info();
     return temp;
 }
@@ -680,17 +689,17 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
     this->call_find_pp=0;
     this->node_open=0;
     this->node_exp=0;
-    if(config.debug>1)
+    if(config.debug>1 || p)
     {
         cout<<"inital constraints:"<<endl;
         prt_constraints(cons);
     }
-    make_constraints(cons);
-    if(config.debug>1)
+    make_constraints(cons,map);
+    if(config.debug>1 || p)
     {
         cout<<"converted: "<<endl;
         prt_cons();
-        cout<<"nextIntervals: "<<endl;
+        cout<<"unsafe Intervals: "<<endl;
         prt_intervals();
         cout<<"landmarks: "<<endl;
         prt_landmarks();
@@ -726,13 +735,13 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
             {
                 return Path();
             }
-            if(config.debug>1)
+            if(config.debug>1 || p)
             {
                 cout<<"start planning"<<endl;
                 prt_nodes(starts);
             }
             parts = find_partial_path(starts, goals, map, h_values, goals.back().interval.second);
-            if(config.debug>1)
+            if(config.debug>1 || p)
             {
                 cout<<"finish planning"<<endl;
                 for (Path p:parts)
@@ -795,7 +804,7 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                     int best_start_id = -1;
                     for(unsigned int j = 0; j < starts.size(); j++)
                     {
-                        pair<double,double> g_val = check_endpoint(starts[j], goals[k]);
+                        pair<double,double> g_val = check_endpoint(starts[j], goals[k],map);
                         /*
                            cout<<"picking g"<<endl;
                            cout<<g<<endl;
@@ -854,7 +863,7 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                             //prt_node(new_results.back().nodes.back());
                         }
                         new_results.back().nodes.push_back(goals[k]);
-                        if(config.debug>1)
+                        if(config.debug>1 || p)
                         {
                             cout<<"new ressult "<<endl;
                             for (Path p:parts)
@@ -893,7 +902,7 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
     result.cost = result.nodes.back().g;
     result.agentID = agent.id;
     result.expanded = expanded;
-    if(config.debug>1)
+    if(config.debug>1 || p)
     {
         cout<<"returned path"<<endl;
         prt_nodes(result.nodes);
