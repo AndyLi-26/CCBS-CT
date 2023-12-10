@@ -54,7 +54,14 @@ for r in config['r']:
                                     for p in range(0,len(processPool)):
                                         if p >= len(processPool):
                                             break
-                                        if processPool[p].poll() is not None:
+                                        result=processPool[p].poll()
+                                        if result is not None:
+                                            if result!=0:
+                                                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                                                print(processPool[p].args)
+                                                print(processPool[p].stderr)
+                                                with open("errors.txt",'a') as f:
+                                                    print(' '.join(processPool[p].args),file=f)
                                             processPool.pop(p)
                                             finish = True
                                             p-=1
@@ -62,7 +69,16 @@ for r in config['r']:
                                 for p in range(0,len(processPool)):
                                         if p >= len(processPool):
                                             break
-                                        if processPool[p].poll() is not None:
+
+                                        result=processPool[p].poll()
+                                        if result is not None:
+                                            print("result",result)
+                                            if result!=0:
+                                                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                                                print(processPool[p])
+                                                print(processPool[p].args)
+                                                with open("errors.txt",'a') as f:
+                                                    print(' '.join(processPool[p].args),file=f)
                                             processPool.pop(p)
                                             finish = True
                                             p-=1
