@@ -587,6 +587,7 @@ pair<double,double> SIPP::check_endpoint(Node start, Node goal,const Map &map)
         {
             if (config.debug>1 || p)
             {
+                cout<<start.interval.first<<"~"<<start.interval.second<<endl;
                cout<<"start g: "<<start.g<<" it t1: "<<it->second[i].first<<endl;
                cout<<"g:     0b";
                prt_double(start.g);
@@ -791,7 +792,8 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                    cout<<"starts"<<endl;
                    prt_nodes(starts);
                    */
-                double offset = sqrt(pow(map.get_i(landmarks[i].id1) - map.get_i(landmarks[i].id2), 2) + pow(map.get_j(landmarks[i].id1) - map.get_j(landmarks[i].id2), 2));
+                //double offset = sqrt(pow(map.get_i(landmarks[i].id1) - map.get_i(landmarks[i].id2), 2) + pow(map.get_j(landmarks[i].id1) - map.get_j(landmarks[i].id2), 2));
+                double offset=map.get_dist(landmarks[i].id1,landmarks[i].id2);
                 goals = get_endpoints(landmarks[i].id2, map.get_i(landmarks[i].id2), map.get_j(landmarks[i].id2), landmarks[i].t1 + offset, landmarks[i].t2 + offset);
                 /*
                    cout<<"goals"<<endl;
@@ -840,6 +842,7 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                             goals[k].interval.second = CN_INFINITY;
                         else
                         {
+                            goals[k].interval.second = CN_INFINITY;
                             for(auto c:collision_intervals[goals[k].id])
                                 if(goals[k].g < c.first)
                                 {

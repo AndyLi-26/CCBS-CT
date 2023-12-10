@@ -31,6 +31,7 @@ class CBS
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
     list<Constraint> get_constraint(int agent, Move move1, Move move2);
     list<Constraint> get_wait_constraint(int agent, Move move1, Move move2);
+    Interval binary_wait_search_constraint(int agent, Move move1, Move move2);
     void find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::vector<sPath> &paths, const sPath &path,
         const std::list<Conflict> &conflicts, const std::list<Conflict> &semicard_conflicts, const std::list<Conflict> &cardinal_conflicts,
         int &low_level_searches, int &low_level_expanded);
