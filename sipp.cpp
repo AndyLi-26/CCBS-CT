@@ -50,8 +50,11 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
             {
                 moveCons=moveColls_it->second[i];
                 //cout<<"moveCons: "<<moveCons.first<<","<<moveCons.second<<endl;
-                if(gt_raw(moveCons.first,interval.second))
+                if(gt_raw(moveCons.first,curNode.interval.second))
+                {
+                    curIntervals.push_back(interval);
                     break;
+                }
                 if (le_raw(moveCons.first,interval.first))
                 {
                     if(ge_raw(moveCons.second,curNode.interval.second))
@@ -722,6 +725,8 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
             if(i == 0)
             {
                 starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
+                if (starts.at(0).interval.first!=0)
+                    return Path();
                 goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
             }
             else

@@ -69,6 +69,7 @@ class CBS
     void printBT(const string& prefix, const int node_id, bool isLeft);
     void check_collison(CBS_Node *node);
     void prt_history(CBS_Node *node);
+    bool validate_path(list<Constraint> constraints,sPath p);
 
     void post_check(vector<sPath> Paths);
     Vector2D ind2Vec(int nodeId);
