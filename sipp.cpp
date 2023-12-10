@@ -49,7 +49,7 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
             for(unsigned int i = 0; i < moveColls_it->second.size(); i++)
             {
                 moveCons=moveColls_it->second[i];
-                cout<<"moveCons: "<<moveCons.first<<","<<moveCons.second<<endl;
+                //cout<<"moveCons: "<<moveCons.first<<","<<moveCons.second<<endl;
                 if(gt_raw(moveCons.first,interval.second))
                     break;
                 if (le_raw(moveCons.first,interval.first))
