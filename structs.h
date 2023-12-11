@@ -162,7 +162,7 @@ struct sNode
     }
     bool operator ==(const sNode& other) const //required for heuristic calculation
     {
-       return id==other.id && g==other.g;
+        return id==other.id && g==other.g;
     }
 };
 
@@ -197,13 +197,13 @@ struct sPath
     }
     bool operator ==(const sPath& other) const
     {
-      if (!eq(cost,other.cost)) return false;
-      if (agentID!=other.agentID) return false;
-      if (nodes.size()!=other.nodes.size()) return false;
-      for (int i=0;i<nodes.size();++i)
-        if (!(nodes.at(i)==other.nodes.at(i))) return false;
+        if (!eq(cost,other.cost)) return false;
+        if (agentID!=other.agentID) return false;
+        if (nodes.size()!=other.nodes.size()) return false;
+        for (int i=0;i<nodes.size();++i)
+            if (!(nodes.at(i)==other.nodes.at(i))) return false;
 
-      return true;
+        return true;
     }
 };
 
@@ -445,9 +445,8 @@ Focal_Elem,
     >
     > Open_List;
 
-    class CBS_Tree
+class CBS_Tree
 {
-
     Focal_container focal;
     CT_container container;
     double focal_weight;

@@ -46,6 +46,7 @@ for r in config['r']:
                             if ds=='1':
                                 cmd+=["--DS"]
                             print(subprocess.list2cmdline(cmd))
+                            assert False
 
                             if (len(processPool)>=3):
                                 finish = False

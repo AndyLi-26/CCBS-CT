@@ -1468,6 +1468,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
 
             }
         }
+        if (debug>0)
+        {
+            cout<<right.id<<" new cost: "<<right.cost<<endl;
+            cout<<left.id<<" new cost: "<<left.cost<<endl;
+        }
         time_spent = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t);
         if(time_spent.count() > config.timelimit)
         {
@@ -1590,6 +1595,9 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
     }
     for(auto c: new_conflicts)
     {
+
+        //cout<<"&&&"<<endl;
+        //prt_conflict(c);
         std::list<Constraint> constraintsA, constraintsB;
         if(path.agentID == c.agent1)
         {
@@ -1605,6 +1613,7 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
             if(new_pathA.cost < 0 && new_pathB.cost < 0)
             {
                 node.cost = -1;
+                //cout<<"returned hereA"<<endl;
                 return;
             }
             else if (new_pathA.cost < 0)
@@ -1632,13 +1641,28 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
         else
         {
             constraintsA = get_constraints(&node, c.agent2);
+            //cout<<"old consA"<<endl;
+            //prt_constraints(constraintsA);
             list<Constraint> temp=get_constraint(c.agent2, c.move2, c.move1);
+            //cout<<"new consA"<<endl;
+            //prt_constraints(temp);
             constraintsA.insert(constraintsA.end(),temp.begin(),temp.end());
             auto new_pathA = planner.find_path(task.get_agent(c.agent2), map, constraintsA, h_values);
+            //sPath p;
+            //p=new_pathA;
+            //prt_path(p);
+            //cout<<endl;
             constraintsB = get_constraints(&node, c.agent1);
+            //cout<<"old consB"<<endl;
+            //prt_constraints(constraintsB);
             temp=get_constraint(c.agent1, c.move1, c.move2);
+            //cout<<"new consB"<<endl;
+            //prt_constraints(temp);
             constraintsB.insert(constraintsB.end(),temp.begin(),temp.end());
             auto new_pathB = planner.find_path(task.get_agent(c.agent1), map, constraintsB, h_values);
+            //p=new_pathB;
+            //prt_path(p);
+            //cout<<endl;
             double old_cost = get_cost(node, c.agent1);
             if(new_pathA.cost < 0 && new_pathB.cost < 0)
             {

@@ -472,6 +472,12 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
     {
         curNode = find_min();
         node_exp+=1;
+        if(config.debug>1 || p)
+        {
+            cout<<"###########"<<endl;
+            cout<<"poped: "<<endl;
+            prt_node(curNode);
+        }
         auto v = visited.find(make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark));
         if(v->second.second){
             continue;
@@ -484,7 +490,14 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
         if(curNode.id == goals[0].id)
         {
             for(unsigned int i = 0; i < goals.size(); i++)
-                if(lt_raw(curNode.g, goals[i].interval.second) && le_raw(goals[i].interval.first,curNode.interval.second))//< && <=
+            {
+
+                bool isGoal;
+                if (goals[i].interval.first==goals[i].interval.second)
+                    isGoal=(curNode.g==goals[i].interval.first);
+                else
+                    isGoal=(lt_raw(curNode.g, goals[i].interval.second) && le_raw(goals[i].interval.first,curNode.interval.second));
+                if(isGoal)//< && <=
                 {
                     paths[i].nodes = reconstruct_path(curNode);
                     if(paths[i].nodes.back().g < goals[i].interval.first)
@@ -496,6 +509,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
                     paths[i].expanded = int(close.size());
                     pathFound++;
                 }
+            }
             if(pathFound == int(goals.size()))
                 return paths;
         }
@@ -505,7 +519,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
         std::list<Node>::iterator it = succs.begin();
         while(it != succs.end())
         {
-            if(gt_raw(it->f, max_f)) //>
+            if(gt(it->f, max_f)) //>
             {
                 it++;
                 continue;
@@ -746,7 +760,10 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
             if(config.debug>1 || p)
             {
                 cout<<"start planning"<<endl;
+                cout<<"start: "<<endl;
                 prt_nodes(starts);
+                cout<<"goal: "<<endl;
+                prt_nodes(goals);
             }
             parts = find_partial_path(starts, goals, map, h_values, goals.back().interval.second);
             if(config.debug>1 || p)
