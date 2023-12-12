@@ -29,7 +29,7 @@ class CBS
     bool check_conflict_ori(Move move1, Move move2);
     double get_hl_heuristic(const std::list<Conflict> &conflicts);
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
-    list<Constraint> get_constraint(int agent, Move move1, Move move2);
+    list<Constraint> get_constraint(int agent, Move move1, Move move2,bool CT=false);
     list<Constraint> get_wait_constraint(int agent, Move move1, Move move2);
     Interval binary_wait_search_constraint(int agent, Move move1, Move move2);
     void find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::vector<sPath> &paths, const sPath &path,

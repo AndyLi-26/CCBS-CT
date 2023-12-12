@@ -308,13 +308,13 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
                     edgeCon.CT=2;
                     assert(gt(edgeCon.t2,edgeCon.t1));
                     constraint.push_back(edgeCon);
-                    solution.n_ct2+=1;
-                    solution.t_ct2+=edgeCon.t2-edgeCon.t1;
+                    solution.n_ct1+=1;
+                    solution.t_ct1+=edgeCon.t2-edgeCon.t1;
                 }
             }
             else{
                 if (check_conflict(tempMove,move2)){
-                    list<Constraint> new_cons=get_constraint(agent,tempMove,move2);
+                    list<Constraint> new_cons=get_constraint(agent,tempMove,move2,true);
                     constraint.insert(constraint.end(),new_cons.begin(),new_cons.end());
                 }
             }
@@ -339,7 +339,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
                 int exit_id=id2ind(n.id,move1.id1,agent);
                 //Interval standardCons(binary_search_constraint(agent,tempM,move2));
                 //Constraint edgeCon(agent,standardCons.first,standardCons.second,n.id,exit_id,move1.id1);
-                list<Constraint> new_cons=get_constraint(agent,tempM,move2);
+                list<Constraint> new_cons=get_constraint(agent,tempM,move2,true);
                 constraint.insert(constraint.end(),new_cons.begin(),new_cons.end());
                 //edgeCon.CT=2;
                 //assert(gt(edgeCon.t2,edgeCon.t1));
@@ -592,7 +592,7 @@ Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
     return make_pair(startTimeA,move1.t1);
 }
 
-list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
+list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2,bool CT)
 {
     //cout<<"-----------"<<endl;
     //cout<<"m1: "<<move1<<endl;
@@ -655,8 +655,14 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
         if (gt(standardCons.second,CTcons.second))
         {
             Constraint cons(agent, standardCons.first, standardCons.second, move1.id1, exit_index, move1.id2);
-            solution.n_standard+=1;
-            solution.t_standard+=standardCons.second-standardCons.first;
+            if (CT) {
+                solution.n_ct1+=1;
+                solution.n_ct1+=standardCons.second-standardCons.first;
+            }
+            else {
+                solution.n_standard+=1;
+                solution.t_standard+=standardCons.second-standardCons.first;
+            }
             c.push_back(cons);
             addedCons=standardCons;
         }
@@ -664,26 +670,23 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
         {
             Constraint cons(agent, CTcons.first, CTcons.second,move1 .id1, exit_index, move1.id2);
             addedCons=CTcons;
-            if (move2.id2==move1.id2)
-            {
-                cons.CT=1;
-                solution.n_ct1+=1;
-                solution.t_ct1+=endT-startT;
-            }
-            else
-            {
-                cons.CT=4;
-                solution.n_ct4+=1;
-                solution.t_ct4+=endT-startT;
-            }
+            cons.CT=1;
+            solution.n_ct1+=1;
+            solution.t_ct1+=CTcons.second-CTcons.first;
             c.push_back(cons);
         }
     }
     else{
         Constraint cons(agent, standardCons.first,standardCons.second, move1.id1, exit_index, move1.id2);
         addedCons=standardCons;
-        solution.n_standard+=1;
-        solution.t_standard+=standardCons.second-standardCons.first;
+        if (CT) {
+            solution.n_ct1+=1;
+            solution.n_ct1+=standardCons.second-standardCons.first;
+        }
+        else {
+            solution.n_standard+=1;
+            solution.t_standard+=standardCons.second-standardCons.first;
+        }
         c.push_back(cons);
     }
 
@@ -722,10 +725,10 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
                             int exit_id=id2ind(n.id,move1.id1,agent);
                             Constraint edgeCon(agent,startT,endT,n.id,exit_id,move1.id1);
                             assert(gt(edgeCon.t2,edgeCon.t1));
-                            edgeCon.CT=3;
+                            edgeCon.CT=2;
                             c.push_back(edgeCon);
-                            solution.n_ct3+=1;
-                            solution.t_ct3+=edgeCon.t2-edgeCon.t1;
+                            solution.n_ct2+=1;
+                            solution.t_ct2+=edgeCon.t2-edgeCon.t1;
                         }
                     }
                     //else {
@@ -759,7 +762,9 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
                             int exit_id=id2ind(n.id,move1.id1,agent);
                             Interval enterInterval=binary_search_constraint(agent,tempM,move2);
                             Constraint enterCon(agent,enterInterval.first,enterInterval.second,n.id,enter_index,move1.id1);
-                            enterCon.CT=3;
+                            enterCon.CT=2;
+                            solution.n_ct1+=1;
+                            solution.n_ct1+=enterInterval.second-enterInterval.first;
                             c.push_back(enterCon);
                         }
                     }
@@ -1601,7 +1606,24 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
     {
         node.conflicts = conflictsA;
         for(auto n:new_conflicts)
+        {
+            if(config.ICP || config.CT_abs || config.CT){
+                list<Constraint> cons1=get_constraint(n.agent1,n.move1,n.move2);
+                double c1=0;
+                for (auto it = cons1.begin()++; it != cons1.end(); ++it) {
+                    c1+=it->t2-it->t1;
+                }
+
+                list<Constraint> cons2=get_constraint(n.agent1,n.move1,n.move2);
+                double c2=0;
+                for (auto it = cons2.begin()++; it != cons2.end(); ++it) {
+                    c2+=it->t2-it->t1;
+                }
+
+                n.overcost = std::min(c1, c2);
+            }
             node.conflicts.push_back(n);
+        }
         node.cardinal_conflicts.clear();
         node.semicard_conflicts.clear();
         node.conflicts_num = node.conflicts.size();

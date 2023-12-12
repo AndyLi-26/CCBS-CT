@@ -9,7 +9,7 @@ void logger::write_to_log_summary()
     <<solution.flowtime<<","
     <<solution.makespan<<","
     <<endl;
-  
+
   fw.close();
 }
 
@@ -71,12 +71,6 @@ void logger::write_exp_result(int task_ind)
     <<solution.t_ct1<<","
     <<solution.n_ct2<<","
     <<solution.t_ct2<<","
-    <<solution.n_ct3<<","
-    <<solution.t_ct3<<","
-    <<solution.n_ct4<<","
-    <<solution.t_ct4<<","
-    <<solution.n_ct5<<","
-    <<solution.t_ct5<<","
     <<endl;
   fw.close();
 }
