@@ -153,7 +153,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
     double radius = 2*config.agent_size;
     Interval interval({-1,-1});
 
-    if(config.EQ)
+    if(false)//(config.EQ)
     {
         double i0(map->get_i(move2.id1)), j0(map->get_j(move2.id1)), i1(map->get_i(move2.id2)), j1(map->get_j(move2.id2)), i2(map->get_i(move1.id1)), j2(map->get_j(move1.id1));
         Point point(i2,j2), p0(i0,j0), p1(i1,j1);
@@ -276,7 +276,7 @@ list<Constraint> CBS::get_wait_constraint(int agent, Move move1, Move move2)
     constraint.push_back(waitCon);
     solution.n_standard+=1;
     solution.t_standard+=waitCon.t2-waitCon.t1;
-    if (config.CT && move2.id2==move1.id1)
+    if (config.ICP||(config.CT && move2.id2==move1.id1))
     {
         //return constraint;
         //if (move2.id2==move1.id1)
@@ -606,7 +606,7 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2)
     Interval addedCons;
     list<Constraint> c(0);
     int exit_index=id2ind(move1.id1, move1.id2,agent);
-    if (config.CT_abs || (config.CT && move2.id2==move1.id2)){
+    if (config.ICP || config.CT_abs || (config.CT && move2.id2==move1.id2)){
         double dist=map->get_dist(move1.id1,move1.id2);
         Interval CTcons{-1,-1};
         if(config.EQ){
