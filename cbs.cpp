@@ -724,20 +724,20 @@ list<Constraint> CBS::get_constraint(int agent, Move move1, Move move2,bool CT)
                 double quad_b(-2*dx*unitV.i-2*dy*unitV.j);
                 double quad_c(dx*dx+dy*dy-4*config.agent_size*config.agent_size);
                 pair<double, double> t_pair=solveQuad(quad_a,quad_b,quad_c);
-                Constraint waitCon(agent,t_pair.first,t_pair.second,move1.id1,-1,move1.id1);
+                Constraint waitCon(agent,move1.t1,addedCons.second,move1.id1,-1,move1.id1);
                 c.push_back(waitCon);
                 vector<Node> nodes=map->get_valid_moves(move1.id1);
                 for (Node n :nodes){
                     double dis=map->get_dist(move1.id1,n.id);
                     int enter_index=id2ind(move1.id1,n.id,agent);
                     assert(enter_index!=-2);
-                    Move tempPreMove(addedCons.first,addedCons.second,n.id,move1.id1);
+                    Move tempPreMove(addedCons.second-dis,addedCons.second,n.id,move1.id1);
                     if(config.EQ)
                     {
                         double min_clear=map->get_min_clear_t(tempPreMove,move2.id2);
                         if (eq(min_clear,-1)) //min_clear==-1
                             continue;
-                        double startT(t_pair.second-dis),endT(move2.t2-dis+min_clear);
+                        double startT(addedCons.second-dis),endT(addedCons.second-dis+min_clear);
                         if (gt(startT,0) && gt(min_clear,0))
                         {
                             assert(gt(endT,startT));
@@ -1276,7 +1276,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         else{
-            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==437+1);
+            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==-1);
         }
         /*
         if(IDX==-1)

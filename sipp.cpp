@@ -60,7 +60,8 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                     if(ge_raw(moveCons.second,curNode.interval.second))
                     {
                         //interval.second=curNode.interval.second;
-                        curIntervals.push_back(interval);
+                        //if()
+                        //curIntervals.push_back(interval);
                         break;
                     }
                     //if(lt_raw(moveCons.second,interval.second))
