@@ -264,8 +264,8 @@ if __name__=="__main__":
     name=['vanilla','DS','DSHP','DS-CT','DSHP-CT','DS-GCT','DSHP-GCT']
     markers=['.','o','v','^','1','s','*']
     ls=[(),(1, 1),(1, 5), (5, 8), (3, 10, 1, 10), (3, 5, 1, 5), (3, 5, 2, 5, 1, 5)]
-    #plotTvSolved(ms,solveIns,markers)
-    #plotEXPvSolved(ms,solveIns,markers)
-    #plotSucc(ms,solveIns,markers)
+    plotTvSolved(ms,solveIns,markers)
+    plotEXPvSolved(ms,solveIns,markers)
+    plotSucc(ms,solveIns,markers)
     comp=[(2,6),(1,5)]
-    plotExpvExp()
+    #plotExpvExp()

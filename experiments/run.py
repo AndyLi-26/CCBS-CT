@@ -1,6 +1,6 @@
 import subprocess, os,glob, time,json
 processPool=[]
-exe = "../release/CCBS"
+exe = "../debug/CCBS"
 map_address ="../Instances/roadmaps/{}/map.graph"
 task_address="../Instances/roadmaps/{}/ori_set/{}_task.task"
 output_address="{}-{}-{}-{}-{}.csv"
