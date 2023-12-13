@@ -3,9 +3,9 @@ x={
         "r":"0.5",# 1.5 2.5 3.5 4.5",
         "m":"sparse dense super-dense",
         "es":"0",
-        "ct":"0 2 3",
+        "ct":"3",
         "ds":"1",
-        "h": "0 2",
+        "h": "2",
         "a":" ".join(map(str,range(2,41))),
         "i":" ".join(map(str,range(1,26)))
         }

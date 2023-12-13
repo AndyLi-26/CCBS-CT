@@ -13,3 +13,5 @@ release/
 ./experiments/*.csv
 ./experiments/*/*.csv
 ./experiments/results/*
+./experiments/w.py
+./experiments/config.json

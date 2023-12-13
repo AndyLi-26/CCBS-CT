@@ -1120,7 +1120,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         }
         else
         {
-            constraintA =get_constraint(conflict.agent1, conflict.move1, conflict.move2);
+            if (conflict.cons1.empty())
+                constraintA =get_constraint(conflict.agent1, conflict.move1, conflict.move2);
+            else
+                constraintA=conflict.cons1;
+
             if (debug>0)
             {
                 cout<<"new constraintA:  ";
@@ -1201,7 +1205,10 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             constraintsB.insert(constraintsB.end(),constraintB.begin(),constraintB.end());
         }
         else{
-            constraintB = get_constraint(conflict.agent2, conflict.move2, conflict.move1);
+            if (conflict.cons2.empty())
+                constraintB = get_constraint(conflict.agent2, conflict.move2, conflict.move1);
+            else
+                constraintB=conflict.cons2;
             if (debug>0)
             {
                 cout<<"new constraintB:  ";
@@ -1613,14 +1620,16 @@ void CBS::find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::ve
                 for (auto it = cons1.begin()++; it != cons1.end(); ++it) {
                     c1+=it->t2-it->t1;
                 }
+                n.cons1=cons1;
 
-                list<Constraint> cons2=get_constraint(n.agent1,n.move1,n.move2);
+                list<Constraint> cons2=get_constraint(n.agent1,n.move2,n.move1);
                 double c2=0;
                 for (auto it = cons2.begin()++; it != cons2.end(); ++it) {
                     c2+=it->t2-it->t1;
                 }
+                n.cons2=cons2;
 
-                n.overcost = std::min(c1, c2);
+                n.overcost = c1+c2;
             }
             node.conflicts.push_back(n);
         }
