@@ -175,10 +175,12 @@ def plotSucc(ms,solveIns,markers):
     plt.subplots_adjust(wspace=0.15,hspace=0.35)
     plt.show()
 
-def plotExpvExp():
-    for c in comp:
+def plotTvT():
+    for i,c in enumerate(comp):
+        plt.subplot(2, 2, i+3)
         x=[]
         y=[]
+        solved=[0,0,0,0]#we solved, they solved, both solve, no solved
         for i,d in enumerate(DATAALL):
             algo1=solveIns[c[0]]
             n1=name[c[0]]
@@ -187,44 +189,67 @@ def plotExpvExp():
             n2=name[c[1]]
             d2=d[algo2]
             for j in range(len(d1)):
-                if d1[j][8]==1:
+                solved1=d1[j][8]
+                solved2=d2[j][8]
+
+                if not solved1 and solved2:
+                    solved[0]+=1
+                elif solved1 and not solved2:
+                    solved[1]+=1
+                elif solved1 and solved2:
+                    solved[2]+=1
+                else:
+                    solved[3]+=1
+
+                if solved1:
                     x.append(d1[j][7])
                 else:
                     x.append(30)
 
-                if d2[j][8]==1:
+                if solved2:
                     y.append(d2[j][7])
                 else:
                     y.append(30)
         c=[]
         result=[0,0,0]#better, same, worse
         for i in range(len(x)):
-            if x[i]==m1 and y[i]==m2:
+            if x[i]==30 and y[i]==30:
                 c.append('black')
-            elif x[i]==y[i]:
-                c.append('blue')
-                result[1]+=1
-            elif x[i]>y[i]:
+            elif (x[i]==30 and y[i]!=30) or x[i]>y[i]+0.5:
                 c.append('green')
                 result[0]+=1
-            else:
+            elif (y[i]==30 and x[i]!=30) or y[i]>x[i]+0.5:
                 c.append('red')
                 result[2]+=1
+            else:
+                c.append('blue')
+                result[1]+=1
 
 
-        plt.figure()
-        ref= np.logspace(np.log10(1), np.log10(max(m1,m2)), num=30).tolist()
-        plt.plot(ref,ref)
+        ref= np.logspace(np.log10(0.00005), np.log10(30), num=110).tolist()
+        ref100x= np.logspace(np.log10(0.005), np.log10(30), num=110).tolist()
+        ref100y= np.logspace(np.log10(0.00005), np.log10(0.3), num=110).tolist()
+        ref10x= np.logspace(np.log10(0.0005), np.log10(30), num=110).tolist()
+        ref10y= np.logspace(np.log10(0.00005), np.log10(3), num=110).tolist()
+        ref2x= np.logspace(np.log10(0.0001), np.log10(30), num=110).tolist()
+        ref2y= np.logspace(np.log10(0.00005), np.log10(15), num=110).tolist()
+        plt.plot(ref,ref,c='blue')
+        plt.plot(ref2x,ref2y,c="blue",dashes=(10,10))
+        plt.text(ref2x[-1], ref2y[-1]-1, "2x", color='blue', fontsize=15, ha='right', va='top',fontweight="bold",rotation=40,rotation_mode="default",snap=True)
+        plt.plot(ref10x,ref10y,c="blue",dashes=(10,10))
+        plt.text(ref10x[-1], ref10y[-1]-0.2, "10x", color='blue', fontsize=15, ha='right', va='top',fontweight="bold",rotation=35,rotation_mode="default",snap=True)
+        plt.plot(ref100x,ref100y,c="blue",dashes=(10,10))
+        plt.text(ref100x[-1], ref100y[-1]-0.05, "100x", color='blue', fontsize=15, ha='right', va='top',fontweight="bold",rotation=30,rotation_mode="default",snap=True)
         plt.scatter(x,y,c=c)
         plt.yscale('log')
         plt.xscale('log')
         plt.xlabel(n1)
         plt.ylabel(n2)
-        plt.title("Expansion VS Expansion {} better, {} same, {} worse".format(*result))
-        plt.show()
+        plt.title("runtime VS runtime \n{} better, {} same, {} worse, we solved {} more instances".format(*result,solved[0]-solved[1]))
 
-def plotTvT():
-    for c in comp:
+def plotExpvExp():
+    for i,c in enumerate(comp):
+        plt.subplot(2, 2, i+1)
         m1=m2=0
 
         for i,d in enumerate(DATAALL):
@@ -240,6 +265,7 @@ def plotTvT():
 
         x=[]
         y=[]
+        solved=[0,0,0,0]#we solved, they solved, both solve, no solved
         for i,d in enumerate(DATAALL):
             algo1=solveIns[c[0]]
             n1=name[c[0]]
@@ -248,6 +274,17 @@ def plotTvT():
             n2=name[c[1]]
             d2=d[algo2]
             for j in range(len(d1)):
+                solved1=d1[j][8]
+                solved2=d2[j][8]
+                if not solved1 and solved2:
+                    solved[0]+=1
+                elif solved1 and not solved2:
+                    solved[1]+=1
+                elif solved1 and solved2:
+                    solved[2]+=1
+                else:
+                    solved[3]+=1
+
                 if d1[j][8]==1:
                     x.append(d1[j][12])
                 else:
@@ -271,18 +308,26 @@ def plotTvT():
             else:
                 c.append('red')
                 result[2]+=1
-
-
-        plt.figure()
-        ref= np.logspace(np.log10(1), np.log10(max(m1,m2)), num=30).tolist()
-        plt.plot(ref,ref)
+        ref= np.logspace(np.log10(1), np.log10(max(m1,m2)), num=110).tolist()
+        ref2x= np.logspace(np.log10(2), np.log10(max(m1,m2)), num=110).tolist()
+        ref2y= np.logspace(np.log10(1), np.log10(max(m1,m2)/2), num=110).tolist()
+        ref10x= np.logspace(np.log10(10), np.log10(max(m1,m2)), num=110).tolist()
+        ref10y= np.logspace(np.log10(1), np.log10(max(m1,m2)/10), num=110).tolist()
+        ref100x= np.logspace(np.log10(100), np.log10(max(m1,m2)), num=110).tolist()
+        ref100y= np.logspace(np.log10(1), np.log10(max(m1,m2)/100), num=110).tolist()
+        plt.plot(ref,ref,c='blue')
+        plt.plot(ref2x,ref2y,c="blue",dashes=(10,10))
+        plt.text(ref2x[-1], ref2y[-1]-20000, "2x", color='blue', fontsize=15, ha='right', va='top',fontweight="bold",rotation=40,rotation_mode="default",snap=True)
+        plt.plot(ref10x,ref10y,c="blue",dashes=(10,10))
+        plt.text(ref10x[-1], ref10y[-1]-5000, "10x", color='blue', fontsize=15, ha='right', va='top',fontweight="bold",rotation=35,rotation_mode="default",snap=True)
+        plt.plot(ref100x,ref100y,c="blue",dashes=(10,10))
+        plt.text(ref100x[-1], ref100y[-1]-500, "100x", color='blue', fontsize=15, ha='right', va='top',fontweight="bold",rotation=30,rotation_mode="default",snap=True)
         plt.scatter(x,y,c=c)
         plt.yscale('log')
         plt.xscale('log')
         plt.xlabel(n1)
         plt.ylabel(n2)
-        plt.title("Expansion VS Expansion {} better, {} same, {} worse".format(*result))
-        plt.show()
+        plt.title("Expansion VS Expansion \n {} better, {} same, {} worse, we solved {} more instances".format(*result,solved[0]-solved[1]))
 
 
 
@@ -306,13 +351,17 @@ if __name__=="__main__":
             DATAALL[i][k]=align(d)
 
     ms=["sparse",'dense',"super-dense"]
-    solveIns=['0-0-0-0','0-0-ds-0','0-0-ds-2','0-ct_abs-ds-0','0-ct_abs-ds-2','0-icp-ds-0','0-icp-ds-2']
-    name=['vanilla','DS','DSHP','DS-CT','DSHP-CT','DS-GCT','DSHP-GCT']
+    solveIns=['0-0-ds-0','0-0-ds-2','0-ct_abs-ds-0','0-ct_abs-ds-2','0-icp-ds-0','0-icp-ds-2']
+    name=['DS','DSHP','DS-CT','DSHP-CT','DS-GCT','DSHP-GCT']
     markers=['.','o','v','^','1','s','*']
     ls=[(),(1, 1),(1, 5), (5, 8), (3, 10, 1, 10), (3, 5, 1, 5), (3, 5, 2, 5, 1, 5)]
-    #plotTvSolved(ms,solveIns,markers)
-    #plotEXPvSolved(ms,solveIns,markers)
-    #plotSucc(ms,solveIns,markers)
-    comp=[(2,6),(1,5)]
+    plotTvSolved(ms,solveIns,markers)
+    plotEXPvSolved(ms,solveIns,markers)
+    plotSucc(ms,solveIns,markers)
+    comp=[(1,5),(0,4)]
+    plt.figure()
     plotExpvExp()
     plotTvT()
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.15,hspace=0.3)
+    plt.show()

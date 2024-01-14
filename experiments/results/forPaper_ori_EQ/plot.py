@@ -175,6 +175,67 @@ def plotSucc(ms,solveIns,markers):
     plt.subplots_adjust(wspace=0.15,hspace=0.35)
     plt.show()
 
+def plotTvT():
+    for c in comp:
+        x=[]
+        y=[]
+        solved=[0,0,0,0]#we solved, they solved, both solve, no solved
+        for i,d in enumerate(DATAALL):
+            algo1=solveIns[c[0]]
+            n1=name[c[0]]
+            d1=d[algo1]
+            algo2=solveIns[c[1]]
+            n2=name[c[1]]
+            d2=d[algo2]
+            for j in range(len(d1)):
+                solved1=d1[j][8]
+                solved2=d2[j][8]
+
+                if not solved1 and solved2:
+                    solved[0]+=1
+                elif solved1 and not solved2:
+                    solved[1]+=1
+                elif solved1 and solved2:
+                    solved[2]+=1
+                else:
+                    solved[3]+=1
+
+                if solved1:
+                    x.append(d1[j][7])
+                else:
+                    x.append(30)
+
+                if solved2:
+                    y.append(d2[j][7])
+                else:
+                    y.append(30)
+        c=[]
+        result=[0,0,0]#better, same, worse
+        for i in range(len(x)):
+            if x[i]==30 and y[i]==30:
+                c.append('black')
+            elif x[i]==y[i]:
+                c.append('blue')
+                result[1]+=1
+            elif x[i]>y[i]:
+                c.append('green')
+                result[0]+=1
+            else:
+                c.append('red')
+                result[2]+=1
+
+
+        plt.figure()
+        ref= np.logspace(np.log10(0.00005), np.log10(30), num=110).tolist()
+        plt.plot(ref,ref)
+        plt.scatter(x,y,c=c)
+        plt.yscale('log')
+        plt.xscale('log')
+        plt.xlabel(n1)
+        plt.ylabel(n2)
+        plt.title("runtime VS runtime {} better, {} same, {} worse, {} we solved they didn't, {} they solved we didn't {} both solved, {} non solved".format(*result,*solved))
+        plt.show()
+
 def plotExpvExp():
     for c in comp:
         m1=m2=0
@@ -238,8 +299,6 @@ def plotExpvExp():
 
 
 
-
-
 if __name__=="__main__":
     current_directory = os.getcwd()
     csv_files = [file for file in os.listdir(current_directory) if file.endswith('.csv')]
@@ -264,8 +323,9 @@ if __name__=="__main__":
     name=['vanilla','DS','DSHP','DS-CT','DSHP-CT','DS-GCT','DSHP-GCT']
     markers=['.','o','v','^','1','s','*']
     ls=[(),(1, 1),(1, 5), (5, 8), (3, 10, 1, 10), (3, 5, 1, 5), (3, 5, 2, 5, 1, 5)]
-    plotTvSolved(ms,solveIns,markers)
-    plotEXPvSolved(ms,solveIns,markers)
-    plotSucc(ms,solveIns,markers)
+    #plotTvSolved(ms,solveIns,markers)
+    #plotEXPvSolved(ms,solveIns,markers)
+    #plotSucc(ms,solveIns,markers)
     comp=[(2,6),(1,5)]
     #plotExpvExp()
+    plotTvT()

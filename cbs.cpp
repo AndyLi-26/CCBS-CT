@@ -1329,6 +1329,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             bool vaild=validate_path(constraintsA,pathA);
             cout<<vaild<<endl<<flush;
             assert(false);
+            FAIL("right cost drop");
         }
         if ((pathB.cost>0 && lt(left.cost,node.cost)))
         {
@@ -1338,14 +1339,17 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             bool vaild=validate_path(constraintsB,pathB);
             cout<<vaild<<endl<<flush;
             assert(false);
+            FAIL("left cost drop");
         }
         if ((right.constraint==parent->constraint) && (right.paths.at(0)==parent->paths.at(0)))
         {
             assert(false);
+            FAIL("right same path");
         }
         if ((left.constraint==parent->constraint) && (left.paths.at(0)==parent->paths.at(0)))
         {
             assert(false);
+            FAIL("left same path");
         }
         Constraint positive;
         bool inserted = false;

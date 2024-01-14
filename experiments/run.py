@@ -2,7 +2,7 @@ import subprocess, os,glob, time,json
 processPool=[]
 exe = "../debug/CCBS"
 map_address ="../Instances/roadmaps/{}/map.graph"
-task_address="../Instances/roadmaps/{}/ori_set/{}_task.task"
+task_address="../Instances/roadmaps/{}/large_agent/{}_task.task"
 output_address="{}-{}-{}-{}-{}.csv"
 with open("./config.json","r") as f:
     config=json.loads(f.read())

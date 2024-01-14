@@ -10,6 +10,10 @@ release/
 ./release
 ./test_result.txt
 ./.worktree/*
+./experiments/*
+./experiments
+experiments
+experiments/*
 ./experiments/*.csv
 ./experiments/*/*.csv
 ./experiments/results/*/*
