@@ -1037,7 +1037,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         auto semicard_conflicts = node.semicard_conflicts;
         if(conflicts.empty() && semicard_conflicts.empty() && cardinal_conflicts.empty())
         {
-            prt_paths(paths);
+            //prt_paths(paths);
             if (debug>1){
                 map.prt_validmoves();
             }

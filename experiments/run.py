@@ -1,6 +1,6 @@
 import subprocess, os,glob, time,json
 processPool=[]
-exe = "../debug/CCBS"
+exe = "../release/CCBS"
 map_address ="../Instances/roadmaps/{}/map.graph"
 task_address="../Instances/roadmaps/{}/large_agent/{}_task.task"
 output_address="{}-{}-{}-{}-{}.csv"
@@ -51,7 +51,7 @@ for r in config['r']:
                                     cmd+=["--DS"]
                                 if h=="2":
                                     cmd+=["--Cardinal"]
-                                print(subprocess.list2cmdline(cmd))
+                                print(subprocess.list2cmdline(cmd),flush=True)
 
                                 if (len(processPool)>=3):
                                     finish = False

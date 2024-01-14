@@ -99,7 +99,7 @@ int main(int argc, const char *argv[])
         cout<<"read task success"<<endl;
 
         cout<<"agents_num="<<task.get_agent_num()<<endl;
-        task.prt_agents();
+        //task.prt_agents();
         CBS cbs;
         Solution solution = cbs.find_solution(map, task, config);
         logger log(config,solution);

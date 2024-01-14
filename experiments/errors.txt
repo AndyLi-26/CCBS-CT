@@ -1,2 +1,6 @@
-../debug/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/1_task.task --HI_h 0 -o sparse-0-0-ds-0.csv -a 0.5 --agent_num 13 --timelimit 60 --extra_info 1 --DS
-../debug/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/1_task.task --HI_h 0 -o sparse-0-0-ds-0.csv -a 0.5 --agent_num 11 --timelimit 60 --extra_info 1 --DS
+../release/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/3_task.task --HI_h 0 -o sparse-0-0-0-0.csv -a 0.5 --agent_num 18 --timelimit 60 --extra_info 3
+../release/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/4_task.task --HI_h 0 -o sparse-0-0-0-0.csv -a 0.5 --agent_num 6 --timelimit 60 --extra_info 4
+../release/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/4_task.task --HI_h 0 -o sparse-0-0-0-0.csv -a 0.5 --agent_num 7 --timelimit 60 --extra_info 4
+../release/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/4_task.task --HI_h 0 -o sparse-0-0-0-0.csv -a 0.5 --agent_num 9 --timelimit 60 --extra_info 4
+../release/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/10_task.task --HI_h 0 -o sparse-0-0-0-0.csv -a 0.5 --agent_num 12 --timelimit 60 --extra_info 10
+../release/CCBS -m ../Instances/roadmaps/sparse/map.graph -t ../Instances/roadmaps/sparse/ori_set/10_task.task --HI_h 0 -o sparse-0-0-0-0.csv -a 0.5 --agent_num 13 --timelimit 60 --extra_info 10
