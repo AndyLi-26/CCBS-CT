@@ -498,9 +498,14 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
                     isGoal=(curNode.g==goals[i].interval.first);
                 else
                     isGoal=(lt_raw(curNode.g, goals[i].interval.second) && le_raw(goals[i].interval.first,curNode.interval.second));
-                if(isGoal)//< && <=
+                if(isGoal && (paths[i].cost==-1 || paths[i].cost>curNode.g))//< && <=
                 {
                     paths[i].nodes = reconstruct_path(curNode);
+                    if(p)
+                    {
+                        cout<<"solution: "<<endl;
+                        prt_nodes(paths[i].nodes);
+                    }
                     if(paths[i].nodes.back().g < goals[i].interval.first)
                     {
                         curNode.g = goals[i].interval.first;
@@ -512,7 +517,9 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
                 }
             }
             if(pathFound == int(goals.size()))
+            {
                 return paths;
+            }
         }
         std::list<Node> succs;
         succs.clear();
@@ -752,7 +759,9 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                 if(i == landmarks.size())
                     goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
                 else
+                {
                     goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
+                }
             }
             if(goals.empty())
             {

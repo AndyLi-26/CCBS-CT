@@ -1016,16 +1016,15 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         parent->conflicts.clear();
         parent->cardinal_conflicts.clear();
         parent->semicard_conflicts.clear();
-        //if (node.id==4)
-        //  p=false;
 
         auto paths = get_paths(&node, task.get_agents_size());
         if (debug>0){
             cout<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
-            cout<<"ID: "<<IDX++<<endl;
+            cout<<"ID: "<<IDX<<endl;
             cout<<"before conflict"<<endl;
             prt_paths(paths);
         }
+        //IDX++;
         //if (node.id==66) BREAK=true;
         if (debug >1){
             cout<<"ori map"<<endl;
@@ -1184,7 +1183,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         else{
             if(config.debug>1)
                 cout<<"start planning"<<endl;
-            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values,IDX==-1);
+            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values);
         }
         if (debug>0){
             cout<<"new_path:";
@@ -1276,7 +1275,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         else{
-            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==-1);
+            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values);
         }
         /*
         if(IDX==-1)
@@ -1322,8 +1321,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         CBS_Node left ({pathB}, parent, constraintB,deltasL, node.cost + pathB.cost - get_cost(node, conflict.agent2), 0, node.total_cons + 1);
         if ((pathA.cost>0 && lt(right.cost,node.cost)))
         {
+            cout<<"IDX: "<<IDX<<endl;
             cout<<"p: "<<pathA.cost<<" node: "<<node.cost<<"right: "<<right.cost<<endl;
             prt_path(paths.at(conflict.agent1));
+            cout<<endl<<flush;
+            prt_path(pathA);
             cout<<endl<<flush;
 
             bool vaild=validate_path(constraintsA,pathA);
@@ -1333,8 +1335,11 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         }
         if ((pathB.cost>0 && lt(left.cost,node.cost)))
         {
+            cout<<"IDX: "<<IDX<<endl;
             cout<<"p: "<<pathB.cost<<" node: "<<node.cost<<"left: "<<left.cost<<endl;
             prt_path(paths.at(conflict.agent2));
+            cout<<endl<<flush;
+            prt_path(pathB);
             cout<<endl<<flush;
             bool vaild=validate_path(constraintsB,pathB);
             cout<<vaild<<endl<<flush;
