@@ -22,13 +22,14 @@ class Heuristic
     std::vector<std::vector<double>> h_values;
     Open_Container open;
     Node find_min();
-    double dist(const Node& a, const Node& b){ return std::sqrt(pow(a.i - b.i, 2) + pow(a.j - b.j, 2)); }
+    //double dist(const Node& a, const Node& b){ return std::sqrt(pow(a.i - b.i, 2) + pow(a.j - b.j, 2)); }
 public:
     Heuristic(){}
     void init(unsigned int size, unsigned int agents);
     void count(const Map &map, Agent agent);
+    void scale(double eps);
     unsigned int get_size() const {return h_values[0].size();}
-    double get_value(int id_node, int id_agent) { return h_values[id_node][id_agent]; }
+    double get_value(int id_node, int id_agent) {return h_values[id_node][id_agent]; }
 	void add_node(const Map &map, Map_delta m_del);
   void prt();
 };

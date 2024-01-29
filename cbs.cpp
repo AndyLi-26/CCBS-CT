@@ -978,6 +978,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         Agent agent = task.get_agent(i);
         h_values.count(map, agent);
     }
+    h_values.scale(CN_EPSILON);
     auto t = std::chrono::high_resolution_clock::now();
     int cardinal_solved = 0, semicardinal_solved = 0;
     if(!this->init_root(map, task))
@@ -1024,7 +1025,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<"before conflict"<<endl;
             prt_paths(paths);
         }
-        //IDX++;
+        IDX++;
         //if (node.id==66) BREAK=true;
         if (debug >1){
             cout<<"ori map"<<endl;
@@ -1183,7 +1184,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         else{
             if(config.debug>1)
                 cout<<"start planning"<<endl;
-            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values);
+            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values,IDX==7493);
         }
         if (debug>0){
             cout<<"new_path:";

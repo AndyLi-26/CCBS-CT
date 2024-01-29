@@ -145,9 +145,11 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                     continue;
                 //cout<<"over lapping: "<<endl;
                 auto vis_it = visited.find(make_tuple(move.id,newNode.interval_id,false));
+                /*
                 if (vis_it!=visited.end())
                     if(vis_it->second.second)
                         continue;
+                */
                 if(ge_raw(cur.first+cost,next.first))
                 {
                     newNode.g=cur.first+cost;
@@ -166,7 +168,10 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                     if(le_raw(vis_it->second.first, newNode.g)) // <=
                         continue;
                     else
+                    {
                         vis_it->second.first = newNode.g;
+                        vis_it->second.second=false;
+                    }
                 }
                 else
                     visited.insert({make_tuple(newNode.id,newNode.interval_id,false), {newNode.g, false}});
@@ -487,7 +492,20 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
         {
             v->second.second = true;
         }
+
+        if(p)
+        {
+            cout<<"curNode.g"<<curNode.g<<endl;
+            prt_double(curNode.g);
+            cout<<endl;
+        }
         auto parent = &close.insert({make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark), curNode}).first->second;
+        if(p)
+        {
+            cout<<"parent g"<<parent->g<<endl;
+            prt_double(parent->g);
+            cout<<endl;
+        }
         if(curNode.id == goals[0].id)
         {
             for(unsigned int i = 0; i < goals.size(); i++)
