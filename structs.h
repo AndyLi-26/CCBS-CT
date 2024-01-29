@@ -14,9 +14,14 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/heap/pairing_heap.hpp>
+//#include <boost/heap/fibonacci_heap.hpp>
+#include <boost/heap/pairing_heap.hpp>
 using boost::multi_index_container;
 using namespace boost::multi_index;
 using namespace std;
+//using boost::heap::fibonacci_heap;
+using boost::heap::compare;
 
 inline bool eq(double a, double b);
 inline bool lt(double a, double b);
@@ -71,7 +76,7 @@ struct Config
 
 struct Node
 {
-    int     id;
+    int     id,node_idx;
     double  f, g, i, j,prev_g;
     //int agent;  //visible to some agent, -1 is everyone
     //std::vector<int> negtive_list;
@@ -79,8 +84,50 @@ struct Node
     Interval interval;
     int interval_id;
     bool from_landMark;
-    Node(int _id = -1, double _f = -1, double _g = -1, double _i = -1, double _j = -1, Node* _parent = nullptr, double begin = -1, double end = -1,int _interval_id = 0, bool _from_landMark=false)
-        :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)),interval_id(_interval_id),from_landMark(_from_landMark) {}
+    bool in_openlist=false;
+    //Node(int _id = -1, double _f = -1, double _g = -1, double _i = -1, double _j = -1, Node* _parent = nullptr, double begin = -1, double end = -1,int _interval_id = 0, bool _from_landMark=false)
+    //    :id(_id), f(_f), g(_g), i(_i), j(_j), parent(_parent), interval(std::make_pair(begin, end)),interval_id(_interval_id),from_landMark(_from_landMark) {}
+
+    Node(int n_id):node_idx(n_id){};
+    Node ()
+    {
+        id=-1;f=-1;g=-1;i=-1;j=-1;parent=nullptr;interval=make_pair(-1,-1);interval_id=0;from_landMark=false;
+    };
+    void copy(Node n)
+    {
+        this->id=n.id;
+		this->f=n.f;
+		this->g=n.g;
+		this->prev_g=n.prev_g;
+		this->i=n.i;
+		this->j=n.j;
+		this->parent=n.parent;
+		this->interval=n.interval;
+        this->interval_id=n.interval_id;
+        this->from_landMark=n.from_landMark;
+    };
+	void init(int _id = -1, double _f = -1, double _g = -1, double _i = -1, double _j = -1, Node* _parent = nullptr, double begin = -1, double end = -1,int _interval_id = 0, bool _from_landMark=false){
+        this->id=_id;
+		this->f=_f;
+		this->g=_g;
+		this->i=_i;
+		this->j=_j;
+		this->parent=_parent;
+		this->interval=std::make_pair(begin,end);
+        this->interval_id=_interval_id;
+        this->from_landMark=_from_landMark;
+	};
+
+	struct compare_node
+	{
+		// returns true if n1 > n2 (note -- this gives us *min*-heap).
+		bool operator()(const Node* n1, const Node* n2) const
+		{
+            if (n1->f==n2->f) return n1->g<=n2->g;
+            return n1->f >= n2->f;
+		}
+	};
+
     bool operator <(const Node& other) const //required for heuristic calculation
     {
         return le_raw(this->g,other.g);
@@ -89,11 +136,14 @@ struct Node
     {
         bool operator()(const Node* s1, const Node* s2) const
         {
-
-            return (s1 == s2) || (s1 && s2 &&
-                    s1->id == s2->id) || (s1 && s2 &&
-                        eq(s1->i, s2->i) &&
-                        eq(s1->j, s2->j));
+            if (s1==s2) return true;
+            if (!s1 || !s2) return false;
+            if (s1->node_idx!=-1 && s1->node_idx==s2->node_idx) return true;
+            if (
+                    ((s1->id!=-1 && s1->id==s2->id) || (s1->i==s2->i && s1->j==s2->j))
+                    && s1->interval_id==s2->interval_id && s1->from_landMark == s2->from_landMark)
+                return true;
+            return false;
         }
     };
 
@@ -101,13 +151,20 @@ struct Node
     {
         std::size_t operator()(const Node* n) const
         {
-            size_t a1 = std::hash<int>()(n->i);
-            size_t a2 = std::hash<int>()(n->j);
+            //size_t a1 = std::hash<int>()(n->i);
+            //size_t a2 = std::hash<int>()(n->j);
             //size_t a3 = std::hash<int>()(n->agent);
             //return (a1<<1 ^ (a2 << 1)*(a3 << 1));
-            return (a1<<1 ^ (a2 << 1));
+            //assert(n->id!=-1 && n->g!=-1);
+            size_t loc_hash=std::hash<int>()(n->id);//(a1<<1 ^ (a2 << 1));
+            //size_t t_hash=std::hash<int>()(n->g);
+            size_t interval_hash=std::hash<int>()(n->interval_id);
+            size_t landmark=std::hash<int>()(n->from_landMark);
+            return (loc_hash^(landmark<<1)*(interval_hash<<1));
         }
     };
+	typedef boost::heap::pairing_heap< Node*, compare<Node::compare_node> >::handle_type open_handle_t;
+    open_handle_t open_handle;
 };
 
 struct gNode
