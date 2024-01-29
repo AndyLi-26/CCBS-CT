@@ -696,10 +696,14 @@ vector<Node*> SIPP::endpoints_from_prev(vector<Path> results)
 
 pair<double,double> SIPP::check_endpoint(Node* start, Node* goal,const Map &map)
 {
+
     double cost=map.get_dist(start->id,goal->id);
     double ind=map.id2ind(start->id,goal->id);
+    double startg;
     if(lt_raw(start->g+cost, goal->interval.first)) //<=
-        start->g = goal->interval.first - cost;
+        startg = goal->interval.first - cost;
+    else
+        startg=start->g;
 
     if(constraints.count({start->id, ind}) != 0)
     {
@@ -709,29 +713,29 @@ pair<double,double> SIPP::check_endpoint(Node* start, Node* goal,const Map &map)
             if (config.debug>1 || p)
             {
                 cout<<start->interval.first<<"~"<<start->interval.second<<endl;
-                cout<<"start g: "<<start->g<<" it t1: "<<it->second[i].first<<endl;
+                cout<<"start g: "<<startg<<" it t1: "<<it->second[i].first<<endl;
                 cout<<"g:     0b";
-                prt_double(start->g);
+                prt_double(startg);
 
                 std::cout << std::endl;
                 cout<<"it t1: 0b";
                 prt_double(it->second[i].first);
                 std::cout << std::endl;
             }
-            if(ge_raw(start->g, it->second[i].first)  && lt_raw(start->g, it->second[i].second)) //>= && <
+            if(ge_raw(startg, it->second[i].first)  && lt_raw(startg, it->second[i].second)) //>= && <
             {
                 //cout<<"got here"<<endl;
-                start->g = it->second[i].second;
+                startg = it->second[i].second;
                 //cout<<"new start g"<<start.g<<endl;
                 //prt_double(start.g);
                 //cout<<endl;
             }
         }
     }
-    if(ge_raw(start->g, start->interval.second)  || ge_raw(start->g+cost, goal->interval.second))
+    if(ge_raw(startg, start->interval.second)  || ge_raw(startg+cost, goal->interval.second))
         return {CN_INFINITY,CN_INFINITY};
     else
-        return {start->g, start->g + cost};
+        return {startg, startg + cost};
 }
 
 Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, Heuristic &h_values, bool p)
@@ -854,6 +858,7 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                 starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
                 if (starts.at(0)->interval.first!=0)
                     return Path();
+                cout<<"getting goals"<<endl;
                 goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
             }
             else
@@ -862,6 +867,7 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                 //starts.clear();
                 //for(auto p:results)
                 //    starts.push_back(p.nodes.back());
+                cout<<"getting goals"<<endl;
                 if(i == landmarks.size())
                     goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
                 else
@@ -940,6 +946,8 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                 if(goals.empty())
                     return Path();
                 new_results.clear();
+                cout<<"land mark goals"<<endl;
+                prt_nodes(goals);
                 for(unsigned int k = 0; k < goals.size(); k++)
                 {
                     double best_g(CN_INFINITY),best_prev_g(CN_INFINITY);

@@ -1008,7 +1008,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
     int id = 2;
     int debug=config.debug;
     int IDX=0;
-    int trigger1=-1,trigger2=-1;
+    int trigger1=-1,trigger2=30;
     //bool BREAK=false;
     do
     {
@@ -1491,6 +1491,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
                 gen_new_map(&right);
 
             find_new_conflicts(map, task, right, paths, pathA, conflicts, semicard_conflicts, cardinal_conflicts, low_level_searches, low_level_expanded);
+            cout<<"alsdkjfklajdsfklasjf"<<endl<<flush;
             if (config.ES)
                 gen_original_map(&right);
             time_spent = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - time_now);
