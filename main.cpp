@@ -109,7 +109,7 @@ int main(int argc, const char *argv[])
         auto ICP_s =config.ICP?"true":"false";
         int task_ind=vm["extra_info"].as<int>();
 
-        std::cout<< "Soulution found: " << found <<"\nUse Edge Splitting: "<< Use_edge <<
+        std::cout<< "Soulution found: " << found <<"\nhl heuristic: "<<config.hlh_type<<"\nUse Edge Splitting: "<< Use_edge <<
             "\nconstraint reasoning: "<<Cons_reason<<"\nIncompatable path reasoning: "<<ICP_s<<
             "\nRuntime: "<<solution.time.count() << "\nMakespan: " << solution.makespan << "\nFlowtime: " << solution.flowtime<< "\nInitial Cost: "<<solution.init_cost<< "\nCollision Checking Time: " << solution.check_time
             << "\nHL expanded: " << solution.high_level_expanded << "\nLL searches: " << solution.low_level_expansions << "\nLL expanded(avg): " << solution.low_level_expanded << std::endl;

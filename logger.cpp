@@ -54,6 +54,7 @@ void logger::write_exp_result(int task_ind)
     <<CT<<","
     <<DS<<","
     <<ICP<<","
+    <<config.hlh_type<<","
     <<config.agent_size<<","
     <<task_ind<<","
     <<solution.time.count()<<","
