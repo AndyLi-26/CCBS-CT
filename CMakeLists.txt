@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 2.8 )
 
 project( CCBS )
 
-set(Boost_USE_STATIC_LIBS OFF) 
+set(Boost_USE_STATIC_LIBS OFF)
 
 find_package(Boost)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options)
@@ -11,17 +11,17 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 include_directories( "." )
 
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -Wall -Wextra -ggdb3" )
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall -Wextra" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -Wall -Wextra" )
 #set( CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++" )
-set( SOURCE_FILES 
-     main.cpp  
+set( SOURCE_FILES
+     main.cpp
      tinyxml2.cpp
-     map.cpp 
+     map.cpp
      logger.cpp
-     heuristic.cpp 
-     sipp.cpp 
+     heuristic.cpp
+     sipp.cpp
      task.cpp
-     cbs.cpp 
+     cbs.cpp
      handyFunc.cpp
      edgeSpliter.cpp
 	 simplex/columnset.cpp
@@ -31,12 +31,12 @@ set( SOURCE_FILES
 	 simplex/simplex.cpp
 	 simplex/variable.cpp)
 
-set( HEADER_FILES 
-     const.h  
+set( HEADER_FILES
+     const.h
      tinyxml2.h
-     map.h 
-     heuristic.h 
-     sipp.h 
+     map.h
+     heuristic.h
+     sipp.h
      logger.h
      task.h
      edgeSpliter.h

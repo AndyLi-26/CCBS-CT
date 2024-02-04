@@ -481,7 +481,7 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
         if(config.debug>1 || p)
         {
             cout<<"###########"<<endl;
-            cout<<"poped: "<<endl;
+            cout<<"poped: llid: "<<node_exp<<endl;
             prt_node(curNode);
         }
         auto v = visited.find(make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark));
@@ -499,12 +499,28 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
             prt_double(curNode.g);
             cout<<endl;
         }
-        auto parent = &close.insert({make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark), curNode}).first->second;
+        auto temp=make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark);
+        boost::unordered_map<node_idx, Node>::iterator close_it;
+        Node* parent;
+        close_it=close.find(temp);
+        if (close_it==close.end()) {
+            parent = &close.insert({temp, curNode}).first->second;
+        }
+        else {
+            close_it->second=curNode;
+            parent=&(close_it->second);
+        }
+
         if(p)
         {
             cout<<"parent g"<<parent->g<<endl;
             prt_double(parent->g);
             cout<<endl;
+            if(curNode.id==88)
+            {
+                curNode.id+=1;
+                curNode.id-=1;
+            }
         }
         if(curNode.id == goals[0].id)
         {

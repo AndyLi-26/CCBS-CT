@@ -1021,11 +1021,10 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         auto paths = get_paths(&node, task.get_agents_size());
         if (debug>0){
             cout<<"###   "<<(node.id>1? node.parent->id : -1)<<"->"<<node.id<<"   #####################################"<<endl;
-            cout<<"ID: "<<IDX<<endl;
+            cout<<"ID: "<<IDX++<<endl;
             cout<<"before conflict"<<endl;
             prt_paths(paths);
         }
-        IDX++;
         //if (node.id==66) BREAK=true;
         if (debug >1){
             cout<<"ori map"<<endl;
@@ -1184,7 +1183,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         else{
             if(config.debug>1)
                 cout<<"start planning"<<endl;
-            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values,IDX==7493);
+            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values);
         }
         if (debug>0){
             cout<<"new_path:";

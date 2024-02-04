@@ -2,7 +2,7 @@ import subprocess, os,glob, time,json
 processPool=[]
 exe = "../release/CCBS"
 map_address ="../Instances/roadmaps/{}/map.graph"
-task_address="../Instances/roadmaps/{}/large_agent/{}_task.task"
+task_address="../Instances/roadmaps/{}/ori_set/{}_task.task"
 output_address="{}-{}-{}-{}-{}.csv"
 with open("./config.json","r") as f:
     config=json.loads(f.read())
@@ -15,7 +15,7 @@ for r in config['r']:
         for h in config['h']:
             for es in config['es']:
                 for ct in config['ct']:
-                    if h=="2" and ct=="0": continue
+                    #if h=="2" and ct=="0": continue
                     for ds in config['ds']:
                         for i in config['i']:
                             for a in config['a']:
@@ -34,7 +34,7 @@ for r in config['r']:
                                      "-o", output_address.format(m,es_tag,ct_tag,ds_tag,h),
                                      "-a",r,
                                      "--agent_num",a,
-                                     "--timelimit","30",
+                                     "--timelimit","60",
                                      "--extra_info",i,
                                      #"--EQ"
                                 ]
@@ -53,7 +53,7 @@ for r in config['r']:
                                     cmd+=["--Cardinal"]
                                 print(subprocess.list2cmdline(cmd),flush=True)
 
-                                if (len(processPool)>=3):
+                                if (len(processPool)>=15):
                                     finish = False
                                     while not finish:
                                         time.sleep(1)
