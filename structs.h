@@ -62,6 +62,7 @@ struct Config
     double  agent_size;
     double  min_dis;
     int  timelimit;
+    int nodelimit;
     int 	agent_num;
     //double 	resolution;
     string F_debug_info;

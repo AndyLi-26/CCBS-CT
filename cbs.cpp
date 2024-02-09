@@ -1528,7 +1528,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<left.id<<" new cost: "<<left.cost<<endl;
         }
         time_spent = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t);
-        if(time_spent.count() > config.timelimit)
+        if(time_spent.count() > config.timelimit || (config.nodelimit!=-1 && expanded>config.nodelimit))
         {
             solution.found = false;
             if (debug>0){

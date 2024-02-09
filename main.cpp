@@ -34,6 +34,7 @@ int main(int argc, const char *argv[])
             ("min_distance",po::value<float>()->default_value(0.45))
             ("agent_num",po::value<int>()->required(),"number of agent")
             ("timelimit",po::value<int>()->default_value(30))
+            ("nodelimit",po::value<int>()->default_value(-1))
             ("Cardinal","use cardinal for choose conflict")
             ("DS","use Disjoint_splitting")
             ("CT","use minimum clearance time reasoning")
@@ -67,6 +68,7 @@ int main(int argc, const char *argv[])
 
 
         config.timelimit=vm["timelimit"].as<int>();
+        config.nodelimit=vm["nodelimit"].as<int>();
         config.debug = vm["debug"].as<int>();
 
         bool card=vm.count("Cardinal");
