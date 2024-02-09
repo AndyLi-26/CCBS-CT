@@ -107,7 +107,7 @@ int main(int argc, const char *argv[])
         logger log(config,solution);
         auto found = solution.found?"true":"false";
         auto Use_edge = config.ES?"true":"false";
-        auto Cons_reason =config.CT?"true":"false";
+        auto Cons_reason =(config.CT||config.CT_abs)?"true":"false";
         auto ICP_s =config.ICP?"true":"false";
         int task_ind=vm["extra_info"].as<int>();
 
