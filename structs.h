@@ -558,6 +558,7 @@ struct Solution
     double t_ct2;
     double t_ds;
     double t_standard;
+    unsigned long int counter;
 
     std::chrono::duration<double> time;
     std::chrono::duration<double> init_time;

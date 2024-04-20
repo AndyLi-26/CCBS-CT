@@ -380,97 +380,96 @@ Interval CBS::binary_wait_search_constraint(int agent, Move move1, Move move2)
     Interval interval={-1,-1};
     if(move1.t2==CN_INFINITY)
         move1.t2=move2.t2;
+    if(eq(move1.t1,move1.t2))
+    {
+        assert(move1.t2>move1.t1);
+        //return Constraint(agent, move1.t1, move1.t1+CN_EPSILON, move1.id1, move1.id2);
+        if (CN_EPSILON==0)
+            return {move1.t1,nextafter(move1.t1,CN_INFINITY)};
+        else
+            return {move1.t1,move1.t1+CN_EPSILON};
+    }
     double startTimeA(move1.t1), endTimeA(move1.t2);
-    //Vector2D A(map->get_i(move1.id1), map->get_j(move1.id1)), A2(map->get_i(move1.id2), map->get_j(move1.id2)),
-    //         B(map->get_i(move2.id1), map->get_j(move2.id1)), B2(map->get_i(move2.id2), map->get_j(move2.id2));
     //search the second half working
     double delta = move1.t2 - move1.t1;
-    //cout<<"start: "<<move1<<endl;
-    //while(gt(delta,CN_PRECISION/2.0))
-    Move tempM(move1);
-    tempM.t1=move1.t2-2*CN_EPSILON;
-    if(check_conflict(tempM,move2))
-        interval.second=move1.t2;
-    else {
-        while(!eq(delta,0))
+    double prev;
+    bool changing=true;
+    while(!eq(delta,0) && changing)
+    {
+        solution.counter+=1;
+        if(check_conflict(move1, move2))
         {
-            if(check_conflict(move1, move2))
-            {
-                move1.t1 += delta;
-            }
-            else
-            {
-                move1.t1 -= delta;
-            }
-            //cout<<"start: "<<move1<<endl;
-            if(gt(move1.t1, move1.t2))
-            {
-                move1.t1 = move1.t2;
-                //cout<<"break here"<<endl;
-                break;
-            }
-            delta /= 2.0;
+            prev=move1.t1;
+            move1.t1 += delta;
+            changing=(prev!=move1.t1);
         }
-        //if(le(delta, CN_PRECISION/2.0) && check_conflict(move1, move2))
-        if(eq(delta,0) && check_conflict(move1, move2))
+        else
         {
-            //cout<<"in here"<<endl;
-            move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
-            //cout<<"start: "<<move1<<endl;
-            //move1.t1 = fmax(move1.t1,startTimeA+CN_PRECISION);
-            //cout<<"start: "<<move1<<endl;
+            prev=move1.t1;
+            move1.t1 -= delta;
+            changing=(prev!=move1.t1);
         }
-        move1.t1 = fmin(move1.t1, move1.t2);
-        move1.t1 = fmin(move1.t1, move2.t2);
-        move1.t1 = fmax(move1.t1,startTimeA + CN_EPSILON);
-        interval.second=move1.t1;
+        if(gt(move1.t1, move1.t2))
+        {
+            move1.t1 = move1.t2;
+            break;
+        }
+        delta /= 2.0;
     }
-
-
+    if(eq(delta,0) && check_conflict(move1, move2))
+    {
+        move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
+    }
+    move1.t1 = fmin(move1.t1, move1.t2);
+    move1.t1 = fmin(move1.t1, move2.t2);
+    if (CN_EPSILON==0)
+        move1.t1 = fmax(move1.t1,nextafter(startTimeA,CN_INFINITY));
+    else
+        move1.t1 = fmax(move1.t1,startTimeA+CN_EPSILON);
+    interval.second=move1.t1;
     //reset all the var
     move1.t1=startTimeA;
+    delta = move1.t2 - move1.t1;
 
-    tempM=move1;
-    tempM.t2=move1.t1+2*CN_EPSILON;
-    if(check_conflict(tempM,move2))
-        interval.first=move1.t1;
-    else {
-        delta = move1.t2 - move1.t1;
-
-        //search the first half working
-        //while(gt(delta,CN_PRECISION/2.0))
-        while(!eq(delta,0))
+    changing=true;
+    while(!eq(delta,0) && changing)
+    {
+        solution.counter+=1;
+        if(check_conflict(move1, move2))
         {
-            //cout<<move1<<endl;
-            if(check_conflict(move1, move2))
-            {
-                move1.t2 -= delta;
-                //cout<<"A: ";
-                //cout<<move1<<endl;
-            }
-            else
-            {
-                move1.t2 += delta;
-            }
-            if((lt(move1.t2, move1.t1)))
-            {
-                //cout<<"A: ";
-                move1.t2 = move2.t1;
-                break;
-            }
-            delta /= 2.0;
+            prev=move1.t2;
+            move1.t2 -= delta;
+            changing=(prev!=move1.t2);
         }
-        //if(le(delta, CN_PRECISION/2.0) && check_conflict(move1, move2))
-        if(eq(delta,0) && check_conflict(move1, move2))
+        else
         {
-            move1.t2 = fmax(move1.t2 - delta*2, move2.t1);
-            //move1.t2 = fmin(move1.t2,interval.second-CN_PRECISION);
+            prev=move1.t2;
+            move1.t2 += delta;
+            changing=(prev!=move1.t2);
         }
-        move1.t2 = fmax(move1.t2, move1.t1);
-        move1.t2 = fmax(move1.t2, move2.t1);
-        move1.t2 = fmin(move1.t2,interval.second - CN_EPSILON);
-        interval.first=move1.t2;
+        if((lt(move1.t2, move1.t1)))
+        {
+            move1.t2 = move1.t1;
+            break;
+        }
+        delta /= 2.0;
     }
+    if(eq(delta,0) && check_conflict(move1, move2))
+    {
+        move1.t2 = fmax(move1.t2 - delta*2, move2.t1);
+    }
+    move1.t2 = fmax(move1.t2, move1.t1);
+    move1.t2 = fmax(move1.t2, move2.t1);
+    if (CN_EPSILON==0)
+        move1.t2 = fmin(move1.t2,nextafter(interval.second,0));
+    else
+        move1.t2 = fmin(move1.t2,interval.second - CN_EPSILON);
+    interval.first=move1.t2;
+    if (interval.first==interval.second)
+        if (CN_EPSILON==0)
+            interval.second=nextafter(interval.first,CN_INFINITY);
+        else
+            interval.second=interval.first+CN_EPSILON;
     assert(interval.first!=-1 && interval.second!=-1);
     assert(lt_raw(interval.first,interval.second));
     return interval;
@@ -570,21 +569,31 @@ Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
     if(move2.t2 == CN_INFINITY)
         return make_pair(move1.t1,CN_INFINITY);
     double delta = move2.t2 - move1.t1;
+    double prev;
+    bool changing=true;
     //cout<<"start: "<<move1.t1<<endl;
-    while(!eq(delta,0))
+    while(!eq(delta,0) && changing)
     {
         //cout<<move1<<endl;
         if(check_conflict(move1, move2))
         {
             //cout<<"A"<<endl;
+            prev=move1.t1;
             move1.t1 += delta;
+            changing=(prev!=move1.t1);
+            prev=move1.t2;
             move1.t2 += delta;
+            changing&=(prev!=move1.t2);
         }
         else
         {
             //cout<<"B"<<endl;
+            prev=move1.t1;
             move1.t1 -= delta;
+            changing=(prev!=move1.t1);
+            prev=move1.t2;
             move1.t2 -= delta;
+            changing&=(prev!=move1.t2);
         }
         //cout<<"after shift"<<move1<<endl;
         if(gt(move1.t1, move2.t2))
@@ -607,7 +616,10 @@ Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
     }
     move1.t1 = fmin(move1.t1, move1.t2);
     move1.t1 = fmin(move1.t1, move2.t2);
-    move1.t1 = fmax(move1.t1,startTimeA+CN_EPSILON);
+    if (CN_EPSILON==0)
+        move1.t1 = fmax(move1.t1,nextafter(startTimeA,CN_INFINITY));
+    else
+        move1.t1 = fmax(move1.t1,startTimeA+CN_EPSILON);
     return make_pair(startTimeA,move1.t1);
 }
 

@@ -636,8 +636,12 @@ pair<double,double> SIPP::check_endpoint(Node start, Node goal,const Map &map)
     //double cost = sqrt(pow(start.i - goal.i, 2) + pow(start.j - goal.j, 2));
     double cost=map.get_dist(start.id,goal.id);
     double ind=map.id2ind(start.id,goal.id);
+    double end=start.g+cost;
     if(lt_raw(start.g+cost, goal.interval.first)) //<=
+    {
         start.g = goal.interval.first - cost;
+        end=goal.interval.first;
+    }
 
     if(constraints.count({start.id, ind}) != 0)
     {
@@ -660,6 +664,7 @@ pair<double,double> SIPP::check_endpoint(Node start, Node goal,const Map &map)
             {
                 //cout<<"got here"<<endl;
                 start.g = it->second[i].second;
+                end=start.g+cost;
                 //cout<<"new start g"<<start.g<<endl;
                 //prt_double(start.g);
                 //cout<<endl;
@@ -928,8 +933,9 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                             //cout<<"add extra wait: "<<endl;
                             new_results.back().nodes.push_back(new_results.back().nodes.back());
                             new_results.back().nodes.back().g = goals[k].prev_g;
-                            //new_results.back().nodes.back().prev_g = goals[k].prev_g;
+                            new_results.back().nodes.back().prev_g = goals[k].prev_g;
                             new_results.back().nodes.back().interval.first = goals[k].prev_g;
+                            //new_results.back().nodes.back().prev_g = goals[k].prev_g;
                             //cout<<"new back1"<<endl;
                             //prt_node(new_results.back().nodes.back());
                         }
@@ -958,7 +964,6 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
     }
     else
     {
-
         starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
         goals = {get_endpoints(agent.goal_id, agent.goal_i, agent.goal_j, 0, CN_INFINITY).back()};
         //cout<<"goals: "<<endl;
