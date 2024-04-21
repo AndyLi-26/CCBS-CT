@@ -674,7 +674,7 @@ pair<double,double> SIPP::check_endpoint(Node start, Node goal,const Map &map)
     if(ge_raw(start.g, start.interval.second)  || ge_raw(start.g+cost, goal.interval.second))
         return {CN_INFINITY,CN_INFINITY};
     else
-        return {start.g, start.g + cost};
+        return {start.g, end};
 }
 
 Path SIPP::find_path(Agent agent, const Map &map, std::list<Constraint> cons, Heuristic &h_values, bool p)
@@ -786,8 +786,6 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
             if(i == 0)
             {
                 starts = {get_endpoints(agent.start_id, agent.start_i, agent.start_j, 0, CN_INFINITY).at(0)};
-                if (starts.at(0).interval.first!=0)
-                    return Path();
                 goals = get_endpoints(landmarks[i].id1, map.get_i(landmarks[i].id1), map.get_j(landmarks[i].id1), landmarks[i].t1, landmarks[i].t2);
             }
             else
@@ -890,13 +888,13 @@ Path SIPP::find_path_aux(Agent agent, const Map &map, std::list<Constraint> cons
                         {
                             best_start_id = j;
                             best_g = g_val.second;
+                            best_prev_g=g_val.first;
                             //cout<<"best_g: "<<g_val.first<<endl;
                             //prt_double(g_val.first);
                             //cout<<endl;
                             //cout<<"best_preb_g: "<<g_val.second<<endl;
                             //prt_double(g_val.second);
                             //cout<<endl;
-                            best_prev_g=g_val.first;
                         }
                     }
                     if(best_start_id >= 0)
