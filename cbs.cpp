@@ -1037,7 +1037,6 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<"before conflict"<<endl;
             prt_paths(paths);
         }
-        cout<<"ID: "<<IDX++<<endl;
         //if (node.id==66) BREAK=true;
         if (debug >1){
             cout<<"ori map"<<endl;
