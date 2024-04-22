@@ -61,6 +61,7 @@ class CBS
     void prt_conflict(Conflict conflict);
     void prt_conflicts(list<Conflict> conflicts);
     void prt_path(sPath p);
+    void prt_bin_path(sPath p);
     void prt_paths(std::vector<sPath> paths);
     void prt_map_deltas(Map_deltas R,Map_deltas L);
     void prt_map_deltas_aux(Map_deltas md);

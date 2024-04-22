@@ -1331,7 +1331,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         low_level_expanded += pathB.expanded;
         CBS_Node right({pathA}, parent, constraintA,deltasR, node.cost + pathA.cost - get_cost(node, conflict.agent1), 0, node.total_cons + 1);
         CBS_Node left ({pathB}, parent, constraintB,deltasL, node.cost + pathB.cost - get_cost(node, conflict.agent2), 0, node.total_cons + 1);
-        if ((pathA.cost>0 && lt(right.cost,node.cost)))
+        if (pathA.cost>0 && pathA.cost<get_cost(node,conflict.agent1))
         {
             cout<<"IDX: "<<IDX<<endl;
             cout<<"p: "<<pathA.cost<<" node: "<<node.cost<<"right: "<<right.cost<<endl;
@@ -1345,13 +1345,24 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             assert(false);
             FAIL("right cost drop");
         }
-        if ((pathB.cost>0 && lt(left.cost,node.cost)))
+        if (pathB.cost>0 && pathB.cost<get_cost(node,conflict.agent2))
         {
             cout<<"IDX: "<<IDX<<endl;
             cout<<"p: "<<pathB.cost<<" node: "<<node.cost<<"left: "<<left.cost<<endl;
+            cout<<"parent node cost: ";
+            prt_double(node.cost);
+            cout<<endl;
+            cout<<"left.cost=node.cost+pathB.cost-get_cost(node,a2)"<<endl;
+            cout<<"left node cost:   ";
+            prt_double(left.cost);
+            cout<<endl;
+            cout<<"old path: ";
             prt_path(paths.at(conflict.agent2));
+            prt_bin_path(paths.at(conflict.agent2));
             cout<<endl<<flush;
+            cout<<"new path: ";
             prt_path(pathB);
+            prt_bin_path(pathB);
             cout<<endl<<flush;
             bool vaild=validate_path(constraintsB,pathB);
             cout<<vaild<<endl<<flush;
@@ -2101,6 +2112,16 @@ void CBS::prt_path(sPath p)
     cout<<p.agentID<<":";
     for (sNode n:p.nodes){
         cout<<"("<<n.id<<","<<n.g<<")->";
+    }
+}
+
+void CBS::prt_bin_path(sPath p)
+{
+    cout<<p.agentID<<":";
+    for (sNode n:p.nodes){
+        cout<<n.id<<" "<<n.g<<"   ";
+        prt_double(n.g);
+        cout<<endl;
     }
 }
 
