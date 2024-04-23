@@ -72,6 +72,7 @@ class CBS
     void prt_history(CBS_Node *node);
     bool validate_path(list<Constraint> constraints,sPath p);
 
+
     void post_check(vector<sPath> Paths);
     Vector2D ind2Vec(int nodeId);
     CBS_Tree tree;
@@ -82,6 +83,7 @@ class CBS
     Map* map;
     Map* original;
     typedef boost::unordered_map<int,CBS_Node_aux*> tree_aux;
+    bool start_debug;
     tree_aux tree_info;
 
 };

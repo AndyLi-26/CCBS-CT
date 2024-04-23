@@ -90,7 +90,6 @@ struct Node
     node_idx get_idx()
     {
         return make_tuple(this->id,this->interval_id,this->from_landMark);
-
     }
     struct eqnode
     {
@@ -233,7 +232,8 @@ struct Constraint
         if (con.positive){
             os<<"+";
         }
-        os<<"CT: "<<con.CT<<" a:" <<con.agent <<"["<< con.id1<<"->"<<con.to_id<<"]"<<"("<<con.t1<<"~"<<con.t2<<")";//<<con.i1<<" "<<con.j1<<" "<<con.i2<<" "<<con.j2<<"\n";
+        //os<<"CT: "<<con.CT<<" a:" <<con.agent <<"["<< con.id1<<"->"<<con.to_id<<"]"<<"("<<con.t1<<"~"<<con.t2<<")";//<<con.i1<<" "<<con.j1<<" "<<con.i2<<" "<<con.j2<<"\n";
+        os<<" a:" <<con.agent <<"["<< con.id1<<"->"<<con.to_id<<"]"<<"("<<con.t1<<"~"<<con.t2<<")";
         return os;
     }
     bool operator <(const Constraint& other) const
