@@ -566,6 +566,8 @@ struct Solution
     double t_ds;
     double t_standard;
     unsigned long int counter;
+    bool gdrop;
+    bool infloop;
 
     std::chrono::duration<double> time;
     std::chrono::duration<double> init_time;
@@ -573,7 +575,8 @@ struct Solution
     Solution(double _flowtime = -1, double _makespan = -1, std::vector<sPath> _paths = {})
         : flowtime(_flowtime), makespan(_makespan), paths(_paths) { init_cost = -1; constraints_num = 0; low_level_expanded = 0; low_level_expansions = 0; cardinal_solved = 0; semicardinal_solved = 0; max_constraints = 0; new_node=-1;
             n_ct1=0;n_ct2=0;n_ds=0;n_standard=0;
-            t_ct1=0;t_ct2=0;t_ds=0;t_standard=0;}
+            t_ct1=0;t_ct2=0;t_ds=0;t_standard=0;
+            gdrop=false;infloop=false;}
     ~Solution() { paths.clear(); found = false;}
 };
 

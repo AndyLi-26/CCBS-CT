@@ -1365,6 +1365,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         CBS_Node left ({pathB}, parent, constraintB,deltasL, node.cost + pathB.cost - get_cost(node, conflict.agent2), 0, node.total_cons + 1);
         if (pathA.cost>0 && pathA.cost<get_cost(node,conflict.agent1))
         {
+            solution.gdrop=true;
+            /*
             cout<<"IDX: "<<IDX<<endl;
             cout<<"p: "<<pathA.cost<<" node: "<<node.cost<<"right: "<<right.cost<<endl;
             prt_path(paths.at(conflict.agent1));
@@ -1376,9 +1378,12 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<vaild<<endl<<flush;
             assert(false);
             FAIL("right cost drop");
+            */
         }
         if (pathB.cost>0 && pathB.cost<get_cost(node,conflict.agent2))
         {
+            solution.gdrop=true;
+            /*
             cout<<"IDX: "<<IDX<<endl;
             cout<<"p: "<<pathB.cost<<" node: "<<node.cost<<"left: "<<left.cost<<endl;
             cout<<"parent node cost: ";
@@ -1400,7 +1405,9 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<vaild<<endl<<flush;
             assert(false);
             FAIL("left cost drop");
+            */
         }
+        /*
         if ((right.constraint==parent->constraint) && (right.paths.at(0)==parent->paths.at(0)))
         {
             assert(false);
@@ -1414,7 +1421,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
                     prt_double(constraintsB.begin()->t2);
             assert(false);
             FAIL("left same path");
-        }
+        }*/
         Constraint positive;
         bool inserted = false;
         bool left_ok = true, right_ok = true;
@@ -1591,6 +1598,26 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<"time so far:"<<time_spent.count()<<endl<<flush;
         if((config.timelimit!=-1 && time_spent.count() > config.timelimit) || (config.nodelimit!=-1 && expanded>config.nodelimit))
         {
+            //if (IDX>2)
+            {
+                CBS_Node* curNode = &node;
+                Constraint prev_cons(*(curNode->constraint.begin()));
+                sPath prev_path(curNode->paths.at(0));
+                curNode = curNode->parent;
+                while(curNode->parent != nullptr)
+                {
+                    //cout<<prev_cons<<endl;
+                    if ((*(curNode->constraint.begin()))==prev_cons && curNode->paths.at(0)==prev_path)
+                    {
+                        solution.infloop=true;
+                        break;
+                    }
+                    prev_cons=*(curNode->constraint.begin());
+                    prev_path=curNode->paths.at(0);
+                    curNode = curNode->parent;
+                }
+            }
+
             solution.found = false;
             if (debug>0){
                 printBT_aux();

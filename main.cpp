@@ -122,6 +122,10 @@ int main(int argc, const char *argv[])
         cout<<" ds  n: "<<solution.n_ds<<"  ave t: "<<(solution.t_ds/solution.n_ds)<<endl;
         cout<<" ct  n: "<<solution.n_ct1<<" ave t: "<<(solution.t_ct1/solution.n_ct1)<<endl;
         cout<<" Gct ct  n: "<<solution.n_ct2<< " ave t: "<< (solution.t_ct2/solution.n_ct2)<<endl;
+        auto gdrop = solution.gdrop?"true":"false";
+        auto infloop = solution.infloop?"true":"false";
+        cout<<"gdrop: "<<gdrop<<endl;
+        cout<<"inf  loop: "<<infloop<<endl;
 
         if (config.F_solution!="")
         {

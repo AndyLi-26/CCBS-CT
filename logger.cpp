@@ -72,6 +72,8 @@ void logger::write_exp_result(int task_ind)
     <<solution.t_ct1<<","
     <<solution.n_ct2<<","
     <<solution.t_ct2<<","
+    <<solution.gdrop<<","
+    <<solution.infloop<<","
     <<endl;
   fw.close();
 }
