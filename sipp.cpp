@@ -144,7 +144,9 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
                 if(!(lt_raw(cur.first+cost,next.second) && gt_raw(cur.second,next.first-cost)))
                     continue;
                 //cout<<"over lapping: "<<endl;
-                auto vis_it = visited.find(make_tuple(move.id,newNode.interval_id,false));
+                //auto vis_it = visited.find(make_tuple(move.id,newNode.interval_id,false));
+                assert(newNode.id==move.id);
+                auto vis_it = visited.find(newNode.get_idx());
                 /*
                 if (vis_it!=visited.end())
                     if(vis_it->second.second)
@@ -165,24 +167,39 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
 
                 if(vis_it != visited.end())
                 {
+                    /*
+                       if(p)
+                       {
+                       cout<<" reexpanding: "<<endl;
+                       cout<<"prev: "<<vis_it->second.first<<endl;
+                       prt_double(vis_it->second.first);
+                       cout<<endl;
+                       cout<<"new : "<<newNode.g<<endl;
+                       prt_double(newNode.g);
+                       cout<<endl;
+
+                       }*/
                     if(le_raw(vis_it->second.first, newNode.g)) // <=
                         continue;
                     else
                     {
+                        if(p)
+                            cout<<"updated"<<endl;
                         vis_it->second.first = newNode.g;
                         vis_it->second.second=false;
                     }
                 }
                 else
-                    visited.insert({make_tuple(newNode.id,newNode.interval_id,false), {newNode.g, false}});
+                    visited.insert({newNode.get_idx(), {newNode.g, false}});
+
                 if(goal.id == agent.goal_id) //perfect heuristic is known
-                    newNode.f = newNode.g + h_values.get_value(newNode.id, agent.id);
+                    newNode.f= (newNode.g + h_values.get_value(newNode.id, agent.id));
                 else
                 {
                     double h = sqrt(pow(goal.i - newNode.i, 2) + pow(goal.j - newNode.j, 2));
                     for(unsigned int i = 0; i < h_values.get_size(); i++) //differential heuristic with pivots placed to agents goals
                         h = std::max(h, fabs(h_values.get_value(newNode.id, i) - h_values.get_value(goal.id, i)));
-                    newNode.f = newNode.g + h;
+                    newNode.f=newNode.g + h;
                 }
                 succs.push_back(newNode);
                 break;
@@ -204,10 +221,25 @@ void SIPP::find_successors(Node curNode, const Map &map, std::list<Node> &succs,
     if(config.debug>1 || p)
         cout<<"----------"<<endl;
 }
+/*
+double SIPP::get_f(Node newNode,  Heuristic &h_values)
+{
+    if(goal.id == agent.goal_id) //perfect heuristic is known
+        return (newNode.g + h_values.get_value(newNode.id, agent.id));
+    else
+    {
+        double h = sqrt(pow(goal.i - newNode.i, 2) + pow(goal.j - newNode.j, 2));
+        for(unsigned int i = 0; i < h_values.get_size(); i++) //differential heuristic with pivots placed to agents goals
+            h = std::max(h, fabs(h_values.get_value(newNode.id, i) - h_values.get_value(goal.id, i)));
+        return newNode.g + h;
+    }
+}*/
 
 Node SIPP::find_min()
 {
     Node min = *open.begin();
+    if (p)
+        prt_nodes(open);
     open.pop_front();
     return min;
 }
@@ -235,6 +267,68 @@ void SIPP::add_open(Node newNode)
     open.push_back(newNode);
     return;
 }
+bool SIPP::relax(Node newNode)
+{
+    if (open.empty())
+        return false;
+
+    node_idx new_idx=newNode.get_idx();
+    for(auto iter = open.begin(); iter != open.end(); ++iter)
+    {
+        if (iter->get_idx()==new_idx)
+        {
+            if (newNode.g <= iter->g)
+            {
+                open.erase(iter);
+                return true;
+                /*
+                if(p)
+                {
+                    cout<<"relaxed: "<<endl;
+                    cout<<"ori: "<<endl;
+                    prt_node(*iter);
+                }
+                iter->parent=newNode.parent;
+                iter->g=newNode.g;
+                iter->prev_g=newNode.prev_g;
+                iter->f=newNode.f;
+                iter->interval=newNode.interval;
+                if(p)
+                {
+                    cout<<"newnode: "<<endl;
+                    prt_node(newNode);
+                    cout<<"open node"<<endl;
+                    prt_node(*iter);
+                }*/
+            }
+            if (newNode.f< iter->f)
+            {
+                open.erase(iter);
+                return true;
+                /*
+                if(p)
+                {
+                    cout<<"relaxed: "<<endl;
+                    cout<<"ori: "<<endl;
+                    prt_node(*iter);
+                }
+                iter->parent=newNode.parent;
+                iter->prev_g=newNode.prev_g;
+                iter->f=newNode.f;
+                iter->interval=newNode.interval;
+                if(p)
+                {
+                    cout<<"newnode: "<<endl;
+                    prt_node(newNode);
+                    cout<<"open node"<<endl;
+                    prt_node(*iter);
+                }
+                return true;*/
+            }
+        }
+    }
+    return false;
+}
 
 std::vector<Node> SIPP::reconstruct_path(Node curNode)
 {
@@ -243,7 +337,7 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
         do
         {
             if (config.debug>1 || p)
-                cout<<curNode.parent->id<<"@"<<curNode.parent->g<<"->"<<(curNode.prev_g)<<"->"<<curNode.id<<"@"<<curNode.g<<endl;
+                cout<<curNode.parent->id<<"@"<<curNode.parent->g<<"->"<<(curNode.prev_g)<<"->"<<curNode.id<<"@"<<curNode.g<<endl<<flush;
             assert(curNode.prev_g!=-1);
             assert(curNode.prev_g>=curNode.parent->g);
             path.nodes.insert(path.nodes.begin(), curNode);
@@ -260,11 +354,11 @@ std::vector<Node> SIPP::reconstruct_path(Node curNode)
         while(curNode.parent != nullptr);
     path.nodes.insert(path.nodes.begin(), curNode);
     /*if(!eq_raw(curNode.g,0))
-    {
-        Node add = curNode;
-        add.g = 0;
-        path.nodes.insert(path.nodes.begin(), add);
-    }*/
+      {
+      Node add = curNode;
+      add.g = 0;
+      path.nodes.insert(path.nodes.begin(), add);
+      }*/
     if(config.debug>1 || p)
     {
         cout<<"recons nodes: "<<endl;
@@ -476,15 +570,21 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
     Node curNode;
     while(!open.empty())
     {
+        if(config.debug>1 || p)
+        {
+            cout<<"############################################################"<<endl;
+            cout<<"poped: llid: "<<node_exp<<endl;
+        }
         curNode = find_min();
         node_exp+=1;
         if(config.debug>1 || p)
         {
-            cout<<"###########"<<endl;
-            cout<<"poped: llid: "<<node_exp<<endl;
+            cout<<"poped node: "<<endl;
             prt_node(curNode);
         }
-        auto v = visited.find(make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark));
+        node_idx curNode_idx=make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark);
+
+        auto v = visited.find(curNode_idx);
         if(v->second.second){
             continue;
         }
@@ -499,12 +599,11 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
             prt_double(curNode.g);
             cout<<endl;
         }
-        auto temp=make_tuple(curNode.id,curNode.interval_id,curNode.from_landMark);
         boost::unordered_map<node_idx, Node>::iterator close_it;
         Node* parent;
-        close_it=close.find(temp);
+        close_it=close.find(curNode_idx);
         if (close_it==close.end()) {
-            parent = &close.insert({temp, curNode}).first->second;
+            parent = &close.insert({curNode_idx, curNode}).first->second;
         }
         else {
             close_it->second=curNode;
@@ -567,6 +666,8 @@ std::vector<Path> SIPP::find_partial_path(std::vector<Node> starts, std::vector<
                 continue;
             }
             it->parent = parent;
+            relax(*it);
+            //if (!relax(*it))
             add_open(*it);
             node_open+=1;
             it++;
@@ -737,6 +838,18 @@ void SIPP::prt_nodes(std::vector<Node> nodes)
 {
     for (Node n:nodes){
         prt_node(n);
+        prt_double(n.g);
+        cout<<endl;
+    }
+}
+
+void SIPP::prt_nodes(std::list<Node> nodes)
+{
+    for (Node n:nodes){
+        prt_node(n);
+        cout<<"f: ";
+        prt_double(n.f);
+        cout<<endl<<"g: ";
         prt_double(n.g);
         cout<<endl;
     }

@@ -70,6 +70,7 @@ struct Config
     string F_exp;
 };
 
+typedef tuple<int,int,bool> node_idx;
 struct Node
 {
     int     id;
@@ -85,6 +86,11 @@ struct Node
     bool operator <(const Node& other) const //required for heuristic calculation
     {
         return le_raw(this->g,other.g);
+    }
+    node_idx get_idx()
+    {
+        return make_tuple(this->id,this->interval_id,this->from_landMark);
+
     }
     struct eqnode
     {
@@ -236,7 +242,8 @@ struct Constraint
     }
     bool operator ==(const Constraint& other) const
     {
-        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2 && eq(t1,other.t1) && eq(t2,other.t2) && positive==other.positive;
+        return agent==other.agent && id1==other.id1 && to_id==other.to_id &&id2==other.id2
+            && t1==other.t1 && t2==other.t2 && positive==other.positive;
     }
 };
 

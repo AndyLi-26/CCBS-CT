@@ -25,6 +25,7 @@ private:
     Path add_part(Path result, Path part);
     void find_successors(Node curNode, const Map &map, std::list<Node> &succs, Heuristic &h_values, Node goal);
     void add_open(Node newNode);
+    bool relax(Node newNode);
     Node find_min();
     double dist(const Node &a, const Node &b);
     std::vector<Node> reconstruct_path(Node curNode);
@@ -35,7 +36,6 @@ private:
     std::vector<Node> get_endpoints(int node_id, double node_i, double node_j, double t1, double t2);
     pair<double,double> check_endpoint(Node start, Node goal,const Map &map);
 
-    typedef std::tuple<int,int,bool> node_idx;
     //std::unordered_map<int, Node> close;
     boost::unordered_map<node_idx, Node> close;
     std::list<Node> open;
@@ -52,6 +52,7 @@ private:
     void prt_cons();
     void prt_node(Node n);
     void prt_nodes(vector<Node> nodes);
+    void prt_nodes(list<Node> nodes);
 void prt_intervals();
 void prt_constraints(list<Constraint> constraints);
 void prt_info(){

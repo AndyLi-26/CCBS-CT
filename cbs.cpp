@@ -471,6 +471,7 @@ Interval CBS::binary_wait_search_constraint(int agent, Move move1, Move move2)
         else
             interval.second=interval.first+CN_EPSILON;
     assert(interval.first!=-1 && interval.second!=-1);
+    assert(interval.second<CN_INFINITY);
     assert(lt_raw(interval.first,interval.second));
     return interval;
 }
@@ -524,45 +525,6 @@ double CBS::get_hl_heuristic(const std::list<Conflict> &conflicts)
     }
 }
 
-/*
-   Vector2D CBS::binary_search_constraint(int agent, Move move1, Move move2)
-   {
-   double startTimeA(move1.t1), endTimeA(move1.t2);
-   Vector2D A(map->get_coord(move1.id1)), A2(map->get_coord(move1.id2)),
-   B(map->get_coord(move2.id1)), B2(map->get_coord(move2.id2));
-
-   double delta = move2.t2 - move1.t1;
-   while(delta > CN_PRECISION/2.0)
-   {
-   if(check_conflict(move1, move2))
-   {
-   move1.t1 += delta;
-   move1.t2 += delta;
-   }
-   else
-
-   move1.t1 -= delta;
-   move1.t2 -= delta;
-   }
-   if(gt(move1.t1, move2.t2))
-   {
-   move1.t1 = move2.t2;
-   move1.t2 = move1.t1 + endTimeA - startTimeA;
-   break;
-   }
-   delta /= 2.0;
-   }
-
-   if(le(delta, CN_PRECISION/2.0) && check_conflict(move1, move2))
-   {
-   move1.t1 = fmin(move1.t1 + delta*2, move2.t2);
-   move1.t1 = fmax(move1.t1,startTimeA+CN_PRECISION);
-   move1.t2 = move1.t1 + endTimeA - startTimeA;
-   }
-
-   return Vector2D(startTimeA,move1.t1);
-   }
-   */
 Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
 {
     double startTimeA(move1.t1), endTimeA(move1.t2);
@@ -575,6 +537,7 @@ Interval CBS::binary_search_constraint(int agent, Move move1, Move move2)
     while(!eq(delta,0) && changing)
     {
         //cout<<move1<<endl;
+        solution.counter+=1;
         if(check_conflict(move1, move2))
         {
             //cout<<"A"<<endl;
@@ -1195,7 +1158,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         else{
             if(config.debug>1)
                 cout<<"start planning"<<endl;
-            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values);
+            pathA = planner.find_path(task.get_agent(conflict.agent1), map, constraintsA, h_values,IDX==-1);
         }
         if (debug>0){
             cout<<"new_path:";
@@ -1243,6 +1206,13 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             {
                 cout<<"new constraintB:  ";
                 prt_constraints(constraintB);
+                if(IDX==41822)
+                {
+                    prt_double(constraintsB.begin()->t1);
+                    cout<<endl;
+                    prt_double(constraintsB.begin()->t2);
+                    cout<<endl;
+                }
             }
             /*if (std::find(constraintsB.begin(),constraintsB.end(),*constraintB.begin())!=constraintsB.end()){
               cout<<"breaking B";
@@ -1287,7 +1257,7 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             }
         }
         else{
-            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values);
+            pathB = planner.find_path(task.get_agent(conflict.agent2), map, constraintsB, h_values,IDX==-1);
         }
         /*
         if(IDX==-1)
@@ -1358,10 +1328,12 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<endl;
             cout<<"old path: ";
             prt_path(paths.at(conflict.agent2));
+            cout<<endl<<flush;
             prt_bin_path(paths.at(conflict.agent2));
             cout<<endl<<flush;
             cout<<"new path: ";
             prt_path(pathB);
+            cout<<endl<<flush;
             prt_bin_path(pathB);
             cout<<endl<<flush;
             bool vaild=validate_path(constraintsB,pathB);
@@ -1376,6 +1348,12 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
         }
         if ((left.constraint==parent->constraint) && (left.paths.at(0)==parent->paths.at(0)))
         {
+            prt_constraints(parent->constraint);
+            cout<<flush;
+                    prt_double(constraintsB.begin()->t1);
+                    cout<<endl;
+                    prt_double(constraintsB.begin()->t2);
+                    cout<<endl;
             assert(false);
             FAIL("left same path");
         }
@@ -1551,6 +1529,8 @@ Solution CBS::find_solution(Map &map, const Task &task, const Config &cfg)
             cout<<left.id<<" new cost: "<<left.cost<<endl;
         }
         time_spent = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - t);
+        //if (debug>0)
+            cout<<"time so far:"<<time_spent.count()<<endl<<flush;
         if((config.timelimit!=-1 && time_spent.count() > config.timelimit) || (config.nodelimit!=-1 && expanded>config.nodelimit))
         {
             solution.found = false;
@@ -2117,7 +2097,7 @@ void CBS::prt_path(sPath p)
 
 void CBS::prt_bin_path(sPath p)
 {
-    cout<<p.agentID<<":";
+    cout<<p.agentID<<":"<<endl;
     for (sNode n:p.nodes){
         cout<<n.id<<" "<<n.g<<"   ";
         prt_double(n.g);
