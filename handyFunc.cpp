@@ -22,6 +22,7 @@ inline void prt_double(double a)
         }
         std::cout << ' '; // Separate bytes with a spacs
     }
+    cout<<endl;
 }
 
 inline double round_down (double f){

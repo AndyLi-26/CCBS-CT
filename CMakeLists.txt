@@ -1,12 +1,13 @@
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 3.16 )
 
 project( CCBS )
 
 set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_NO_BOOST_CMAKE ON)
 
-find_package(Boost)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS system program_options)
-
+#find_package(Boost)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
+#FIND_PACKAGE(Boost REQUIRED)
 include_directories( ${Boost_INCLUDE_DIRS} )
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories( "." )
@@ -67,3 +68,9 @@ set( HEADER_FILES
 
 add_executable( CCBS ${SOURCE_FILES} ${HEADER_FILES} )
 target_link_libraries(CCBS ${Boost_LIBRARIES})
+
+#target_link_libraries(CCBS
+#    PRIVATE
+#        Boost::system
+#        Boost::program_options
+#)

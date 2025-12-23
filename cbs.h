@@ -31,7 +31,7 @@ class CBS
     std::vector<Conflict> get_all_conflicts(const std::vector<sPath> &paths, int id);
     list<Constraint> get_constraint(int agent, Move move1, Move move2,bool CT=false);
     list<Constraint> get_wait_constraint(int agent, Move move1, Move move2);
-    Interval binary_wait_search_constraint(int agent, Move move1, Move move2);
+    Interval binary_wait_search_constraint(Move move1, Move move2);
     void find_new_conflicts(Map &map, const Task &task, CBS_Node &node, std::vector<sPath> &paths, const sPath &path,
         const std::list<Conflict> &conflicts, const std::list<Conflict> &semicard_conflicts, const std::list<Conflict> &cardinal_conflicts,
         int &low_level_searches, int &low_level_expanded);
@@ -40,9 +40,10 @@ class CBS
     Conflict get_conflict(std::list<Conflict> &conflicts);
     Move find_sub_conflict(Move m1,Move m2,CBS_Node *node);
     Move split_conf_move(Move m1,Move m2, CBS_Node *node);
-    Interval binary_search_constraint(int agent, Move move1, Move move2);
+    Interval binary_search_constraint(Move move1, Move move2);
     Conflict modify_conflict(Conflict conflict,CBS_Node *node);
     Move modify_move(Move move,int new_id);
+    pair<Constraint,Constraint> get_shiftConstraint(Conflict conflict, bool prt=false);
     //bool validNewNode(Vector2D X1,Vector2D X2,Vector2D New);
     //typedef std::pair<Map_delta,Map_delta> Map_delta_pair;
     typedef std::pair<Vector2D,Vector2D> node_pair;

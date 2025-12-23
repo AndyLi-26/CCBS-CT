@@ -13,6 +13,8 @@
 #define CN_EPSILON       1e-8
 #define CN_FOCAL_WEIGHT  1.0 // experimental function, focal is supported only on the high-level
 #define CN_OBSTL         1
+#define CN_SHIFT         0.9
+
 //#define CN_MAP_RESOLUTION sqrt(2.0)/4.0
 #define CN_INFINITY		 1e+8
 #define CN_LOG           "_log"
